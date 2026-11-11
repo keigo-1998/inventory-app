@@ -134,9 +134,10 @@ input.auto-in{color:var(--accent);font-weight:600;background:#eaf1ff}
 .sheet td.cell .ddv{display:inline-block;max-width:calc(100% - 14px);overflow:hidden;text-overflow:ellipsis;vertical-align:bottom}
 .sheet td.cell .dd{position:absolute;right:4px;top:50%;transform:translateY(-50%);color:#8a93a3;font-size:11px;cursor:pointer;padding:2px 3px;border-radius:3px}
 .sheet td.cell .dd:hover{background:var(--gray-soft);color:var(--text)}
-.sheet td.cell .ddlist{position:absolute;top:100%;left:-1px;min-width:160px;max-height:220px;overflow:auto;background:#fff;border:1px solid #cfd5df;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.15);z-index:10;padding:4px}
+.ddlist{position:fixed;min-width:160px;max-height:220px;overflow:auto;background:#fff;border:1px solid #cfd5df;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.15);z-index:10;padding:4px}
 .ddlist .opt{padding:6px 10px;border-radius:5px;cursor:pointer}
 .ddlist .opt:hover,.ddlist .opt.on{background:var(--accent-soft);color:var(--accent)}
+.ddlist .opt.cur{font-weight:700}
 .ddlist .none{padding:6px 10px;color:var(--sub);font-size:12px;white-space:normal}
 .sheet td.warn{background:#fff4e5}
 .warnlist{margin:4px 0 0;padding-left:18px;color:var(--orange);font-size:12px}
@@ -206,6 +207,16 @@ table.calc.small td{padding:6px 4px;font-size:13px}
 .phonebar{display:flex;gap:12px;align-items:center;justify-content:space-between;width:min(390px,100%);margin-bottom:10px}
 .phone{width:390px;max-width:100%;height:min(844px,calc(100vh - 80px));border:10px solid #111827;border-radius:44px;overflow:hidden;background:#fff;box-shadow:0 20px 50px rgba(0,0,0,.25);flex:none}
 .phone iframe{width:100%;height:100%;border:0;display:block}
+.countbadge{display:inline-block;min-width:18px;padding:0 5px;border-radius:99px;background:var(--orange);color:#fff;font-size:11px;font-weight:700;margin-left:2px}
+.pill.on .countbadge{background:#fff;color:var(--orange)}
+.tbdbanner{display:flex;align-items:center;gap:10px;background:var(--orange-soft);color:var(--orange);border-radius:12px;padding:10px 14px;margin:0 0 12px}
+.tbdbanner b{margin-right:auto}
+.tbdrow{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:8px}
+.tbdinfo{display:flex;flex-direction:column;gap:2px;min-width:0}
+.tbdin{display:flex;gap:8px}
+.tbdin input{border:1px solid var(--line);border-radius:10px;padding:9px 12px;font:inherit;font-size:16px;width:150px;text-align:right}
+.tbdin input.errin{border-color:var(--red)}
+@media (max-width:760px){.tbdin{width:100%}.tbdin input{flex:1}}
 .btn[disabled]{opacity:.45;cursor:not-allowed}
 nav.bottom{display:none}
 .fab{display:none}
@@ -251,6 +262,7 @@ nav.bottom{display:none}
 <section class="screen on" id="dash">
   <h1>ダッシュボード</h1>
   <p class="lead">2026年11月11日（水）時点</p>
+  <div class="tbdbanner" id="tbdBanner"><span>🚚</span><b></b><button class="btn">送料を入れる</button></div>
 
   <div class="sec">今日</div>
   <div class="grid kpis">
@@ -465,7 +477,7 @@ nav.bottom{display:none}
   <div class="sheet-tools">
     <button class="btn" id="addRows">＋ 10行追加</button>
         <button class="btn" id="clear">すべて消す</button>
-    <span class="legend2"><b style="font-weight:600">ジャンル</b>は ▾ で一覧から選択　<span class="tag t-yama">山</span>/<span class="tag t-stock">単品</span> 押すと切り替え　<i class="sw auto"></i>自動で入れたマス　<i class="sw err"></i>直すマス</span>
+    <span class="legend2"><b style="font-weight:600">ジャンル</b>は商品名から推測して自動で入れます（▾ で選び直せます）　<span class="tag t-yama">山</span>/<span class="tag t-stock">単品</span> 押すと切り替え　<i class="sw auto"></i>自動で入れたマス　<i class="sw err"></i>直すマス</span>
   </div>
 
   <div class="card regbar">
@@ -480,6 +492,7 @@ nav.bottom{display:none}
   <div class="pills" id="salesTabs">
     <button class="pill on" data-st="one">1件ずつ（スマホ向け）</button>
     <button class="pill" data-st="many">まとめて入力（パソコン向け）</button>
+    <button class="pill" data-st="tbd" id="tbdTab">送料未定 <span class="countbadge" id="tbdCount">0</span></button>
     <button class="pill" data-st="ch">販路の設定</button>
   </div>
 
@@ -520,10 +533,16 @@ nav.bottom{display:none}
 
   <!-- まとめて入力 -->
   <div id="st-many" style="display:none">
-    <p class="muted" style="margin:0 0 8px">通知を見ながら1行ずつ入れていきます。商品名の一部（例：「オリンパス」）を入れると候補が出るので、選んでください。売り先を選ぶと、売り先を選ぶと手数料（自動の販路）と粗利が入ります。スプレッドシートから行を貼り付けることもできます（本物のアプリでは「まとめて登録」と同じ操作になります）。</p>
+    <p class="muted" style="margin:0 0 8px">実送料を空欄のまま記録すると「送料未定」になり、あとで「送料未定」タブから入れられます。通知を見ながら1行ずつ入れていきます。商品名の一部（例：「オリンパス」）を入れると候補が出るので、選んでください。売り先を選ぶと、売り先を選ぶと手数料（自動の販路）と粗利が入ります。スプレッドシートから行を貼り付けることもできます（本物のアプリでは「まとめて登録」と同じ操作になります）。</p>
     <div class="sheet-wrap"><table class="mtable" id="mTable"></table></div>
     <div class="sheet-tools"><button class="btn" id="mAdd">＋ 5行追加</button><span class="legend2"><i class="sw auto"></i>自動で入ったマス　<i class="sw warn2"></i>いつもと違う手数料</span></div>
     <div class="card regbar"><b id="mSum"></b><button class="btn primary" id="mSave">まとめて記録する</button></div>
+  </div>
+
+  <!-- 送料未定 -->
+  <div id="st-tbd" style="display:none">
+    <p class="muted" style="margin:0 0 10px">「送料未定」で記録した販売の一覧です。実際にかかった送料が分かったら、ここで入れてください。入れると粗利が計算し直され、一覧から消えます。</p>
+    <div id="tbdRows"></div>
   </div>
 
   <!-- 販路の設定 -->
@@ -581,6 +600,36 @@ document.querySelectorAll("[data-go]").forEach(b=>b.addEventListener("click",()=
 const COLS=[["種類",64],["管理番号",96],["商品名",300],["ジャンル",90],["仕入先",150],["仕入日",100],["原価",90],["個数",54],["予想売価",90]];
 const GENRE_COL=3;
 const GENRES=["雑貨","カメラ","PC、OA機器","時計","茶道具","絵画、美術品","家電","家具","アパレル","ブランド品","ホビー","ゲーム","着物関係","楽器"]; // スプレッドシートのジャンル（家具・アンティーク家具・小家具→家具、ブランド食器→ブランド品にまとめた）。よく使う順
+// ---- 商品名からジャンルを推測する ----
+// スプレッドシートの過去の商品（約600件）でよく出た言葉と、一般的なブランド名・品名から作った手がかり
+const GENRE_HINTS={
+  "カメラ":["カメラ","レンズ","一眼","フィルム","ビデオカメラ","ズイコー","タクマー","canon","キヤノン","キャノン","nikon","ニコン","pentax","ペンタックス","olympus","オリンパス","minolta","ミノルタ","fujifilm","富士フイルム","leica","ライカ","rolleiflex","mamiya","マミヤ","contax","コンタックス","asahi","takumar","eos","om-1","om-system","hi-matic","camera","lens"],
+  "時計":["時計","腕時計","懐中時計","クォーツ","クオーツ","自動巻","seiko","セイコー","citizen","シチズン","casio","カシオ","g-shock","orient","オリエント","grand seiko","tissot","chrono"],
+  "PC、OA機器":["パソコン","ノートパソコン","デスクトップ","プリンター","モニター","マザーボード","グラボ","キーボード","マウス","pc","macbook","imac","ipad","iphone","apple","mac","thinkpad","surface","dell","asus","lenovo","hp","intel","core","cpu","ssd","hdd","ddr3","ddr4","i5","i7","i9","ryzen","geforce","gtx","rtx"],
+  "茶道具":["茶道具","茶碗","茶器","茶入","茶杓","棗","水指","建水","香合","急須","湯呑","抹茶","一輪挿","花入","薩摩焼","楽焼","中次","釜"],
+  "絵画、美術品":["絵画","油絵","水彩","版画","リトグラフ","掛軸","掛け軸","日本画","彫刻","ブロンズ","美術","模造刀","刀","仏像","書画"],
+  "家電":["家電","ラジオ","リモコン","ウォークマン","スピーカー","アンプ","オーディオ","コンポ","テレビ","扇風機","掃除機","ドライヤー","炊飯器","レンジ","ポータブル","denon","sony","ソニー","panasonic","パナソニック","bose","technics"],
+  "家具":["家具","チェア","椅子","スツール","テーブル","ソファ","ベッド","デスク","キャビネット","チェスト","シェルフ","ランプ","照明","竹細工","boconcept","boconsept","stool","newport","shogun","xtra","アクタス","カリモク"],
+  "アパレル":["シャツ","tシャツ","パンツ","ボトム","ジーンズ","デニム","ジャケット","コート","ニット","パーカー","スウェット","ドレス","ワンピース","スカート","スニーカー","ブーツ","リーバイス","levi's","gildan","ハーレーダビッドソン","nike","ナイキ","adidas","アディダス"],
+  "ブランド品":["louis vuitton","ルイヴィトン","ヴィトン","chanel","シャネル","gucci","グッチ","hermes","エルメス","prada","プラダ","dior","ディオール","rolex","ロレックス","omega","オメガ","cartier","カルティエ","rimowa","リモワ","リモア","スワロフスキー","swarovski","バカラ","baccarat","マイセン","meissen","ウェッジウッド","wedgwood","ロイヤルコペンハーゲン","ヘレンド","ベネチアンガラス","バッグ","ショルダーバッグ","財布","スーツケース"],
+  "ホビー":["フィギュア","プラモデル","ミニカー","ドール","人形","西洋人形","トレカ","トレーディングカード","ワンピースカード","ポケモンカード","ぬいぐるみ","鉄道模型","ガンプラ","おもちゃ"],
+  "ゲーム":["ゲーム","ドリームキャスト","ファミコン","スーパーファミコン","プレイステーション","プレステ","playstation","ps2","ps3","ps4","ps5","nintendo","任天堂","switch","ゲームボーイ","game boy","セガ","sega","xbox","3ds"],
+  "着物関係":["着物","羽織","帯","浴衣","反物","和装","振袖","留袖","帯締"],
+  "楽器":["ギター","ベース","ウクレレ","バイオリン","ピアノ","シンセサイザー","ドラム","サックス","トランペット","楽器","エフェクター"],
+  "雑貨":["雑貨","小物","メガネ","眼鏡","サングラス","zippo","ジッポ","ルアー","民芸品","置物","直筆","サイン","チェキ","生写真","衣装","コスチューム","一点物"],
+};
+const HINT_LIST=Object.entries(GENRE_HINTS).filter(([g])=>GENRES.includes(g.trim())).flatMap(([g,ws])=>ws.map(w=>[g.trim(),w.normalize("NFKC").toLowerCase()]));
+function guessGenre(name){
+  const n=String(name||"").normalize("NFKC").toLowerCase();if(!n)return "";
+  const score={};
+  HINT_LIST.forEach(([g,w])=>{
+    const ascii=/^[a-z0-9 .'\-]+$/.test(w);
+    const hit=ascii?new RegExp(`(^|[^a-z0-9])${w.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")}([^a-z0-9]|$)`).test(n):n.includes(w);
+    if(hit)score[g]=(score[g]||0)+w.length; // 長い言葉ほど確か
+  });
+  const best=Object.entries(score).sort((a,b)=>b[1]-a[1])[0];
+  return best?best[0]:"";
+}
 const NC=COLS.length, NUMCOL=new Set([6,7,8]);
 const ALIAS={"商品名 メーカー/ブランド":"商品名","f":"仕入日","在庫残":"個数","予想売上":"予想売価","数量":"個数","小計":"原価"};
 const num=s=>{const v=String(s??"").replace(/[¥,円\s]/g,"");return v===""?null:(isNaN(+v)?NaN:+v)};
@@ -608,6 +657,7 @@ function applyAuto(){
     if(!row[0]){row[0]=YAMA_WORDS.test(row[2])?"山":"単品";autoCells.add(r+":0")}
     if(!row[1]){row[1]=row[0]==="山"?pad(n)+"-0":pad(n);autoCells.add(r+":1")}
     n++;
+    if(!row[3]){const g=guessGenre(row[2]);if(g){row[3]=g;autoCells.add(r+":3")}}
     if(!row[4]&&supplier){row[4]=supplier;autoCells.add(r+":4")}
     if(!row[5]&&date){row[5]=date;autoCells.add(r+":5")}
     if(!row[7]){row[7]="1";autoCells.add(r+":7")}
@@ -667,11 +717,13 @@ function startEdit(r,c,clear,initial=""){
   inp.focus();inp.setSelectionRange(inp.value.length,inp.value.length);
   let dd=null,hi=-1;
   if(c===GENRE_COL){
-    dd=document.createElement("div");dd.className="ddlist";td.appendChild(dd);
-    const show=()=>{const q=inp.value.trim();const opts=GENRES.filter(g=>!q||g.includes(q));
-      dd.innerHTML=opts.map((g,i)=>`<div class="opt${i===hi?" on":""}" data-v="${g}">${g}</div>`).join("")||`<div class="none">「${esc(q)}」は一覧にありません（Enterでそのまま入れる）</div>`;
+    dd=document.createElement("div");dd.className="ddlist";document.body.appendChild(dd);editing.dd=dd;
+    const place=()=>{const rc=td.getBoundingClientRect();dd.style.left=rc.left+"px";dd.style.top=(rc.bottom+2)+"px";dd.style.minWidth=Math.max(180,rc.width)+"px"};place();
+    let typed=clear;
+    const show=()=>{const q=typed?inp.value.trim():"";const cur=inp.value.trim();const opts=GENRES.filter(g=>!q||norm(g).includes(norm(q)));if(!typed&&hi<0)hi=opts.indexOf(cur);
+      dd.innerHTML=opts.map((g,i)=>`<div class="opt${i===hi?" on":""}${g===cur?" cur":""}" data-v="${g}">${g===cur?"✓ ":""}${g}</div>`).join("")||`<div class="none">「${esc(q)}」は一覧にありません（Enterでそのまま入れる）</div>`;
       dd.querySelectorAll(".opt").forEach(o=>o.addEventListener("mousedown",ev=>{ev.preventDefault();inp.value=o.dataset.v;commitEdit();sheet.focus()}));};
-    inp.addEventListener("input",()=>{hi=-1;show()});
+    inp.addEventListener("input",()=>{typed=true;hi=-1;show()});
     inp.addEventListener("keydown",ev=>{const n=dd.querySelectorAll(".opt").length;
       if(ev.key==="ArrowDown"){ev.preventDefault();hi=Math.min(n-1,hi+1);show()}
       else if(ev.key==="ArrowUp"){ev.preventDefault();hi=Math.max(-1,hi-1);show()}
@@ -681,11 +733,11 @@ function startEdit(r,c,clear,initial=""){
   inp.addEventListener("keydown",ev=>{
     if(ev.key==="Enter"){ev.preventDefault();commitEdit();move(1,0)}
     else if(ev.key==="Tab"){ev.preventDefault();commitEdit();move(0,ev.shiftKey?-1:1)}
-    else if(ev.key==="Escape"){editing=null;draw();sheet.focus()}
+    else if(ev.key==="Escape"){editing.dd&&editing.dd.remove();editing=null;draw();sheet.focus()}
   });
   inp.addEventListener("blur",()=>setTimeout(commitEdit,0));
 }
-function commitEdit(){if(!editing)return;const {r,c,inp}=editing;editing=null;setCell(r,c,inp.value);draw();}
+function commitEdit(){if(!editing)return;const {r,c,inp,dd}=editing;editing=null;dd&&dd.remove();setCell(r,c,inp.value);draw();}
 function move(dr,dc,extend=false){
   const r=Math.max(0,sel.r2+dr),c=Math.min(NC-1,Math.max(0,sel.c2+dc));
   if(r>=grid.length){ensureRows(r+5);draw()}
@@ -791,7 +843,7 @@ function recalc(){
     NUMCOL.forEach(c=>{if(Number.isNaN(num(row[c])))mark(r,c,"数字を入れてください")});
     if(row[GENRE_COL]&&!GENRES.includes(row[GENRE_COL])){const td=cellEl(r,GENRE_COL);if(td){td.classList.add("warn");td.title="一覧にないジャンルです"}warns.push(`${r+1}行目「ジャンル」：「${row[GENRE_COL]}」は一覧にありません。登録すると一覧に追加されます`)}
   });
-  autoCells.forEach(k=>{const [r,c]=k.split(":");const td=cellEl(r,c);if(td&&!td.classList.contains("err"))td.classList.add("auto")});
+  autoCells.forEach(k=>{const [r,c]=k.split(":");const td=cellEl(r,c);if(td&&!td.classList.contains("err")){td.classList.add("auto");if(+c===GENRE_COL)td.title="商品名から推測しました。違っていたら ▾ で選び直してください"}});
   document.getElementById("warnlist").innerHTML=warns.slice(0,5).map(e=>`<li>${e}</li>`).join("");
   const s=document.getElementById("summary");
   s.textContent=count?(errs.length?`${count}件のうち、直すところが${errs.length}か所あります`:`${count}件（単品 ${count-yama}・山 ${yama}）、すべて登録できます`):"まだ何も入っていません";
@@ -1046,7 +1098,7 @@ function drawOne(){
 sEl("sFee").addEventListener("input",()=>{sFeeTouched=true;drawOne()});
 sEl("sSave").addEventListener("click",()=>{
   const it=sSel?findItem(sSel):null;if(!it){alert("売れた商品を選んでください");sEl("sQ").focus();return}
-  const rec={id:recId++,no:it[0],name:it[1],ch:sCh};
+  const rec={id:recId++,no:it[0],name:it[1],ch:sCh,tbd:sEl("sShipTbd").checked&&!SPECIAL[sCh]};
   if(!SPECIAL[sCh]){const r=calcSale({ch:sCh,price:sEl("sPrice").value,ship:sEl("sShip").value,fee:sEl("sFee").value,real:sEl("sReal").value,cost:it[2],feeTouched:sFeeTouched});rec.profit=r.profit;rec.priceY=r.priceY;rec.calc=r}
   applySale(rec);
   ["sPrice","sShip","sFee","sReal"].forEach(id=>sEl(id).value="");sEl("sSent").checked=false;sEl("sShipTbd").checked=false;sFeeTouched=false;sSel=null;sEl("sQ").style.display="";
@@ -1081,7 +1133,7 @@ function drawMany(){
       <td><div class="cin"><input data-i="${i}" data-k="price" value="${m.price}" class="n"><i>${sign}</i></div></td>
       <td>${c.ship?`<div class="cin"><input data-i="${i}" data-k="ship" value="${m.ship}" class="n"><i>${sign}</i></div>`:'<span class="muted" style="padding:0 8px">なし</span>'}</td>
       <td class="${r.warn?"warn2":""}" title="${r.warn}"><div class="cin"><input data-i="${i}" data-k="fee" value="${feeVal}" class="n${r.feeAuto?" auto-in":""}"><i>${sign}</i></div></td>
-      <td><input data-i="${i}" data-k="real" value="${m.real}" class="n"></td>
+      <td><input data-i="${i}" data-k="real" value="${m.real}" class="n" placeholder="未定"></td>
       <td class="n ${r.profit>=0?"up":"down"}" style="padding:0 8px;font-weight:600">${m.price&&it?(r.profit<0?"−":"")+yen(Math.abs(r0(r.profit))):'<span class="muted">—</span>'}</td>
     </tr>`}).join("")+"</tbody>";
   t.querySelectorAll("input:not(.mq),select").forEach(el=>el.addEventListener("change",()=>{const m=mRows[+el.dataset.i];m[el.dataset.k]=el.value;if(el.dataset.k==="fee")m.ft=el.value!=="";if(el.dataset.k==="ch"){m.ft=false;m.fee=""}drawMany()}));
@@ -1099,7 +1151,7 @@ document.getElementById("mSave").addEventListener("click",()=>{
   const valid=mRows.filter(m=>findItem(m.no)&&m.price);if(!valid.length){alert("記録できる行がありません（商品と売値を入れてください）");return}
   const b=++batchSeq,recs=[];
   valid.forEach(m=>{const it=findItem(m.no);const r=calcSale({ch:m.ch,price:m.price,ship:m.ship,fee:m.fee,real:m.real,cost:it[2],feeTouched:m.ft});
-    const rec={id:recId++,no:it[0],name:it[1],ch:m.ch,profit:r.profit,priceY:r.priceY,calc:r,batch:b};applySale(rec);recs.push(rec)});
+    const rec={id:recId++,no:it[0],name:it[1],ch:m.ch,profit:r.profit,priceY:r.priceY,calc:r,batch:b,tbd:String(m.real).trim()===""};applySale(rec);recs.push(rec)});
   mRows=mRows.filter(m=>!valid.includes(m));while(mRows.length<6)mRows.push(newRow());
   afterChange();
   toast(`${recs.length}件を記録しました。商品一覧で「売却済み」になりました`,()=>{recs.forEach(undoSale);afterChange()});
@@ -1125,7 +1177,7 @@ function drawCh(){
 drawCh();
 document.querySelectorAll("#salesTabs .pill").forEach(p=>p.addEventListener("click",()=>{
   document.querySelectorAll("#salesTabs .pill").forEach(x=>x.classList.toggle("on",x===p));
-  ["one","many","ch"].forEach(k=>document.getElementById("st-"+k).style.display=p.dataset.st===k?"":"none");
+  ["one","many","tbd","ch"].forEach(k=>document.getElementById("st-"+k).style.display=p.dataset.st===k?"":"none");
 }));
 
 // ---- 商品の詳細（商品一覧で商品を押すと、利益が見られる） ----
@@ -1138,11 +1190,11 @@ const dd=document.createElement("dialog");dd.id="itemDlg";dd.className="itemdlg"
 document.querySelectorAll("dialog").forEach(d=>document.body.appendChild(d)); // どの画面からでも開けるように
 function saleCalcFor(r){
   const log=saleLog.find(h=>h.no===r[0]&&!h.undone);
-  if(log&&log.calc)return {ch:log.ch,date:"2026/11/12",...log.calc,fromLog:true};
+  if(log&&log.calc)return {ch:log.ch,date:"2026/11/12",...log.calc,fromLog:true,tbd:log.tbd};
   const s=SOLD_INFO[r[0]];if(!s)return null;
   const c=CH[s.ch],rate=RATES[c.cur];
-  const priceY=s.price*rate,shipY=c.ship?s.ship*rate:0,feeY=s.fee*rate,realY=s.real;
-  return {ch:s.ch,date:s.date,rate,priceY,shipY,feeY,realY,feeIn:s.fee,profit:priceY+shipY-realY-feeY-r[4],raw:s};
+  const priceY=s.price*rate,shipY=c.ship?s.ship*rate:0,feeY=s.fee*rate,realY=s.real||0;
+  return {ch:s.ch,date:s.date,rate,priceY,shipY,feeY,realY,feeIn:s.fee,profit:priceY+shipY-realY-feeY-r[4],raw:s,tbd:!!s.tbd};
 }
 function openItem(no){
   const r=items.find(x=>x[0]===no);if(!r)return;
@@ -1157,7 +1209,7 @@ function openItem(no){
         <table class="calc">
           <tr><td>売値（円）${sub(c.raw?c.raw.price:null)}</td><td class="n">${yen(r0(c.priceY))}</td></tr>
           ${cfg.ship?`<tr><td>＋ 設定送料（円）${sub(c.raw?c.raw.ship:null)}</td><td class="n">${yen(r0(c.shipY))}</td></tr>`:""}
-          <tr><td>− 実送料</td><td class="n">${yen(r0(c.realY))}</td></tr>
+          <tr><td>− 実送料${c.tbd?' <span class="tag t-temp">未定</span>':""}</td><td class="n">${c.tbd?'<button class="linkbtn" id="toTbd">送料を入れる</button>':yen(r0(c.realY))}</td></tr>
           <tr><td>− 手数料（円）${sub(c.raw?c.raw.fee:null)}</td><td class="n">${yen(r0(c.feeY))}</td></tr>
           <tr><td>− 原価</td><td class="n">${yen(r[4])}</td></tr>
           <tr class="tot"><td>粗利</td><td class="n ${c.profit>=0?"up":"down"}">${c.profit<0?"−":""}${yen(Math.abs(r0(c.profit)))}</td></tr>
@@ -1194,6 +1246,7 @@ function openItem(no){
     ${body}${lotBox}`;
   dd.showModal();
   dd.querySelector("#idClose").onclick=()=>dd.close();
+  const tt=dd.querySelector("#toTbd");if(tt)tt.onclick=()=>{dd.close();goTbd()};
   const tl=dd.querySelector("#toLot");if(tl)tl.onclick=()=>{dd.close();document.querySelector('nav.top [data-go="lot"]').click()};
 }
 dd.addEventListener("click",e=>{if(e.target===dd)dd.close()}); // 外側を押すと閉じる
@@ -1214,6 +1267,61 @@ document.getElementById("itemcards").addEventListener("click",onItemClick);
     ov.querySelector("#phoneBack").onclick=()=>{ov.remove();document.body.style.overflow=""};
   });
 })();
+// ---- 送料未定（あとで実送料を入れる） ----
+// 見本：送料がまだ入っていない販売
+items.push(["0298-0","Nikon AF-S 50mm f/1.8G","カメラ","2026/10/03",3500,12000,"sold",["ヤフオク*"],null]);
+items.push(["0315","SEIKO プレザージュ 自動巻き","時計","2026/10/15",9000,26000,"sold",["Catawiki*","メルカリ"],null]);
+SOLD_INFO["0298-0"]={ch:"ヤフオク",date:"2026/11/10",price:14800,ship:1200,fee:1347,real:null,tbd:true};
+SOLD_INFO["0315"]={ch:"Catawiki",date:"2026/11/09",price:180,ship:35,fee:27.9,real:null,tbd:true};
+renderItems();
+function tbdList(){
+  const out=[];
+  items.filter(r=>r[6]==="sold").forEach(r=>{
+    const log=saleLog.find(h=>h.no===r[0]&&!h.undone);
+    if(log){if(log.tbd)out.push({r,src:"log",log,ch:log.ch,date:"2026/11/12"});return}
+    const s=SOLD_INFO[r[0]];if(s&&s.tbd)out.push({r,src:"static",s,ch:s.ch,date:s.date});
+  });
+  return out;
+}
+function setRealShip(x,val){
+  const before=saleCalcFor(x.r).profit;
+  if(x.src==="log"){const c=x.log.calc;c.profit=c.profit+c.realY-val;c.realY=val;x.log.profit=c.profit;x.log.tbd=false}
+  else{x.s.real=val;x.s.tbd=false}
+  return [before,saleCalcFor(x.r).profit];
+}
+function unsetRealShip(x,oldReal){
+  if(x.src==="log"){const c=x.log.calc;c.profit=c.profit+c.realY-oldReal;c.realY=oldReal;x.log.profit=c.profit;x.log.tbd=true}
+  else{x.s.real=null;x.s.tbd=true}
+}
+function drawTbd(){
+  const list=tbdList();
+  document.getElementById("tbdCount").textContent=list.length;
+  document.getElementById("tbdTab").style.display="";
+  const banner=document.getElementById("tbdBanner");
+  banner.style.display=list.length?"flex":"none";
+  banner.querySelector("b").textContent=`送料がまだ入っていない販売が ${list.length}件 あります`;
+  const box=document.getElementById("tbdRows");
+  box.innerHTML=list.length?list.map((x,i)=>{const c=saleCalcFor(x.r);return `<div class="tbdrow">
+      <div class="tbdinfo"><span class="muted">${x.r[0]}・${x.ch}・${x.date}</span><b>${x.r[1]}</b>
+        <span class="muted">今の粗利（送料0円として） <b class="${c.profit>=0?"up":"down"}">${yen(r0(c.profit))}</b></span></div>
+      <div class="tbdin"><input data-i="${i}" inputmode="numeric" placeholder="実送料（円）"><button class="btn primary" data-i="${i}">入れる</button></div>
+    </div>`}).join("")
+    :'<div class="card" style="text-align:center"><b class="up">送料未定の販売はありません</b><p class="muted" style="margin:4px 0 0">すべての販売に実送料が入っています。</p></div>';
+  box.querySelectorAll("button[data-i]").forEach(b=>b.addEventListener("click",()=>{
+    const i=+b.dataset.i,inp=box.querySelector(`input[data-i="${i}"]`),v=num(inp.value);
+    if(v==null||Number.isNaN(v)){inp.focus();inp.classList.add("errin");return}
+    const x=list[i],[b4,af]=setRealShip(x,v);
+    drawTbd();
+    toast(`${x.r[0]} の実送料 ${yen(v)} を入れました。粗利 ${yen(r0(b4))} → ${yen(r0(af))}`,()=>{unsetRealShip(x,0);drawTbd()});
+  }));
+  box.querySelectorAll("input[data-i]").forEach(inp=>inp.addEventListener("keydown",e=>{if(e.key==="Enter")box.querySelector(`button[data-i="${inp.dataset.i}"]`).click()}));
+}
+function goTbd(){document.querySelector('nav.top [data-go="sales"]').click();document.querySelector('#salesTabs [data-st="tbd"]').click()}
+document.getElementById("tbdBanner").querySelector("button").addEventListener("click",goTbd);
+drawTbd();
+// 記録・取り消しのたびに数を更新
+const _afterChange=afterChange;afterChange=function(){_afterChange();drawTbd()};
+
 document.querySelectorAll("#items .pill").forEach(p=>p.addEventListener("click",()=>{document.querySelectorAll("#items .pill").forEach(x=>x.classList.remove("on"));p.classList.add("on")}));
 </script>
 </body>
