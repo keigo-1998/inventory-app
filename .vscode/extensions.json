@@ -1,0 +1,9 @@
+{
+  "recommendations": [
+    "Prisma.prisma",
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "MS-CEINTL.vscode-language-pack-ja",
+    "Anthropic.claude-code"
+  ]
+}
