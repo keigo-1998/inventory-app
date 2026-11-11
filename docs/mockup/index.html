@@ -14,13 +14,14 @@
 body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif;font-size:14px;line-height:1.5}
 .note{background:#fff8db;border-bottom:1px solid #f1e3a1;padding:8px 16px;font-size:12px;color:#6b5800}
 header{background:var(--card);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
-.hwrap{max-width:1200px;margin:0 auto;display:flex;align-items:center;gap:24px;padding:0 16px;height:56px}
-.logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:14px;white-space:nowrap}
+.hwrap{max-width:1200px;margin:0 auto;display:flex;align-items:center;gap:20px;padding:0 16px;height:60px}
+.logo{display:flex;align-items:center;gap:8px;white-space:nowrap;cursor:default;user-select:none;padding-right:20px;border-right:1px solid var(--line);height:32px}
 .logo img{height:22px;width:auto;display:block}
-.logo span{padding-left:10px;border-left:1px solid var(--line);color:var(--sub)}
-nav.top{display:flex;gap:4px}
-nav.top button{border:0;background:none;padding:8px 12px;border-radius:8px;font:inherit;color:var(--sub);cursor:pointer}
-nav.top button.on{background:var(--accent-soft);color:var(--accent);font-weight:600}
+.logo span{font-size:10px;font-weight:600;letter-spacing:.08em;color:var(--sub);background:var(--gray-soft);border-radius:4px;padding:2px 6px}
+nav.top{display:flex;gap:2px;background:#eef0f4;border-radius:10px;padding:3px}
+nav.top button{border:0;background:none;padding:7px 14px;border-radius:8px;font:inherit;font-size:13px;font-weight:500;color:#374151;cursor:pointer;white-space:nowrap}
+nav.top button:hover{background:#e2e6ec}
+nav.top button.on{background:var(--accent);color:#fff;font-weight:700;box-shadow:0 1px 3px rgba(37,99,235,.35)}
 .hright{margin-left:auto;display:flex;gap:8px}
 .btn{border:1px solid var(--line);background:var(--card);border-radius:8px;padding:8px 14px;font:inherit;cursor:pointer;white-space:nowrap}
 .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
@@ -579,7 +580,7 @@ document.querySelectorAll("[data-go]").forEach(b=>b.addEventListener("click",()=
 // ---- まとめて登録（伝票の取り込み・スプレッドシート風の表） ----
 const COLS=[["種類",64],["管理番号",96],["商品名",300],["ジャンル",90],["仕入先",150],["仕入日",100],["原価",90],["個数",54],["予想売価",90]];
 const GENRE_COL=3;
-const GENRES=["カメラ","時計","ゲーム","小家電","家電","パソコン","衣類","雑貨","茶道具","家具","おもちゃ","その他"]; // 本物のアプリでは「選択肢の一覧」で編集できる
+const GENRES=["雑貨","カメラ","PC、OA機器","時計","茶道具","絵画、美術品","家電","家具","アパレル","ブランド品","ホビー","ゲーム","着物関係","楽器"]; // スプレッドシートのジャンル（家具・アンティーク家具・小家具→家具、ブランド食器→ブランド品にまとめた）。よく使う順
 const NC=COLS.length, NUMCOL=new Set([6,7,8]);
 const ALIAS={"商品名 メーカー/ブランド":"商品名","f":"仕入日","在庫残":"個数","予想売上":"予想売価","数量":"個数","小計":"原価"};
 const num=s=>{const v=String(s??"").replace(/[¥,円\s]/g,"");return v===""?null:(isNaN(+v)?NaN:+v)};
@@ -890,8 +891,8 @@ const SPECIAL={"廃棄":"捨てた（原価を損失として記録）","備品�
 Object.assign(st,{disposed:["廃棄","t-warn"],fixture:["備品","t-stock"]});
 // 在庫の見本を足す
 [["0120-5","SEIKO クオーツ","時計","2026/09/14",1500,15000,"stock",[],58],
- ["0352","Apple MacBookAir A2941","パソコン","2026/11/04",81675,110000,"stock",[],8],
- ["0354","BAKUNE Dry TENTIAL ロングスリーブTシャツ/ロングパンツセット","衣類","2026/11/04",14520,22000,"list",["メルカリ"],8],
+ ["0352","Apple MacBookAir A2941","PC、OA機器","2026/11/04",81675,110000,"stock",[],8],
+ ["0354","BAKUNE Dry TENTIAL ロングスリーブTシャツ/ロングパンツセット","アパレル","2026/11/04",14520,22000,"list",["メルカリ"],8],
  ["0360-1","オリンパス OM-1 ボディ","カメラ","2026/10/21",4000,18000,"list",["メルカリ","ヤフオク"],22],
  ["0361","オリンパス ズイコー 50mm F1.8","カメラ","2026/10/21",2500,9000,"stock",[],22]].forEach(r=>items.push(r));
 const findItem=no=>{const r=items.find(x=>x[0]===String(no||"").trim());return r?[r[0],r[1],r[4],r]:null};
