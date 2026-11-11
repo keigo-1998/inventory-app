@@ -140,6 +140,50 @@ input.auto-in{color:var(--accent);font-weight:600;background:#eaf1ff}
 .sheet td.warn{background:#fff4e5}
 .warnlist{margin:4px 0 0;padding-left:18px;color:var(--orange);font-size:12px}
 .sheet-wrap{overflow:auto}
+.form .f{display:flex;flex-direction:column;gap:4px;margin-bottom:12px;font-size:13px;font-weight:600}
+.form .f>span{color:var(--text)}
+.form input:not([type=checkbox]){border:1px solid var(--line);border-radius:10px;padding:11px 12px;font:inherit;font-size:16px;font-weight:400}
+.form .cur{color:var(--sub);font-weight:400}
+.hint{font-weight:400;color:var(--sub);font-size:12px}
+.itembox{background:var(--gray-soft);border-radius:10px;padding:10px 12px;margin:-4px 0 12px;font-size:13px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chipbtn{border:1px solid var(--line);background:var(--card);border-radius:99px;padding:8px 12px;font:inherit;font-size:13px;cursor:pointer}
+.chipbtn.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+.chipbtn.sp{border-style:dashed;color:var(--sub)}
+.chipbtn.sp.on{background:var(--text);border-color:var(--text);color:#fff}
+.chk.small{font-size:12px;font-weight:400;margin-top:4px}
+.btn.big{width:100%;padding:13px;font-size:15px;margin-top:4px}
+table.calc td{padding:8px 4px}
+table.calc tr.tot td{border-top:2px solid var(--text);font-weight:700;font-size:16px}
+.mtable{border-collapse:collapse;width:max-content;min-width:100%;font-size:13px}
+.mtable th{position:sticky;top:0;background:#f1f3f6;color:#374151;font-weight:600;border:1px solid #d9dee6;padding:6px 8px;white-space:nowrap;z-index:1}
+.mtable td{border:1px solid #e3e7ed;padding:0;height:34px;white-space:nowrap}
+.mtable td.rn{width:36px;text-align:center;color:#8a93a3;background:#f1f3f6;font-size:12px}
+.mtable input,.mtable select{border:0;padding:7px 8px;font:inherit;background:transparent;width:100%;min-width:80px;outline:none}
+.mtable input:focus,.mtable select:focus{box-shadow:inset 0 0 0 2px var(--accent);background:#fff}
+.mtable td.err{background:var(--red-soft);color:var(--red)}
+.cin{display:flex;align-items:center}.cin input{min-width:70px;width:84px}.cin i{font-style:normal;color:var(--sub);padding-right:8px;font-size:12px}
+.warn2{background:#fff4e5!important}.sw.warn2{background:#fff4e5}
+#chTable select,#chTable input{border:1px solid var(--line);border-radius:6px;padding:5px 6px;font:inherit}
+.sugg{position:fixed;display:none;z-index:50;background:#fff;border:1px solid #cfd5df;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.18);padding:4px;max-height:340px;overflow:auto}
+.sugg .sg{padding:8px 10px;border-radius:7px;cursor:pointer;font-size:13px}
+.sugg .sg.on,.sugg .sg[data-i]:hover{background:var(--accent-soft)}
+.sugg .sg.none{cursor:default;color:var(--sub)}
+.sugg b{color:var(--accent)}
+.itembox.picked{background:var(--accent-soft)}
+.linkbtn{border:0;background:none;color:var(--accent);font:inherit;font-size:12px;cursor:pointer;padding:2px 4px;text-decoration:underline}
+.picked-cell{display:flex;align-items:center;gap:6px;padding:0 8px;white-space:nowrap}
+.picked-cell .linkbtn{margin-left:auto}
+#toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,140%);background:var(--text);color:#fff;border-radius:12px;padding:12px 14px 14px;display:flex;align-items:center;gap:12px;box-shadow:0 10px 30px rgba(0,0,0,.25);z-index:60;max-width:calc(100vw - 32px);transition:transform .25s;font-size:13px;overflow:hidden}
+#toast.show{transform:translate(-50%,0)}
+#toast .btn{background:#fff;color:var(--text);border:0;font-weight:700}
+#toast .x{border:0;background:none;color:#9ca3af;font-size:18px;cursor:pointer}
+#toast .bar{position:absolute;left:0;bottom:0;height:3px;background:#60a5fa;width:100%}
+#toast.show .bar{animation:shrink 10s linear forwards}
+@keyframes shrink{to{width:0}}
+tr.flash td,.mc.flash{animation:flash 2.5s ease}
+@keyframes flash{0%{background:#fff3b0}100%{background:transparent}}
+@media (max-width:760px){#toast{bottom:76px}}
 .btn[disabled]{opacity:.45;cursor:not-allowed}
 nav.bottom{display:none}
 .fab{display:none}
@@ -175,8 +219,9 @@ nav.bottom{display:none}
     <button data-go="items">商品一覧</button>
     <button data-go="lot">山の詳細</button>
     <button data-go="bulk">まとめて登録</button>
+    <button data-go="sales">販売を記録</button>
   </nav>
-  <div class="hright"><button class="btn">販売を記録</button><button class="btn primary">＋ 商品を登録</button></div>
+  <div class="hright"><button class="btn" data-go="sales">販売を記録</button><button class="btn primary">＋ 商品を登録</button></div>
 </div></header>
 
 <main>
@@ -406,6 +451,66 @@ nav.bottom{display:none}
     <button class="btn primary" id="doReg" disabled>この内容で登録する</button>
   </div>
 </section>
+<!-- 販売を記録 -->
+<section class="screen" id="sales">
+  <h1>販売を記録</h1>
+  <p class="lead">売れた商品の売値・手数料・送料を入れると、粗利が自動で出ます。為替レート：<b>1€ = <span id="rateEUR"></span>円</b>、<b>1$ = <span id="rateUSD"></span>円</b> <span class="tag t-temp">11月・仮</span> <span class="muted">（月初のTTM。月末に平均TTMで確定）</span></p>
+  <div class="pills" id="salesTabs">
+    <button class="pill on" data-st="one">1件ずつ（スマホ向け）</button>
+    <button class="pill" data-st="many">まとめて入力（パソコン向け）</button>
+    <button class="pill" data-st="ch">販路の設定</button>
+  </div>
+
+  <!-- 1件ずつ -->
+  <div id="st-one" class="grid two">
+    <div class="card form">
+      <label class="f"><span>売れた商品</span>
+        <input id="sQ" placeholder="商品名か管理番号で探す（例：オリンパス）" autocomplete="off">
+      </label>
+      <div id="sItem" class="itembox muted"></div>
+
+      <div class="f"><span>売り先</span><div class="chips" id="sCh"></div></div>
+
+      <div id="sPriceArea">
+        <label class="f"><span>売却日</span><input id="sDate" value="2026/11/12"></label>
+        <label class="f"><span>売値 <b class="cur" id="curPrice"></b></span><input id="sPrice" inputmode="decimal" placeholder="0"></label>
+        <label class="f" id="shipWrap"><span>設定送料（お客様からもらう送料） <b class="cur" id="curShip"></b></span><input id="sShip" inputmode="decimal" placeholder="0"></label>
+        <label class="f"><span>手数料 <b class="cur" id="curFee"></b></span><input id="sFee" inputmode="decimal" placeholder="0"><small id="feeHint" class="hint"></small></label>
+        <label class="f"><span>実送料（実際にかかった送料・円）</span><input id="sReal" inputmode="numeric" placeholder="0">
+          <label class="chk small"><input type="checkbox" id="sShipTbd"> 送料未定（あとで入れる）</label></label>
+        <label class="chk"><input type="checkbox" id="sSent"> 発送済み</label>
+      </div>
+      <button class="btn primary big" id="sSave">記録する</button>
+    </div>
+
+    <div>
+      <div class="card">
+        <h2>計算の内訳</h2>
+        <table class="calc" id="sCalc"></table>
+        <p class="muted" id="sCalcNote" style="margin:8px 0 0"></p>
+      </div>
+      <div class="card" style="margin-top:12px">
+        <h2>今日記録した販売</h2>
+        <ul class="list" id="sToday"><li class="muted">まだありません</li></ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- まとめて入力 -->
+  <div id="st-many" style="display:none">
+    <p class="muted" style="margin:0 0 8px">通知を見ながら1行ずつ入れていきます。商品名の一部（例：「オリンパス」）を入れると候補が出るので、選んでください。売り先を選ぶと、売り先を選ぶと手数料（自動の販路）と粗利が入ります。スプレッドシートから行を貼り付けることもできます（本物のアプリでは「まとめて登録」と同じ操作になります）。</p>
+    <div class="sheet-wrap"><table class="mtable" id="mTable"></table></div>
+    <div class="sheet-tools"><button class="btn" id="mAdd">＋ 5行追加</button><span class="legend2"><i class="sw auto"></i>自動で入ったマス　<i class="sw warn2"></i>いつもと違う手数料</span></div>
+    <div class="card regbar"><b id="mSum"></b><button class="btn primary" id="mSave">まとめて記録する</button></div>
+  </div>
+
+  <!-- 販路の設定 -->
+  <div id="st-ch" style="display:none">
+    <p class="muted" style="margin:0 0 8px">販路ごとの計算方法です。ここを変えると、「1件ずつ」「まとめて入力」の計算もすぐ変わります。粗利の式はすべての販路で共通です：<b>売値（円）＋ 設定送料（円）− 実送料 − 手数料（円）− 原価</b></p>
+    <div class="card tablewrap" style="padding:4px 8px"><table id="chTable"></table></div>
+    <p class="muted">「毎回入力」の販路は、過去の手数料率の平均を目安として表示し、平均から大きく外れたときに知らせます。</p>
+  </div>
+</section>
 </main>
 
 <button class="fab">＋ 登録</button>
@@ -413,7 +518,7 @@ nav.bottom{display:none}
   <button data-go="dash" class="on"><b>▦</b>ホーム</button>
   <button data-go="items"><b>☰</b>商品</button>
   <button data-go="lot"><b>◫</b>山</button>
-  <button><b>¥</b>販売</button>
+  <button data-go="sales"><b>¥</b>販売</button>
 </nav>
 
 <script>
@@ -745,6 +850,261 @@ document.getElementById("pickSell").addEventListener("click",openBundle);
 document.getElementById("pickClear").addEventListener("click",()=>{picked.clear();document.querySelectorAll(".pick").forEach(x=>x.checked=false);drawPickBar()});
 document.getElementById("bClose").addEventListener("click",()=>document.getElementById("bundleDlg").close());
 document.getElementById("bSave").addEventListener("click",()=>alert("これは画面イメージなので、登録はされません。"));
+
+// ---- 販売を記録 ----
+const RATES={JPY:1,EUR:177.36,USD:152.40}; // 見本の数字（11月・仮）
+const CUR_SIGN={JPY:"円",EUR:"€",USD:"$"};
+const CH={
+  "Catawiki":{cur:"EUR",fee:"manual",rate:null,avg:0.155,ship:true},
+  "メルカリ":{cur:"JPY",fee:"auto",rate:0.10,ship:false},
+  "ヤフオク":{cur:"JPY",fee:"manual",rate:null,avg:0.091,ship:true},
+  "JOOM":{cur:"USD",fee:"auto",rate:0.15,ship:true},
+  "Chrono24":{cur:"JPY",fee:"auto",rate:0.125,ship:true},
+  "浜屋":{cur:"JPY",fee:"manual",rate:null,avg:0.10,ship:true},
+  "古物市場":{cur:"JPY",fee:"manual",rate:null,avg:0.10,ship:true},
+  "ジモティー":{cur:"JPY",fee:"none",rate:null,ship:true},
+  "eBay":{cur:"USD",fee:"manual",rate:null,avg:null,ship:true,tbd:true},
+};
+const SPECIAL={"廃棄":"捨てた（原価を損失として記録）","備品にした":"会社で使う（売上に入れない）"};
+Object.assign(st,{disposed:["廃棄","t-warn"],fixture:["備品","t-stock"]});
+// 在庫の見本を足す
+[["0120-5","SEIKO クオーツ","時計","2026/09/14",1500,15000,"stock",[],58],
+ ["0352","Apple MacBookAir A2941","パソコン","2026/11/04",81675,110000,"stock",[],8],
+ ["0354","BAKUNE Dry TENTIAL ロングスリーブTシャツ/ロングパンツセット","衣類","2026/11/04",14520,22000,"list",["メルカリ"],8],
+ ["0360-1","オリンパス OM-1 ボディ","カメラ","2026/10/21",4000,18000,"list",["メルカリ","ヤフオク"],22],
+ ["0361","オリンパス ズイコー 50mm F1.8","カメラ","2026/10/21",2500,9000,"stock",[],22]].forEach(r=>items.push(r));
+const findItem=no=>{const r=items.find(x=>x[0]===String(no||"").trim());return r?[r[0],r[1],r[4],r]:null};
+const inStock=r=>r[6]==="stock"||r[6]==="list";
+const r0=v=>Math.round(v);
+document.getElementById("rateEUR").textContent=RATES.EUR;document.getElementById("rateUSD").textContent=RATES.USD.toFixed(2);
+
+// ---- 商品一覧の再表示（販売を記録すると状態が変わる） ----
+function renderItems(){
+  document.getElementById("itemrows").innerHTML=items.map(r=>`<tr class="${r._flash?"flash":""}"><td>${inStock(r)?`<input type="checkbox" class="pick" data-no="${r[0]}"${picked.has(r[0])?" checked":""}>`:""}</td><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td class="n">${yen(r[4])}</td><td class="n">${yen(r[5])}</td><td><span class="tag ${st[r[6]][1]}">${st[r[6]][0]}</span></td><td>${chips(r[7])}</td><td class="n">${inStock(r)?days(r[8]):'<span class="muted">—</span>'}</td></tr>`).join("");
+  document.getElementById("itemcards").innerHTML=items.map(r=>`<div class="mc ${r._flash?"flash":""}"><div class="top"><span class="muted">${inStock(r)?`<input type="checkbox" class="pick" data-no="${r[0]}"${picked.has(r[0])?" checked":""}> `:""}${r[0]}・${r[2]}</span><span class="tag ${st[r[6]][1]}">${st[r[6]][0]}</span></div><div class="name">${r[1]}</div><div class="meta"><span>原価 ${yen(r[4])} / 予想 ${yen(r[5])}</span><span>${inStock(r)&&r[8]!=null?r[8]+"日":""}</span></div><div style="margin-top:6px">${chips(r[7])}</div></div>`).join("");
+  document.querySelectorAll(".pick").forEach(cb=>cb.addEventListener("change",()=>{cb.checked?picked.add(cb.dataset.no):picked.delete(cb.dataset.no);
+    document.querySelectorAll(`.pick[data-no="${cb.dataset.no}"]`).forEach(x=>x.checked=cb.checked);drawPickBar()}));
+  const n=items.filter(inStock).length;document.querySelector("#items .lead").firstChild.textContent=`全 1,284 点（在庫 ${400+n} 点）。`;
+}
+renderItems();
+
+// ---- 商品名・管理番号で探す ----
+const norm=s=>String(s).normalize("NFKC").toLowerCase().replace(/[ァ-ヶ]/g,c=>String.fromCharCode(c.charCodeAt(0)-0x60)).replace(/\s+/g,"");
+const sugg=document.createElement("div");sugg.className="sugg";document.body.appendChild(sugg);
+let suggFor=null,suggHi=0,suggList=[];
+function searchItems(q){const k=norm(q);if(!k)return [];
+  return items.filter(r=>inStock(r)).map(r=>{const name=norm(r[1]),no=norm(r[0]);let score=no.startsWith(k)?3:name.startsWith(k)?2:(name.includes(k)||no.includes(k))?1:0;
+    if(!score){const words=String(q).normalize("NFKC").toLowerCase().split(/\s+/).filter(Boolean).map(norm);if(words.length>1&&words.every(w=>name.includes(w)||no.includes(w)))score=1}
+    return [score,r]}).filter(x=>x[0]).sort((a,b)=>b[0]-a[0]).slice(0,8).map(x=>x[1])}
+const hl=(text,q)=>{const t=String(text);const k=String(q).normalize("NFKC").trim();if(!k)return t;const i=norm(t).indexOf(norm(k));if(i<0)return t;
+  // ひらがな・カタカナ・全角半角を区別せずに太字にする（簡易）
+  let pos=0,start=-1,end=-1;for(let j=0;j<t.length;j++){const n=norm(t.slice(0,j+1)).length;if(start<0&&n>i){start=j}if(n>=i+norm(k).length){end=j+1;break}}
+  return start<0?t:t.slice(0,start)+"<b>"+t.slice(start,end)+"</b>"+t.slice(end)};
+function showSugg(input,onPick){
+  suggFor={input,onPick};suggList=searchItems(input.value);suggHi=0;
+  if(!input.value.trim()){sugg.style.display="none";return}
+  const rc=input.getBoundingClientRect();
+  sugg.style.cssText=`display:block;left:${Math.max(8,rc.left)}px;top:${rc.bottom+4}px;width:${Math.max(rc.width,340)}px`;
+  sugg.innerHTML=suggList.length?suggList.map((r,i)=>`<div class="sg${i===suggHi?" on":""}" data-i="${i}">
+      <div><span class="muted">${hl(r[0],input.value)}</span>　${hl(r[1],input.value)}</div>
+      <div class="muted" style="font-size:12px">原価 ${yen(r[4])}・<span class="tag ${st[r[6]][1]}">${st[r[6]][0]}</span> ${r[7].map(c=>`<span class="chip">${c}</span>`).join("")}</div></div>`).join("")
+    :`<div class="sg none">「${input.value}」に当てはまる在庫がありません<br><span class="muted">売却済みの商品は出てきません</span></div>`;
+  sugg.querySelectorAll(".sg[data-i]").forEach(el=>el.addEventListener("mousedown",e=>{e.preventDefault();pick(+el.dataset.i)}));
+}
+function pick(i){const r=suggList[i];if(!r||!suggFor)return;sugg.style.display="none";suggFor.onPick(r)}
+function attachSearch(input,onPick){
+  input.addEventListener("input",()=>showSugg(input,onPick));
+  input.addEventListener("focus",()=>input.value&&showSugg(input,onPick));
+  input.addEventListener("blur",()=>setTimeout(()=>{if(suggFor&&suggFor.input===input)sugg.style.display="none"},150));
+  input.addEventListener("keydown",e=>{if(sugg.style.display!=="block")return;
+    if(e.key==="ArrowDown"){e.preventDefault();suggHi=Math.min(suggList.length-1,suggHi+1);showSuggKeep()}
+    else if(e.key==="ArrowUp"){e.preventDefault();suggHi=Math.max(0,suggHi-1);showSuggKeep()}
+    else if(e.key==="Enter"){e.preventDefault();pick(suggHi)}
+    else if(e.key==="Escape"){sugg.style.display="none"}});
+}
+function showSuggKeep(){sugg.querySelectorAll(".sg[data-i]").forEach(el=>el.classList.toggle("on",+el.dataset.i===suggHi))}
+window.addEventListener("scroll",()=>{sugg.style.display="none"},true);
+
+// 計算（すべての販路で共通の式）
+function calcSale({ch,price,ship,fee,real,cost,feeTouched}){
+  const c=CH[ch];const rate=RATES[c.cur];
+  const priceY=(num(price)||0)*rate, shipY=c.ship?(num(ship)||0)*rate:0;
+  let feeIn=num(fee), feeY, feeAuto=false;
+  if(c.fee==="auto"&&!feeTouched){feeIn=(num(price)||0)*c.rate;feeAuto=true}
+  if(c.fee==="none"){feeIn=0;feeAuto=true}
+  feeY=(feeIn||0)*rate;
+  const realY=num(real)||0;
+  const profit=priceY+shipY-realY-feeY-(cost||0);
+  let warn="";
+  if(c.fee==="manual"&&c.avg&&num(price)>0&&feeIn!=null){const pct=feeIn/num(price);if(Math.abs(pct-c.avg)>c.avg*0.4)warn=`いつもの手数料率（約${(c.avg*100).toFixed(1)}%）と違います（今回 ${(pct*100).toFixed(1)}%）。打ち間違いがないか確認してください`}
+  return {rate,priceY,shipY,feeIn,feeY,realY,profit,feeAuto,warn};
+}
+
+// ---- 記録と取り消し ----
+const saleLog=[]; // 記録した販売（新しい順）
+let batchSeq=0;
+function applySale(rec){
+  const r=findItem(rec.no)[3];
+  rec.prev={status:r[6],chips:[...r[7]]};
+  if(rec.ch==="廃棄")r[6]="disposed";else if(rec.ch==="備品にした")r[6]="fixture";
+  else{r[6]="sold";r[7]=r[7].filter(c=>c!==rec.ch);r[7].unshift(rec.ch+"*")}
+  r._flash=true;setTimeout(()=>{r._flash=false},2500);
+  saleLog.unshift(rec);
+}
+function undoSale(rec){
+  const r=findItem(rec.no)[3];r[6]=rec.prev.status;r[7]=rec.prev.chips;rec.undone=true;
+  r._flash=true;setTimeout(()=>{r._flash=false},2500);
+}
+function afterChange(){renderItems();drawToday();drawOne();drawMany()}
+let toastTimer=null;
+function toast(msg,undoFn){
+  let t=document.getElementById("toast");if(!t){t=document.createElement("div");t.id="toast";document.body.appendChild(t)}
+  t.innerHTML=`<span>${msg}</span>${undoFn?'<button class="btn" id="toastUndo">元に戻す</button>':""}<button class="x" id="toastX">×</button><i class="bar"></i>`;
+  t.className="show";clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.className="",10000);
+  t.querySelector("#toastX").onclick=()=>t.className="";
+  if(undoFn)t.querySelector("#toastUndo").onclick=()=>{undoFn();t.className="";toast("取り消しました。商品は元の状態（在庫・出品中）に戻りました",null)};
+}
+function drawToday(){
+  const list=saleLog.filter(h=>!h.undone);
+  sEl("sToday").innerHTML=list.length?list.map(h=>`<li><span>${h.no} ${h.name}<br><span class="muted">${h.ch}${h.profit!=null?"・売値 "+yen(r0(h.priceY)):""}${h.batch?"・まとめて入力":""}</span></span>
+     <span style="text-align:right">${h.profit!=null?`<span class="n ${h.profit>=0?"up":"down"}">${yen(r0(h.profit))}</span><br>`:""}<button class="linkbtn" data-id="${h.id}">取り消す</button></span></li>`).join("")
+    :'<li class="muted">まだありません</li>';
+  sEl("sToday").querySelectorAll(".linkbtn").forEach(b=>b.addEventListener("click",()=>{
+    const h=saleLog.find(x=>x.id===+b.dataset.id);
+    if(!confirm(`${h.no} ${h.name} の「${h.ch}」の記録を取り消しますか？\n商品は元の状態に戻ります。`))return;
+    undoSale(h);afterChange();toast(`${h.no} の記録を取り消しました`,null)}));
+}
+let recId=1;
+
+// ---- 1件ずつ ----
+let sCh="Catawiki", sFeeTouched=false, sSel=null;
+const sEl=id=>document.getElementById(id);
+function drawChips(){
+  sEl("sCh").innerHTML=Object.keys(CH).map(k=>`<button class="chipbtn${k===sCh?" on":""}" data-c="${k}">${k}${CH[k].tbd?' <small>未定</small>':""}</button>`).join("")+
+    Object.keys(SPECIAL).map(k=>`<button class="chipbtn sp${k===sCh?" on":""}" data-c="${k}">${k}</button>`).join("");
+  sEl("sCh").querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>{sCh=b.dataset.c;sFeeTouched=false;sEl("sFee").value="";drawChips();drawOne()}));
+}
+function selectOne(r){sSel=r?r[0]:null;sEl("sQ").value="";sEl("sQ").style.display=r?"none":"";drawOne();if(!r)sEl("sQ").focus()}
+attachSearch(sEl("sQ"),r=>selectOne(r));
+function drawOne(){
+  const it=sSel?findItem(sSel):null;
+  if(it&&!inStock(it[3])){sSel=null;return drawOne()}
+  sEl("sItem").innerHTML=it?`<div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start"><div><span class="muted">${it[0]}</span><br><b>${it[1]}</b><br>原価 ${yen(it[2])}${it[3][7].length?"・出品先 "+it[3][7].join("・"):""}</div><button class="linkbtn" id="sChange">変更</button></div>`:"商品名か管理番号の一部を入れると、候補が出ます";
+  sEl("sItem").className="itembox"+(it?" picked":" muted");
+  if(it)sEl("sChange").onclick=()=>selectOne(null);
+  const cost=it?it[2]:0;
+  if(SPECIAL[sCh]){
+    sEl("sPriceArea").style.display="none";
+    const loss=sCh==="廃棄";
+    sEl("sCalc").innerHTML=`<tr><td>原価</td><td class="n">${yen(cost)}</td></tr><tr class="tot"><td>${loss?"損失":"売上・粗利"}</td><td class="n ${loss?"down":""}">${loss?"−"+yen(cost):"集計に入れません"}</td></tr>`;
+    sEl("sCalcNote").textContent=SPECIAL[sCh];sEl("sSave").textContent=`「${sCh}」として記録する`;return;
+  }
+  sEl("sPriceArea").style.display="";sEl("sSave").textContent="記録する";
+  const c=CH[sCh],sign=CUR_SIGN[c.cur];
+  ["curPrice","curShip","curFee"].forEach(id=>sEl(id).textContent=`（${sign}）`);
+  sEl("shipWrap").style.display=c.ship?"":"none";
+  const r=calcSale({ch:sCh,price:sEl("sPrice").value,ship:sEl("sShip").value,fee:sEl("sFee").value,real:sEl("sReal").value,cost,feeTouched:sFeeTouched});
+  const feeBox=sEl("sFee");
+  if(r.feeAuto){feeBox.value=c.fee==="none"?"0":(r.feeIn?+r.feeIn.toFixed(2):"");feeBox.classList.add("auto-in")}else feeBox.classList.remove("auto-in");
+  feeBox.readOnly=c.fee==="none";
+  const hint=c.fee==="auto"?`売値の${c.rate*100}%で自動で入れました（手で直せます）`:c.fee==="none"?"この販路は手数料なし":c.tbd?"eBayの手数料の決まりはまだ決めていません":`毎回入力。目安：いつもは売値の約${(c.avg*100).toFixed(1)}%${num(sEl("sPrice").value)?`（${sign}${(num(sEl("sPrice").value)*c.avg).toFixed(c.cur==="JPY"?0:2)}前後）`:""}`;
+  sEl("feeHint").innerHTML=r.warn?`<span class="down">⚠ ${r.warn}</span>`:hint;
+  const fx=c.cur!=="JPY";
+  const line=(l,v,raw)=>`<tr><td>${l}${fx&&raw!=null?`<br><small class="muted">${sign}${raw} × ${r.rate}円</small>`:""}</td><td class="n">${v}</td></tr>`;
+  sEl("sCalc").innerHTML=
+    line("売値（円）",yen(r0(r.priceY)),num(sEl("sPrice").value)||0)+
+    (c.ship?line("＋ 設定送料（円）",yen(r0(r.shipY)),num(sEl("sShip").value)||0):"")+
+    `<tr><td>− 実送料${sEl("sShipTbd").checked?' <span class="tag t-temp">未定</span>':""}</td><td class="n">${yen(r0(r.realY))}</td></tr>`+
+    line("− 手数料（円）",yen(r0(r.feeY)),r.feeIn!=null?+(+r.feeIn).toFixed(2):0)+
+    `<tr><td>− 原価</td><td class="n">${yen(cost)}</td></tr>`+
+    `<tr class="tot"><td>粗利</td><td class="n ${r.profit>=0?"up":"down"}">${r.profit<0?"−":""}${yen(Math.abs(r0(r.profit)))}</td></tr>`;
+  sEl("sCalcNote").innerHTML=fx?`為替は11月の仮レートです。月末に11月の平均TTMで自動で計算し直します。`:"";
+}
+["sPrice","sShip","sReal","sShipTbd"].forEach(id=>sEl(id).addEventListener("input",drawOne));
+sEl("sFee").addEventListener("input",()=>{sFeeTouched=true;drawOne()});
+sEl("sSave").addEventListener("click",()=>{
+  const it=sSel?findItem(sSel):null;if(!it){alert("売れた商品を選んでください");sEl("sQ").focus();return}
+  const rec={id:recId++,no:it[0],name:it[1],ch:sCh};
+  if(!SPECIAL[sCh]){const r=calcSale({ch:sCh,price:sEl("sPrice").value,ship:sEl("sShip").value,fee:sEl("sFee").value,real:sEl("sReal").value,cost:it[2],feeTouched:sFeeTouched});rec.profit=r.profit;rec.priceY=r.priceY}
+  applySale(rec);
+  ["sPrice","sShip","sFee","sReal"].forEach(id=>sEl(id).value="");sEl("sSent").checked=false;sEl("sShipTbd").checked=false;sFeeTouched=false;sSel=null;sEl("sQ").style.display="";
+  afterChange();
+  toast(`${rec.no} ${rec.name} を記録しました。商品一覧で「${SPECIAL[rec.ch]?(rec.ch==="廃棄"?"廃棄":"備品"):"売却済み"}」になりました`,()=>{undoSale(rec);afterChange()});
+});
+drawChips();sSel="0120-3";sEl("sQ").style.display="none";sEl("sPrice").value="120";sEl("sShip").value="30";sEl("sFee").value="18.6";sEl("sReal").value="5200";sFeeTouched=true;drawOne();drawToday();
+
+// ---- まとめて入力 ----
+const newRow=()=>({no:"",q:"",ch:"メルカリ",date:"2026/11/12",price:"",ship:"",fee:"",real:"",ft:false});
+let mRows=[
+  {no:"0042-3",ch:"メルカリ",date:"2026/11/12",price:"9800",ship:"",fee:"",real:"750",ft:false},
+  {no:"0120-4",ch:"ヤフオク",date:"2026/11/12",price:"16500",ship:"",fee:"1500",real:"1100",ft:true},
+  {no:"0352",ch:"Catawiki",date:"2026/11/11",price:"560",ship:"45",fee:"78",real:"9800",ft:true},
+  {no:"0058-0",ch:"古物市場",date:"2026/11/11",price:"3000",ship:"",fee:"30",real:"",ft:true},
+  newRow(),newRow(),
+];
+function drawMany(){
+  const t=document.getElementById("mTable");
+  // 売れてしまった（ほかで記録した）商品は外す
+  mRows.forEach(m=>{const it=findItem(m.no);if(m.no&&it&&!inStock(it[3])){m.no="";m.q=""}});
+  t.innerHTML=`<thead><tr><th class="rn"></th><th>商品（商品名・管理番号で探す）</th><th>売り先</th><th>売却日</th><th class="n">売値</th><th class="n">設定送料</th><th class="n">手数料</th><th class="n">実送料（円）</th><th class="n">粗利（円）</th></tr></thead><tbody>`+
+  mRows.map((m,i)=>{
+    const it=findItem(m.no),c=CH[m.ch],sign=CUR_SIGN[c.cur];
+    const r=calcSale({ch:m.ch,price:m.price,ship:m.ship,fee:m.fee,real:m.real,cost:it?it[2]:0,feeTouched:m.ft});
+    const feeVal=r.feeAuto?(c.fee==="none"?"0":(r.feeIn?+r.feeIn.toFixed(2):"")):m.fee;
+    return `<tr>
+      <td class="rn">${i+1}</td>
+      <td style="min-width:300px">${it?`<div class="picked-cell"><span class="muted">${it[0]}</span> ${it[1]}<button class="linkbtn" data-clear="${i}">変更</button></div>`:`<input data-i="${i}" data-k="q" class="mq" value="${m.q||""}" placeholder="例：オリンパス、0120">`}</td>
+      <td><select data-i="${i}" data-k="ch">${Object.keys(CH).map(k=>`<option${k===m.ch?" selected":""}>${k}</option>`).join("")}</select></td>
+      <td><input data-i="${i}" data-k="date" value="${m.date}" style="width:100px"></td>
+      <td><div class="cin"><input data-i="${i}" data-k="price" value="${m.price}" class="n"><i>${sign}</i></div></td>
+      <td>${c.ship?`<div class="cin"><input data-i="${i}" data-k="ship" value="${m.ship}" class="n"><i>${sign}</i></div>`:'<span class="muted" style="padding:0 8px">なし</span>'}</td>
+      <td class="${r.warn?"warn2":""}" title="${r.warn}"><div class="cin"><input data-i="${i}" data-k="fee" value="${feeVal}" class="n${r.feeAuto?" auto-in":""}"><i>${sign}</i></div></td>
+      <td><input data-i="${i}" data-k="real" value="${m.real}" class="n"></td>
+      <td class="n ${r.profit>=0?"up":"down"}" style="padding:0 8px;font-weight:600">${m.price&&it?(r.profit<0?"−":"")+yen(Math.abs(r0(r.profit))):'<span class="muted">—</span>'}</td>
+    </tr>`}).join("")+"</tbody>";
+  t.querySelectorAll("input:not(.mq),select").forEach(el=>el.addEventListener("change",()=>{const m=mRows[+el.dataset.i];m[el.dataset.k]=el.value;if(el.dataset.k==="fee")m.ft=el.value!=="";if(el.dataset.k==="ch"){m.ft=false;m.fee=""}drawMany()}));
+  t.querySelectorAll(".mq").forEach(el=>{const i=+el.dataset.i;attachSearch(el,r=>{
+      if(mRows.some((m,j)=>j!==i&&m.no===r[0])){alert(`${r[0]} はほかの行ですでに選んでいます`);return}
+      mRows[i].no=r[0];mRows[i].q="";drawMany();
+      const nx=document.querySelector(`#mTable [data-i="${i}"][data-k="price"]`);nx&&nx.focus()});
+    el.addEventListener("input",()=>{mRows[i].q=el.value})});
+  t.querySelectorAll("[data-clear]").forEach(b=>b.addEventListener("click",()=>{mRows[+b.dataset.clear].no="";drawMany();document.querySelector(`#mTable .mq[data-i="${b.dataset.clear}"]`)?.focus()}));
+  const valid=mRows.filter(m=>findItem(m.no)&&m.price);const tot=valid.reduce((a,m)=>{const it=findItem(m.no);return a+calcSale({ch:m.ch,price:m.price,ship:m.ship,fee:m.fee,real:m.real,cost:it[2],feeTouched:m.ft}).profit},0);
+  document.getElementById("mSum").innerHTML=`${valid.length}件　粗利の合計 <span class="${tot>=0?"up":"down"}">${yen(r0(tot))}</span>`;
+}
+document.getElementById("mAdd").addEventListener("click",()=>{for(let k=0;k<5;k++)mRows.push(newRow());drawMany()});
+document.getElementById("mSave").addEventListener("click",()=>{
+  const valid=mRows.filter(m=>findItem(m.no)&&m.price);if(!valid.length){alert("記録できる行がありません（商品と売値を入れてください）");return}
+  const b=++batchSeq,recs=[];
+  valid.forEach(m=>{const it=findItem(m.no);const r=calcSale({ch:m.ch,price:m.price,ship:m.ship,fee:m.fee,real:m.real,cost:it[2],feeTouched:m.ft});
+    const rec={id:recId++,no:it[0],name:it[1],ch:m.ch,profit:r.profit,priceY:r.priceY,batch:b};applySale(rec);recs.push(rec)});
+  mRows=mRows.filter(m=>!valid.includes(m));while(mRows.length<6)mRows.push(newRow());
+  afterChange();
+  toast(`${recs.length}件を記録しました。商品一覧で「売却済み」になりました`,()=>{recs.forEach(undoSale);afterChange()});
+});
+drawMany();
+
+// ---- 販路の設定 ----
+function drawCh(){
+  const t=document.getElementById("chTable");
+  t.innerHTML=`<thead><tr><th>販路</th><th>通貨</th><th>為替レート</th><th>手数料</th><th class="n">率</th><th>設定送料</th></tr></thead><tbody>`+
+  Object.entries(CH).map(([k,c])=>`<tr>
+    <td><b>${k}</b>${c.tbd?' <span class="tag t-temp">未定</span>':""}</td>
+    <td><select data-k="${k}" data-f="cur">${["JPY","EUR","USD"].map(x=>`<option value="${x}"${x===c.cur?" selected":""}>${{JPY:"円",EUR:"ユーロ",USD:"ドル"}[x]}</option>`).join("")}</select></td>
+    <td class="muted">${c.cur==="JPY"?"—":`売れた月の平均TTM（${c.cur==="EUR"?"ユーロ円":"ドル円"}）`}</td>
+    <td><select data-k="${k}" data-f="fee"><option value="auto"${c.fee==="auto"?" selected":""}>売値の○%で自動</option><option value="manual"${c.fee==="manual"?" selected":""}>毎回入力</option><option value="none"${c.fee==="none"?" selected":""}>なし</option></select></td>
+    <td class="n">${c.fee==="auto"?`<input data-k="${k}" data-f="rate" value="${+(c.rate*100).toFixed(2)}" style="width:60px" class="n">%`:c.fee==="manual"&&c.avg?`<span class="muted">目安 ${(c.avg*100).toFixed(1)}%</span>`:'<span class="muted">—</span>'}</td>
+    <td><select data-k="${k}" data-f="ship"><option value="1"${c.ship?" selected":""}>使う</option><option value="0"${!c.ship?" selected":""}>使わない</option></select></td>
+  </tr>`).join("")+"</tbody>";
+  t.querySelectorAll("select,input").forEach(el=>el.addEventListener("change",()=>{const c=CH[el.dataset.k],f=el.dataset.f;
+    if(f==="cur")c.cur=el.value;else if(f==="fee"){c.fee=el.value;if(el.value==="auto"&&!c.rate)c.rate=0.1}else if(f==="rate")c.rate=(num(el.value)||0)/100;else if(f==="ship")c.ship=el.value==="1";
+    drawCh();drawOne();drawMany()}));
+}
+drawCh();
+document.querySelectorAll("#salesTabs .pill").forEach(p=>p.addEventListener("click",()=>{
+  document.querySelectorAll("#salesTabs .pill").forEach(x=>x.classList.toggle("on",x===p));
+  ["one","many","ch"].forEach(k=>document.getElementById("st-"+k).style.display=p.dataset.st===k?"":"none");
+}));
 
 document.querySelectorAll("#items .pill").forEach(p=>p.addEventListener("click",()=>{document.querySelectorAll("#items .pill").forEach(x=>x.classList.remove("on"));p.classList.add("on")}));
 </script>
