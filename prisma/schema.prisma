@@ -1,0 +1,61 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Category {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  items     Item[]
+  createdAt DateTime @default(now())
+}
+
+model Item {
+  id          Int             @id @default(autoincrement())
+  code        String          @unique // 品番・管理番号
+  name        String
+  categoryId  Int?
+  category    Category?       @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  unit        String          @default("個")
+  quantity    Int             @default(0) // 現在庫（貸出中を含まない手元在庫）
+  minQuantity Int             @default(0) // 発注点
+  location    String?
+  note        String?
+  movements   StockMovement[]
+  loans       Loan[]
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+}
+
+// type: IN(入庫) / OUT(出庫) / ADJUST(棚卸調整) / LOAN(貸出) / RETURN(返却)
+model StockMovement {
+  id        Int      @id @default(autoincrement())
+  itemId    Int
+  item      Item     @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  type      String
+  quantity  Int // 在庫に対する増減（符号付き）
+  after     Int // 処理後の在庫数
+  operator  String?
+  note      String?
+  createdAt DateTime @default(now())
+
+  @@index([itemId, createdAt])
+}
+
+model Loan {
+  id         Int       @id @default(autoincrement())
+  itemId     Int
+  item       Item      @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  borrower   String
+  quantity   Int
+  loanedAt   DateTime  @default(now())
+  dueDate    DateTime?
+  returnedAt DateTime?
+  note       String?
+
+  @@index([returnedAt])
+}
