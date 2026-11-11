@@ -184,6 +184,27 @@ table.calc tr.tot td{border-top:2px solid var(--text);font-weight:700;font-size:
 tr.flash td,.mc.flash{animation:flash 2.5s ease}
 @keyframes flash{0%{background:#fff3b0}100%{background:transparent}}
 @media (max-width:760px){#toast{bottom:76px}}
+.clickable{cursor:pointer}
+tr.clickable:hover td{background:#f7f9fc}
+.itemdlg{width:min(520px,calc(100vw - 32px))}
+.dlghead{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:12px}
+.dlghead .x{border:0;background:none;font-size:22px;color:var(--sub);cursor:pointer;line-height:1}
+.infogrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
+.infogrid div{background:var(--gray-soft);border-radius:10px;padding:8px 10px;display:flex;flex-direction:column;gap:2px;font-size:12px}
+.infogrid span{color:var(--sub)}.infogrid b{font-size:14px}
+.profitbig{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;background:var(--green-soft);border-radius:12px;padding:12px 14px;margin-bottom:10px}
+.profitbig.down{background:var(--red-soft)}
+.profitbig span{font-size:13px;font-weight:600;color:var(--text)}
+.profitbig b{font-size:26px}
+.profitbig small{color:var(--sub);margin-left:auto}
+table.calc.small td{padding:6px 4px;font-size:13px}
+.lotbox{display:flex;justify-content:space-between;gap:10px;align-items:center;border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-top:12px;font-size:13px}
+@media (max-width:760px){.infogrid{grid-template-columns:repeat(2,1fr)}}
+.phonebtn{float:right;margin:-3px 0 -3px 12px;border:1px solid #d8c56a;background:#fff;border-radius:99px;padding:3px 12px;font:inherit;font-size:12px;font-weight:600;cursor:pointer;color:#5a4a00}
+#phoneOv{position:fixed;inset:0;z-index:100;background:#e9ecf1;display:flex;flex-direction:column;align-items:center;overflow:auto;padding:12px 16px 24px}
+.phonebar{display:flex;gap:12px;align-items:center;justify-content:space-between;width:min(390px,100%);margin-bottom:10px}
+.phone{width:390px;max-width:100%;height:min(844px,calc(100vh - 80px));border:10px solid #111827;border-radius:44px;overflow:hidden;background:#fff;box-shadow:0 20px 50px rgba(0,0,0,.25);flex:none}
+.phone iframe{width:100%;height:100%;border:0;display:block}
 .btn[disabled]{opacity:.45;cursor:not-allowed}
 nav.bottom{display:none}
 .fab{display:none}
@@ -211,7 +232,7 @@ nav.bottom{display:none}
 </style>
 </head>
 <body>
-<div class="note">これは画面のイメージです。数字はすべて見本で、ボタンは押しても登録されません。上（スマホでは下）のメニューで画面を切り替えられます。</div>
+<div class="note"><button id="phoneBtn" class="phonebtn">📱 スマホ表示に切り替え</button>これは画面のイメージです。数字はすべて見本で、ボタンは押しても登録されません。上（スマホでは下）のメニューで画面を切り替えられます。</div>
 <header><div class="hwrap">
   <div class="logo"><img src="joynt-logo.png" alt="JOYNT"><span>物販管理</span></div>
   <nav class="top">
@@ -298,7 +319,7 @@ nav.bottom{display:none}
 <!-- 商品一覧 -->
 <section class="screen" id="items">
   <h1>商品一覧</h1>
-  <p class="lead">全 1,284 点（在庫 412 点）。売れ残りをまとめて山売りしたいときは、商品にチェックを入れて「まとめて売る」を押します。<br><span class="muted">見本：0350（単品）と 0351-2（山0351の枝番）にチェックを入れてみてください。</span></p>
+  <p class="lead">全 1,284 点（在庫 412 点）。売れ残りをまとめて山売りしたいときは、商品にチェックを入れて「まとめて売る」を押します。<br><span class="muted">商品を押すと、いくら利益が出ているかが見られます。</span></p>
   <div class="filters">
     <input placeholder="管理番号・商品名で検索">
     <select><option>ジャンル：すべて</option><option>カメラ</option><option>ゲーム</option><option>茶道具</option><option>家具</option></select>
@@ -880,8 +901,8 @@ document.getElementById("rateEUR").textContent=RATES.EUR;document.getElementById
 
 // ---- 商品一覧の再表示（販売を記録すると状態が変わる） ----
 function renderItems(){
-  document.getElementById("itemrows").innerHTML=items.map(r=>`<tr class="${r._flash?"flash":""}"><td>${inStock(r)?`<input type="checkbox" class="pick" data-no="${r[0]}"${picked.has(r[0])?" checked":""}>`:""}</td><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td class="n">${yen(r[4])}</td><td class="n">${yen(r[5])}</td><td><span class="tag ${st[r[6]][1]}">${st[r[6]][0]}</span></td><td>${chips(r[7])}</td><td class="n">${inStock(r)?days(r[8]):'<span class="muted">—</span>'}</td></tr>`).join("");
-  document.getElementById("itemcards").innerHTML=items.map(r=>`<div class="mc ${r._flash?"flash":""}"><div class="top"><span class="muted">${inStock(r)?`<input type="checkbox" class="pick" data-no="${r[0]}"${picked.has(r[0])?" checked":""}> `:""}${r[0]}・${r[2]}</span><span class="tag ${st[r[6]][1]}">${st[r[6]][0]}</span></div><div class="name">${r[1]}</div><div class="meta"><span>原価 ${yen(r[4])} / 予想 ${yen(r[5])}</span><span>${inStock(r)&&r[8]!=null?r[8]+"日":""}</span></div><div style="margin-top:6px">${chips(r[7])}</div></div>`).join("");
+  document.getElementById("itemrows").innerHTML=items.map(r=>`<tr data-no="${r[0]}" class="clickable ${r._flash?"flash":""}"><td>${inStock(r)?`<input type="checkbox" class="pick" data-no="${r[0]}"${picked.has(r[0])?" checked":""}>`:""}</td><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td class="n">${yen(r[4])}</td><td class="n">${yen(r[5])}</td><td><span class="tag ${st[r[6]][1]}">${st[r[6]][0]}</span></td><td>${chips(r[7])}</td><td class="n">${inStock(r)?days(r[8]):'<span class="muted">—</span>'}</td></tr>`).join("");
+  document.getElementById("itemcards").innerHTML=items.map(r=>`<div data-no="${r[0]}" class="mc clickable ${r._flash?"flash":""}"><div class="top"><span class="muted">${inStock(r)?`<input type="checkbox" class="pick" data-no="${r[0]}"${picked.has(r[0])?" checked":""}> `:""}${r[0]}・${r[2]}</span><span class="tag ${st[r[6]][1]}">${st[r[6]][0]}</span></div><div class="name">${r[1]}</div><div class="meta"><span>原価 ${yen(r[4])} / 予想 ${yen(r[5])}</span><span>${inStock(r)&&r[8]!=null?r[8]+"日":""}</span></div><div style="margin-top:6px">${chips(r[7])}</div></div>`).join("");
   document.querySelectorAll(".pick").forEach(cb=>cb.addEventListener("change",()=>{cb.checked?picked.add(cb.dataset.no):picked.delete(cb.dataset.no);
     document.querySelectorAll(`.pick[data-no="${cb.dataset.no}"]`).forEach(x=>x.checked=cb.checked);drawPickBar()}));
   const n=items.filter(inStock).length;document.querySelector("#items .lead").firstChild.textContent=`全 1,284 点（在庫 ${400+n} 点）。`;
@@ -1025,7 +1046,7 @@ sEl("sFee").addEventListener("input",()=>{sFeeTouched=true;drawOne()});
 sEl("sSave").addEventListener("click",()=>{
   const it=sSel?findItem(sSel):null;if(!it){alert("売れた商品を選んでください");sEl("sQ").focus();return}
   const rec={id:recId++,no:it[0],name:it[1],ch:sCh};
-  if(!SPECIAL[sCh]){const r=calcSale({ch:sCh,price:sEl("sPrice").value,ship:sEl("sShip").value,fee:sEl("sFee").value,real:sEl("sReal").value,cost:it[2],feeTouched:sFeeTouched});rec.profit=r.profit;rec.priceY=r.priceY}
+  if(!SPECIAL[sCh]){const r=calcSale({ch:sCh,price:sEl("sPrice").value,ship:sEl("sShip").value,fee:sEl("sFee").value,real:sEl("sReal").value,cost:it[2],feeTouched:sFeeTouched});rec.profit=r.profit;rec.priceY=r.priceY;rec.calc=r}
   applySale(rec);
   ["sPrice","sShip","sFee","sReal"].forEach(id=>sEl(id).value="");sEl("sSent").checked=false;sEl("sShipTbd").checked=false;sFeeTouched=false;sSel=null;sEl("sQ").style.display="";
   afterChange();
@@ -1077,7 +1098,7 @@ document.getElementById("mSave").addEventListener("click",()=>{
   const valid=mRows.filter(m=>findItem(m.no)&&m.price);if(!valid.length){alert("記録できる行がありません（商品と売値を入れてください）");return}
   const b=++batchSeq,recs=[];
   valid.forEach(m=>{const it=findItem(m.no);const r=calcSale({ch:m.ch,price:m.price,ship:m.ship,fee:m.fee,real:m.real,cost:it[2],feeTouched:m.ft});
-    const rec={id:recId++,no:it[0],name:it[1],ch:m.ch,profit:r.profit,priceY:r.priceY,batch:b};applySale(rec);recs.push(rec)});
+    const rec={id:recId++,no:it[0],name:it[1],ch:m.ch,profit:r.profit,priceY:r.priceY,calc:r,batch:b};applySale(rec);recs.push(rec)});
   mRows=mRows.filter(m=>!valid.includes(m));while(mRows.length<6)mRows.push(newRow());
   afterChange();
   toast(`${recs.length}件を記録しました。商品一覧で「売却済み」になりました`,()=>{recs.forEach(undoSale);afterChange()});
@@ -1106,6 +1127,92 @@ document.querySelectorAll("#salesTabs .pill").forEach(p=>p.addEventListener("cli
   ["one","many","ch"].forEach(k=>document.getElementById("st-"+k).style.display=p.dataset.st===k?"":"none");
 }));
 
+// ---- 商品の詳細（商品一覧で商品を押すと、利益が見られる） ----
+const SOLD_INFO={ // 見本：スプレッドシートの実際の行と同じ計算
+  "0237-0":{ch:"Catawiki",date:"2026/11/11",price:370,ship:60,fee:54.18,real:10850},
+  "0303-0":{ch:"メルカリ",date:"2026/11/11",price:6500,ship:0,fee:650,real:160},
+};
+const LOT_INFO={"0120":{name:"腕時計まとめ 12点",cost:10000,sales:72000,profit:48350,sold:3,total:6}};
+const dd=document.createElement("dialog");dd.id="itemDlg";dd.className="itemdlg";document.body.appendChild(dd);
+document.querySelectorAll("dialog").forEach(d=>document.body.appendChild(d)); // どの画面からでも開けるように
+function saleCalcFor(r){
+  const log=saleLog.find(h=>h.no===r[0]&&!h.undone);
+  if(log&&log.calc)return {ch:log.ch,date:"2026/11/12",...log.calc,fromLog:true};
+  const s=SOLD_INFO[r[0]];if(!s)return null;
+  const c=CH[s.ch],rate=RATES[c.cur];
+  const priceY=s.price*rate,shipY=c.ship?s.ship*rate:0,feeY=s.fee*rate,realY=s.real;
+  return {ch:s.ch,date:s.date,rate,priceY,shipY,feeY,realY,feeIn:s.fee,profit:priceY+shipY-realY-feeY-r[4],raw:s};
+}
+function openItem(no){
+  const r=items.find(x=>x[0]===no);if(!r)return;
+  const lot=no.includes("-")?no.split("-")[0]:null,isLotHead=/-0$/.test(no);
+  let body="";
+  if(r[6]==="sold"){
+    const c=saleCalcFor(r);
+    if(c){const cfg=CH[c.ch],sign=CUR_SIGN[cfg.cur],fx=cfg.cur!=="JPY";
+      const sub=(v)=>fx&&v!=null?`<br><small class="muted">${sign}${+(+v).toFixed(2)} × ${c.rate}円</small>`:"";
+      body=`<div class="profitbig ${c.profit>=0?"up":"down"}"><span>粗利</span><b>${c.profit<0?"−":""}${yen(Math.abs(r0(c.profit)))}</b><small>粗利率 ${c.priceY?Math.round(c.profit/c.priceY*100):0}%</small></div>
+        <p class="muted" style="margin:0 0 6px">${c.date} に <b>${c.ch}</b> で売れました${fx?'　<span class="tag t-temp">為替 11月・仮</span>':""}</p>
+        <table class="calc">
+          <tr><td>売値（円）${sub(c.raw?c.raw.price:null)}</td><td class="n">${yen(r0(c.priceY))}</td></tr>
+          ${cfg.ship?`<tr><td>＋ 設定送料（円）${sub(c.raw?c.raw.ship:null)}</td><td class="n">${yen(r0(c.shipY))}</td></tr>`:""}
+          <tr><td>− 実送料</td><td class="n">${yen(r0(c.realY))}</td></tr>
+          <tr><td>− 手数料（円）${sub(c.raw?c.raw.fee:null)}</td><td class="n">${yen(r0(c.feeY))}</td></tr>
+          <tr><td>− 原価</td><td class="n">${yen(r[4])}</td></tr>
+          <tr class="tot"><td>粗利</td><td class="n ${c.profit>=0?"up":"down"}">${c.profit<0?"−":""}${yen(Math.abs(r0(c.profit)))}</td></tr>
+        </table>`;
+    } else body=`<p class="muted">売れた記録の詳しい内訳は、この見本にはありません。</p>`;
+  } else if(r[6]==="disposed"){
+    body=`<div class="profitbig down"><span>損失</span><b>−${yen(r[4])}</b><small>廃棄</small></div>`;
+  } else if(r[6]==="fixture"){
+    body=`<div class="profitbig"><span>備品にした</span><b>—</b><small>売上・粗利に入れません</small></div>`;
+  } else {
+    // まだ売れていない：予想の利益
+    const exp=r[5]||0,chans=r[7].length?r[7]:["メルカリ"];
+    const rows=chans.map(ch=>{const cfg=CH[ch]||CH["メルカリ"];const rate=cfg.fee==="auto"?cfg.rate:cfg.fee==="none"?0:(cfg.avg||0.1);const fee=exp*rate;return [ch,rate,fee,exp-fee-r[4],cfg.fee]});
+    const best=rows.reduce((a,b)=>b[3]>a[3]?b:a,rows[0]);
+    body=`<div class="profitbig ${best[3]>=0?"up":"down"}"><span>予想の粗利</span><b>${yen(r0(best[3]))}</b><small>まだ売れていません（予想売価で計算）</small></div>
+      <table class="calc">
+        <tr><td>予想売価</td><td class="n">${yen(exp)}</td></tr>
+        <tr><td>− 原価</td><td class="n">${yen(r[4])}</td></tr>
+        <tr class="tot"><td>手数料を引く前</td><td class="n">${yen(exp-r[4])}</td></tr>
+      </table>
+      <div class="sec" style="margin-top:14px">${r[7].length?"出品先ごとの予想":"メルカリで売った場合の予想"}（送料は含みません）</div>
+      <table class="calc small">${rows.map(x=>`<tr><td>${x[0]}<br><small class="muted">手数料 ${x[4]==="auto"?"":"目安 "}${+(x[1]*100).toFixed(1)}%</small></td><td class="n">− ${yen(r0(x[2]))}</td><td class="n ${x[3]>=0?"up":"down"}"><b>${yen(r0(x[3]))}</b></td></tr>`).join("")}</table>`;
+  }
+  const lotBox=lot&&!isLotHead&&LOT_INFO[lot]?`<div class="lotbox"><div><b>山${lot}（${LOT_INFO[lot].name}）全体</b><br><span class="muted">仕入額 ${yen(LOT_INFO[lot].cost)}・売上 ${yen(LOT_INFO[lot].sales)}・売れた ${LOT_INFO[lot].sold}/${LOT_INFO[lot].total}点</span></div><div style="text-align:right"><span class="up"><b>粗利 ${yen(LOT_INFO[lot].profit)}</b></span><br><button class="linkbtn" id="toLot">山の画面へ</button></div></div>`
+    :lot&&!isLotHead?`<div class="lotbox"><span class="muted">この商品は山${lot}の枝番です。山全体の利益は山の画面で見られます。</span></div>`:"";
+  dd.innerHTML=`<div class="dlghead"><div><div class="muted">${r[0]}・${r[2]}</div><h2 style="margin:2px 0 0">${r[1]}</h2></div><button class="x" id="idClose" title="閉じる">×</button></div>
+    <div class="infogrid">
+      <div><span>状態</span><b><span class="tag ${st[r[6]][1]}">${st[r[6]][0]}</span></b></div>
+      <div><span>仕入日</span><b>${r[3]}</b></div>
+      <div><span>原価</span><b>${yen(r[4])}</b></div>
+      <div><span>${inStock(r)?"滞留日数":"出品先"}</span><b>${inStock(r)?(r[8]!=null?r[8]+"日":"—"):chips(r[7])}</b></div>
+    </div>
+    ${inStock(r)&&r[7].length?`<p class="muted" style="margin:0 0 10px">出品中：${chips(r[7])}</p>`:""}
+    ${body}${lotBox}`;
+  dd.showModal();
+  dd.querySelector("#idClose").onclick=()=>dd.close();
+  const tl=dd.querySelector("#toLot");if(tl)tl.onclick=()=>{dd.close();document.querySelector('nav.top [data-go="lot"]').click()};
+}
+dd.addEventListener("click",e=>{if(e.target===dd)dd.close()}); // 外側を押すと閉じる
+const onItemClick=e=>{if(e.target.closest("input"))return;const el=e.target.closest("[data-no]");if(el)openItem(el.dataset.no)};
+document.getElementById("itemrows").addEventListener("click",onItemClick);
+document.getElementById("itemcards").addEventListener("click",onItemClick);
+
+// ---- スマホ表示の切り替え（スマホの幅の画面を、枠の中に表示する） ----
+(function(){
+  const inPhone=new URLSearchParams(location.search).has("phone");
+  const btn=document.getElementById("phoneBtn");
+  if(inPhone){btn.remove();document.querySelector(".note").style.display="none";return}
+  btn.addEventListener("click",()=>{
+    const ov=document.createElement("div");ov.id="phoneOv";
+    ov.innerHTML=`<div class="phonebar"><b>スマホ表示（iPhone の幅）</b><button class="btn" id="phoneBack">💻 パソコン表示に戻る</button></div>
+      <div class="phone"><iframe src="${location.pathname}?phone=1" title="スマホ表示"></iframe></div>`;
+    document.body.appendChild(ov);document.body.style.overflow="hidden";
+    ov.querySelector("#phoneBack").onclick=()=>{ov.remove();document.body.style.overflow=""};
+  });
+})();
 document.querySelectorAll("#items .pill").forEach(p=>p.addEventListener("click",()=>{document.querySelectorAll("#items .pill").forEach(x=>x.classList.remove("on"));p.classList.add("on")}));
 </script>
 </body>
