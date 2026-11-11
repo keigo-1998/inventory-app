@@ -1,0 +1,752 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>画面イメージ（物販管理）</title>
+<style>
+:root{
+  --bg:#f5f6f8; --card:#fff; --text:#1d2330; --sub:#6b7280; --line:#e5e7eb;
+  --accent:#2563eb; --accent-soft:#e8efff; --green:#15803d; --green-soft:#e7f6ec;
+  --orange:#c2410c; --orange-soft:#fdeee5; --red:#b91c1c; --red-soft:#fdeaea; --gray-soft:#f0f1f3;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif;font-size:14px;line-height:1.5}
+.note{background:#fff8db;border-bottom:1px solid #f1e3a1;padding:8px 16px;font-size:12px;color:#6b5800}
+header{background:var(--card);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+.hwrap{max-width:1200px;margin:0 auto;display:flex;align-items:center;gap:24px;padding:0 16px;height:56px}
+.logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:14px;white-space:nowrap}
+.logo img{height:22px;width:auto;display:block}
+.logo span{padding-left:10px;border-left:1px solid var(--line);color:var(--sub)}
+nav.top{display:flex;gap:4px}
+nav.top button{border:0;background:none;padding:8px 12px;border-radius:8px;font:inherit;color:var(--sub);cursor:pointer}
+nav.top button.on{background:var(--accent-soft);color:var(--accent);font-weight:600}
+.hright{margin-left:auto;display:flex;gap:8px}
+.btn{border:1px solid var(--line);background:var(--card);border-radius:8px;padding:8px 14px;font:inherit;cursor:pointer;white-space:nowrap}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+main{max-width:1200px;margin:0 auto;padding:20px 16px 96px}
+h1{font-size:20px;margin:0 0 4px}
+.lead{color:var(--sub);margin:0 0 16px;font-size:13px}
+.grid{display:grid;gap:12px}
+.kpis{grid-template-columns:repeat(5,1fr)}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px}
+.kpi .l{color:var(--sub);font-size:12px}
+.kpi .v{font-size:22px;font-weight:700;margin-top:2px}
+.kpi .d{font-size:12px;margin-top:2px}
+.up{color:var(--green)} .down{color:var(--red)}
+.sec{font-size:13px;font-weight:700;color:var(--sub);margin:22px 0 8px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px}
+.card h2{font-size:15px;margin:0 0 12px;display:flex;align-items:center;gap:8px}
+.two{grid-template-columns:2fr 1fr}
+.tag{display:inline-block;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600;white-space:nowrap}
+.t-stock{background:var(--gray-soft);color:#374151}
+.t-list{background:var(--accent-soft);color:var(--accent)}
+.t-sold{background:var(--green-soft);color:var(--green)}
+.t-warn{background:var(--orange-soft);color:var(--orange)}
+.t-temp{background:#fff4cc;color:#8a6d00}
+.chip{display:inline-block;padding:1px 7px;border-radius:6px;font-size:11px;border:1px solid var(--line);margin:1px 2px 1px 0;color:var(--sub)}
+.chip.sold{border-color:var(--green);color:var(--green);font-weight:600}
+table{width:100%;border-collapse:collapse}
+th,td{text-align:left;padding:9px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+th{font-size:12px;color:var(--sub);font-weight:600}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+tr:last-child td{border-bottom:0}
+.list li{display:flex;justify-content:space-between;gap:8px;padding:9px 0;border-bottom:1px solid var(--line)}
+.list li:last-child{border-bottom:0}
+ul.list{list-style:none;margin:0;padding:0}
+.muted{color:var(--sub);font-size:12px}
+.bars .row{display:grid;grid-template-columns:80px 1fr 80px;gap:8px;align-items:center;margin:8px 0;font-size:13px}
+.bar{height:10px;background:var(--gray-soft);border-radius:99px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);border-radius:99px}
+.legend{display:flex;gap:14px;font-size:12px;color:var(--sub);margin-bottom:6px}
+.legend span::before{content:"";display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px;background:var(--c)}
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.filters input,.filters select{border:1px solid var(--line);border-radius:8px;padding:8px 10px;font:inherit;background:var(--card)}
+.filters input{flex:1;min-width:200px}
+.pills{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.pill{border:1px solid var(--line);background:var(--card);border-radius:99px;padding:5px 12px;font-size:12px;cursor:pointer}
+.pill.on{background:var(--text);color:#fff;border-color:var(--text)}
+.tablewrap{overflow-x:auto}
+.mcards{display:none}
+.lothead{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.lotnum{font-size:13px;color:var(--sub)}
+.progress{height:14px;background:var(--gray-soft);border-radius:99px;overflow:hidden;margin:8px 0 4px}
+.progress i{display:block;height:100%;background:var(--green)}
+.three{grid-template-columns:repeat(4,1fr)}
+.sold-row td{background:#fbfefc}
+.alert{background:var(--orange-soft);color:var(--orange);border-radius:10px;padding:10px 12px;font-size:13px;margin-bottom:12px}
+.screen{display:none}.screen.on{display:block}
+.step{display:inline-flex;width:22px;height:22px;border-radius:99px;background:var(--accent);color:#fff;font-size:12px;align-items:center;justify-content:center}
+.chk{display:flex;gap:8px;align-items:center;cursor:pointer}
+textarea{width:100%;border:1px dashed #b8c2d6;border-radius:10px;padding:10px;font:13px/1.5 ui-monospace,Menlo,monospace;background:#fafbfd;resize:vertical}
+td.err{background:var(--red-soft);color:var(--red)}
+td.auto{color:var(--accent);font-weight:600}
+.sheet-wrap{background:var(--card);border:1px solid #cfd5df;border-radius:8px;overflow:auto;max-height:520px;margin-top:12px}
+table.sheet{border-collapse:collapse;width:max-content;min-width:100%;font-size:13px}
+.sheet th{position:sticky;top:0;background:#f1f3f6;color:#374151;font-weight:600;border:1px solid #d9dee6;padding:6px 8px;z-index:1}
+.sheet td{border:1px solid #e3e7ed;padding:0}
+.sheet td.rn,.sheet th.rn{width:36px;min-width:36px;text-align:center;color:#8a93a3;background:#f1f3f6;font-size:12px;padding:0 4px;position:sticky;left:0;z-index:2}
+.sheet th.rn{z-index:3}
+.sheet input{border:0;width:100%;padding:6px 8px;font:inherit;background:transparent;outline:none}
+.sheet input.n{text-align:right;font-variant-numeric:tabular-nums}
+.sheet input:focus{box-shadow:inset 0 0 0 2px var(--accent);background:#fff}
+.sheet td.auto{background:#eaf1ff;color:var(--accent);font-weight:600}
+.sheet td.err{background:var(--red-soft);color:var(--red)}
+.sheet-tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px}
+.legend2{margin-left:auto;font-size:12px;color:var(--sub);display:flex;align-items:center;gap:4px}
+.sw{display:inline-block;width:12px;height:12px;border-radius:3px;border:1px solid #d9dee6}.sw.auto{background:#eaf1ff}.sw.err{background:var(--red-soft)}
+.lotbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:12px 14px}
+.lotbar input:not([type]){border:1px solid var(--line);border-radius:8px;padding:7px 10px;font:inherit;width:190px}
+.regbar{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-top:12px;flex-wrap:wrap}
+.regbar ul{margin:6px 0 0;padding-left:18px;color:var(--red);font-size:12px}
+.sheet:focus{outline:none}
+.sheet td.cell{padding:6px 8px;height:31px;cursor:cell;position:relative;user-select:none;max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sheet td.cell.n{text-align:right;font-variant-numeric:tabular-nums}
+.sheet td.cell.sel{background:#e8f0fe}
+.sheet td.cell.anchor{box-shadow:inset 0 0 0 2px var(--accent)}
+.sheet td.cell .handle{position:absolute;right:-4px;bottom:-4px;width:8px;height:8px;background:var(--accent);border:1px solid #fff;cursor:crosshair;z-index:4}
+.sheet td.cell .editor{position:absolute;inset:0;border:0;padding:6px 8px;font:inherit;box-shadow:inset 0 0 0 2px var(--accent);outline:none;background:#fff}
+.sheet td.cell .editor.n{text-align:right}
+.sheet td.cell.sel.auto{background:#d7e4ff}.sheet td.cell.sel.err{background:#f8d3d3}
+.howto{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--sub);margin:0 0 12px}
+.howto b{color:var(--text);background:var(--gray-soft);border-radius:4px;padding:1px 6px;font-weight:600;margin-right:4px}
+.t-yama{background:#fdeee5;color:#b45309}
+.sheet td.kind{cursor:pointer;text-align:center}
+.slipgrid{display:grid;grid-template-columns:1fr 1.4fr;gap:12px;margin-top:4px}
+.drop{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border:2px dashed #b8c2d6;border-radius:12px;background:#fafbfd;padding:18px;cursor:pointer;text-align:center}
+.drop.over{border-color:var(--accent);background:var(--accent-soft)}
+.slipbar{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center}
+.slipbar>div{width:100%}
+.slipbar label{display:flex;align-items:center;gap:6px;font-size:13px}
+.slipbar input{border:1px solid var(--line);border-radius:8px;padding:7px 10px;font:inherit;width:180px}
+.pickbar{display:none;position:sticky;bottom:12px;margin-top:12px;background:var(--text);color:#fff;border-radius:12px;padding:10px 12px;align-items:center;gap:8px;box-shadow:0 6px 20px rgba(0,0,0,.18)}
+.pickbar b{margin-right:auto}
+.pickbar .btn:not(.primary){background:transparent;color:#fff;border-color:#4b5563}
+dialog{border:0;border-radius:14px;padding:20px;width:min(640px,calc(100vw - 32px));box-shadow:0 20px 60px rgba(0,0,0,.25)}
+dialog::backdrop{background:rgba(17,24,39,.45)}
+dialog td input,.brtable input{border:1px solid var(--line);border-radius:6px;padding:6px 8px;font:inherit;width:100%}
+dialog td input{width:110px}
+input.n{text-align:right}
+input.auto-in{color:var(--accent);font-weight:600;background:#eaf1ff}
+.auto-txt{color:var(--accent);font-weight:600}
+@media (max-width:760px){.slipgrid{grid-template-columns:1fr}.pickbar{bottom:72px}}
+.sheet td.cell .ddv{display:inline-block;max-width:calc(100% - 14px);overflow:hidden;text-overflow:ellipsis;vertical-align:bottom}
+.sheet td.cell .dd{position:absolute;right:4px;top:50%;transform:translateY(-50%);color:#8a93a3;font-size:11px;cursor:pointer;padding:2px 3px;border-radius:3px}
+.sheet td.cell .dd:hover{background:var(--gray-soft);color:var(--text)}
+.sheet td.cell .ddlist{position:absolute;top:100%;left:-1px;min-width:160px;max-height:220px;overflow:auto;background:#fff;border:1px solid #cfd5df;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.15);z-index:10;padding:4px}
+.ddlist .opt{padding:6px 10px;border-radius:5px;cursor:pointer}
+.ddlist .opt:hover,.ddlist .opt.on{background:var(--accent-soft);color:var(--accent)}
+.ddlist .none{padding:6px 10px;color:var(--sub);font-size:12px;white-space:normal}
+.sheet td.warn{background:#fff4e5}
+.warnlist{margin:4px 0 0;padding-left:18px;color:var(--orange);font-size:12px}
+.sheet-wrap{overflow:auto}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+nav.bottom{display:none}
+.fab{display:none}
+
+@media (max-width:760px){
+  .hwrap{height:52px}
+  nav.top,.hright{display:none}
+  main{padding:14px 16px 96px}
+  .kpis{grid-template-columns:repeat(2,1fr)}
+  .kpis .kpi:first-child{grid-column:span 2}
+  .two,.three{grid-template-columns:1fr}
+  .three{grid-template-columns:repeat(2,1fr)}
+  .tablewrap.pc{display:none}
+  .mcards{display:block}
+  .mc{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:8px}
+  .mc .top{display:flex;justify-content:space-between;gap:8px}
+  .mc .name{font-weight:600;margin:2px 0 6px}
+  .mc .meta{display:flex;justify-content:space-between;font-size:12px;color:var(--sub)}
+  nav.bottom{display:flex;position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--line);z-index:6;padding-bottom:env(safe-area-inset-bottom)}
+  nav.bottom button{flex:1;border:0;background:none;padding:8px 0 10px;font:inherit;font-size:11px;color:var(--sub);display:flex;flex-direction:column;align-items:center;gap:2px}
+  nav.bottom button b{font-size:18px;font-weight:400;line-height:1}
+  nav.bottom button.on{color:var(--accent);font-weight:600}
+  .fab{display:block;position:fixed;right:16px;bottom:76px;z-index:6;border:0;background:var(--accent);color:#fff;border-radius:99px;padding:12px 18px;font:inherit;font-weight:700;box-shadow:0 4px 14px rgba(37,99,235,.35)}
+}
+</style>
+</head>
+<body>
+<div class="note">これは画面のイメージです。数字はすべて見本で、ボタンは押しても登録されません。上（スマホでは下）のメニューで画面を切り替えられます。</div>
+<header><div class="hwrap">
+  <div class="logo"><img src="joynt-logo.png" alt="JOYNT"><span>物販管理</span></div>
+  <nav class="top">
+    <button data-go="dash" class="on">ダッシュボード</button>
+    <button data-go="items">商品一覧</button>
+    <button data-go="lot">山の詳細</button>
+    <button data-go="bulk">まとめて登録</button>
+  </nav>
+  <div class="hright"><button class="btn">販売を記録</button><button class="btn primary">＋ 商品を登録</button></div>
+</div></header>
+
+<main>
+<!-- ダッシュボード -->
+<section class="screen on" id="dash">
+  <h1>ダッシュボード</h1>
+  <p class="lead">2026年11月11日（水）時点</p>
+
+  <div class="sec">今日</div>
+  <div class="grid kpis">
+    <div class="kpi"><div class="l">売上</div><div class="v">¥72,123</div><div class="d up">▲ 昨日より +¥40,200</div></div>
+    <div class="kpi"><div class="l">粗利</div><div class="v">¥50,907</div><div class="d muted">粗利率 71%</div></div>
+    <div class="kpi"><div class="l">仕入額</div><div class="v">¥0</div><div class="d muted">0件</div></div>
+    <div class="kpi"><div class="l">出品数</div><div class="v">3</div><div class="d muted">件</div></div>
+    <div class="kpi"><div class="l">発送数</div><div class="v">1</div><div class="d down">未発送 4件</div></div>
+  </div>
+
+  <div class="sec">今月（11月）</div>
+  <div class="grid three">
+    <div class="kpi"><div class="l">売上</div><div class="v">¥486,300</div><div class="d"><span class="tag t-temp">為替 仮</span></div></div>
+    <div class="kpi"><div class="l">粗利</div><div class="v">¥301,550</div><div class="d muted">粗利率 62%</div></div>
+    <div class="kpi"><div class="l">売上目標</div><div class="v">49%</div><div class="d muted">目標 ¥1,000,000</div></div>
+    <div class="kpi"><div class="l">在庫（残原価）</div><div class="v">¥1,158,208</div><div class="d muted">412点</div></div>
+  </div>
+
+  <div class="grid two" style="margin-top:12px">
+    <div class="card">
+      <h2>月ごとの売上と粗利</h2>
+      <div class="legend"><span style="--c:#93b4f7">売上</span><span style="--c:#15803d">粗利</span></div>
+      <svg viewBox="0 0 600 220" width="100%" role="img" aria-label="月ごとの売上と粗利のグラフ">
+        <g font-size="11" fill="#6b7280">
+          <line x1="40" y1="190" x2="590" y2="190" stroke="#e5e7eb"/>
+          <line x1="40" y1="130" x2="590" y2="130" stroke="#f0f1f3"/>
+          <line x1="40" y1="70" x2="590" y2="70" stroke="#f0f1f3"/>
+          <text x="34" y="194" text-anchor="end">0</text>
+          <text x="34" y="134" text-anchor="end">50万</text>
+          <text x="34" y="74" text-anchor="end">100万</text>
+        </g>
+        <g id="chart"></g>
+      </svg>
+    </div>
+    <div class="card">
+      <h2>売り先別（今月）</h2>
+      <div class="bars">
+        <div class="row"><span>Catawiki</span><div class="bar"><i style="width:82%"></i></div><span class="n" style="text-align:right">¥241,800</span></div>
+        <div class="row"><span>メルカリ</span><div class="bar"><i style="width:48%"></i></div><span style="text-align:right">¥142,000</span></div>
+        <div class="row"><span>ヤフオク</span><div class="bar"><i style="width:20%"></i></div><span style="text-align:right">¥58,500</span></div>
+        <div class="row"><span>Amazon</span><div class="bar"><i style="width:12%"></i></div><span style="text-align:right">¥34,000</span></div>
+        <div class="row"><span>市場</span><div class="bar"><i style="width:4%"></i></div><span style="text-align:right">¥10,000</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid two" style="margin-top:12px">
+    <div class="card">
+      <h2>売れ残っている商品 <span class="tag t-warn">90日以上</span></h2>
+      <ul class="list">
+        <li><span>0042-3 オリンパス フィルムカメラ<br><span class="muted">出品先: メルカリ・ヤフオク</span></span><span class="n">212日<br><span class="muted">¥3,000</span></span></li>
+        <li><span>0058-0 レトロ 薬箱 赤<br><span class="muted">未出品</span></span><span>184日<br><span class="muted">¥1,200</span></span></li>
+        <li><span>L00004 北欧 チェア<br><span class="muted">出品先: メルカリ（残り5個）</span></span><span>121日<br><span class="muted">¥2,500</span></span></li>
+      </ul>
+    </div>
+    <div class="card">
+      <h2>未発送 <span class="tag t-warn">4件</span></h2>
+      <ul class="list">
+        <li><span>0237-0 Canon ビデオカメラ<br><span class="muted">Catawiki・11/11</span></span><button class="btn">発送済み</button></li>
+        <li><span>0303-0 ドリームキャスト<br><span class="muted">メルカリ・11/11</span></span><button class="btn">発送済み</button></li>
+        <li><span>0120-2 SEIKO 腕時計<br><span class="muted">Catawiki・11/10</span></span><button class="btn">発送済み</button></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- 商品一覧 -->
+<section class="screen" id="items">
+  <h1>商品一覧</h1>
+  <p class="lead">全 1,284 点（在庫 412 点）。売れ残りをまとめて山売りしたいときは、商品にチェックを入れて「まとめて売る」を押します。<br><span class="muted">見本：0350（単品）と 0351-2（山0351の枝番）にチェックを入れてみてください。</span></p>
+  <div class="filters">
+    <input placeholder="管理番号・商品名で検索">
+    <select><option>ジャンル：すべて</option><option>カメラ</option><option>ゲーム</option><option>茶道具</option><option>家具</option></select>
+    <select><option>出品先：すべて</option><option>Catawiki</option><option>メルカリ</option><option>ヤフオク</option></select>
+  </div>
+  <div class="pills">
+    <button class="pill on">すべて</button><button class="pill">在庫（未出品）</button><button class="pill">出品中</button><button class="pill">売却済み</button><button class="pill">90日以上</button>
+  </div>
+
+  <div class="card tablewrap pc" style="padding:4px 8px">
+    <table>
+      <thead><tr><th style="width:28px"></th><th>管理番号</th><th>商品名</th><th>ジャンル</th><th>仕入日</th><th class="n">原価</th><th class="n">予想売価</th><th>状態</th><th>出品先</th><th class="n">滞留</th></tr></thead>
+      <tbody id="itemrows"></tbody>
+    </table>
+  </div>
+  <div class="mcards" id="itemcards"></div>
+  <div class="pickbar" id="pickBar"><b id="pickCount"></b><button class="btn" id="pickClear">選択を外す</button><button class="btn primary" id="pickSell">まとめて売る</button></div>
+  <dialog id="bundleDlg">
+    <h2 style="margin:0 0 4px">まとめて売る（山売り）</h2>
+    <p class="muted" style="margin:0 0 12px">売れた金額を、予想売価の比率で各商品に割り振ります。金額のマスは手で直せます。</p>
+    <div class="filters">
+      <select><option>売り先：市場</option><option>ヤフオク</option><option>メルカリ</option></select>
+      <input value="2026/11/12" style="flex:0 1 130px;min-width:120px">
+      <input id="bAmt" value="5000" inputmode="numeric" style="flex:0 1 150px;min-width:120px" placeholder="売れた金額">
+    </div>
+    <div id="leftovers" style="margin-bottom:10px"></div>
+    <div class="tablewrap"><table>
+      <thead><tr><th>管理番号</th><th class="n">予想売価</th><th class="n">売上（割り振り）</th><th class="n">粗利</th></tr></thead>
+      <tbody id="bRows"></tbody>
+    </table></div>
+    <p id="bCheck" style="font-size:13px"></p>
+    <div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap"><button class="btn" id="bReset">自動の割り振りに戻す</button><button class="btn" id="bClose">閉じる</button><button class="btn primary" id="bSave">記録する</button></div>
+  </dialog>
+</section>
+
+<!-- 山の詳細 -->
+<section class="screen" id="lot">
+  <div class="pills"><button class="pill on" data-lot="A">見本1：売れている山（0120）</button><button class="pill" data-lot="B">見本2：仕入れたばかりの山（0353）</button></div>
+  <div id="lotA">
+  <p class="muted" style="margin:0 0 6px">商品一覧 ＞ 山 0120</p>
+  <div class="lothead">
+    <div>
+      <div class="lotnum">0120-0（山）</div>
+      <h1>腕時計まとめ 12点</h1>
+      <p class="lead" style="margin:0">仕入先：トレファクオークション ／ 仕入日：2026/09/14</p>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn">山を編集</button><button class="btn primary">＋ 売れた分を追加</button></div>
+  </div>
+
+  <div class="grid three" style="margin-top:16px">
+    <div class="kpi"><div class="l">仕入額</div><div class="v">¥10,000</div></div>
+    <div class="kpi"><div class="l">売上合計</div><div class="v">¥72,000</div></div>
+    <div class="kpi"><div class="l">粗利合計</div><div class="v up">¥48,350</div></div>
+    <div class="kpi"><div class="l">売れた点数</div><div class="v">3 / 6</div><div class="d muted">登録済みの商品</div></div>
+  </div>
+
+  <div class="card" style="margin-top:12px">
+    <h2>仕入額の回収</h2>
+    <div class="progress"><i style="width:100%"></i></div>
+    <div class="muted">売上 ¥72,000 ÷ 仕入額 ¥10,000 ＝ <b style="color:var(--green)">720%</b>（回収済み）</div>
+  </div>
+
+  <div class="alert">0120-2 がCatawikiで売れました。メルカリの出品を取り下げてください。</div>
+
+  <div class="card tablewrap pc" style="padding:4px 8px">
+    <table>
+      <thead><tr><th>管理番号</th><th>商品名</th><th class="n">予想売価</th><th class="n">原価（割り振り）</th><th>状態</th><th>出品先</th><th class="n">売値</th><th class="n">粗利</th></tr></thead>
+      <tbody>
+        <tr class="sold-row"><td>0120-1</td><td>SEIKO 5 自動巻き</td><td class="n">¥30,000</td><td class="n">¥3,000</td><td><span class="tag t-sold">売却済み</span></td><td><span class="chip sold">Catawiki</span></td><td class="n">¥34,000</td><td class="n up">¥24,100</td></tr>
+        <tr class="sold-row"><td>0120-2</td><td>CITIZEN クロノグラフ</td><td class="n">¥20,000</td><td class="n">¥2,000</td><td><span class="tag t-sold">売却済み</span></td><td><span class="chip sold">Catawiki</span><span class="chip">メルカリ</span></td><td class="n">¥28,000</td><td class="n up">¥19,750</td></tr>
+        <tr><td>0120-3</td><td>ORIENT スター</td><td class="n">¥20,000</td><td class="n">¥2,000</td><td><span class="tag t-list">出品中</span></td><td><span class="chip">メルカリ</span><span class="chip">ヤフオク</span></td><td class="n">—</td><td class="n">—</td></tr>
+        <tr><td>0120-4</td><td>CASIO G-SHOCK</td><td class="n">¥15,000</td><td class="n">¥1,500</td><td><span class="tag t-list">出品中</span></td><td><span class="chip">メルカリ</span></td><td class="n">—</td><td class="n">—</td></tr>
+        <tr><td>0120-5</td><td>SEIKO クオーツ</td><td class="n">¥15,000</td><td class="n">¥1,500</td><td><span class="tag t-stock">在庫</span></td><td class="muted">未出品</td><td class="n">—</td><td class="n">—</td></tr>
+        <tr class="sold-row"><td>0120-6</td><td>残り7点まとめ（市場）</td><td class="n">—</td><td class="n">¥0</td><td><span class="tag t-sold">売却済み</span></td><td><span class="chip sold">市場</span></td><td class="n">¥10,000</td><td class="n up">¥4,500</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="mcards">
+    <div class="mc"><div class="top"><span class="muted">0120-1</span><span class="tag t-sold">売却済み</span></div><div class="name">SEIKO 5 自動巻き</div><div class="meta"><span>原価 ¥3,000 → 売値 ¥34,000</span><span class="up">粗利 ¥24,100</span></div></div>
+    <div class="mc"><div class="top"><span class="muted">0120-2</span><span class="tag t-sold">売却済み</span></div><div class="name">CITIZEN クロノグラフ</div><div class="meta"><span>原価 ¥2,000 → 売値 ¥28,000</span><span class="up">粗利 ¥19,750</span></div></div>
+    <div class="mc"><div class="top"><span class="muted">0120-3</span><span class="tag t-list">出品中</span></div><div class="name">ORIENT スター</div><div class="meta"><span>原価 ¥2,000 / 予想 ¥20,000</span><span>メルカリ・ヤフオク</span></div></div>
+    <div class="mc"><div class="top"><span class="muted">0120-4</span><span class="tag t-list">出品中</span></div><div class="name">CASIO G-SHOCK</div><div class="meta"><span>原価 ¥1,500 / 予想 ¥15,000</span><span>メルカリ</span></div></div>
+    <div class="mc"><div class="top"><span class="muted">0120-5</span><span class="tag t-stock">在庫</span></div><div class="name">SEIKO クオーツ</div><div class="meta"><span>原価 ¥1,500 / 予想 ¥15,000</span><span>未出品</span></div></div>
+    <div class="mc"><div class="top"><span class="muted">0120-6</span><span class="tag t-sold">売却済み</span></div><div class="name">残り7点まとめ（市場）</div><div class="meta"><span>原価 ¥0 → 売値 ¥10,000</span><span class="up">粗利 ¥4,500</span></div></div>
+  </div>
+  <p class="muted">原価は、山の仕入額 ¥10,000 を予想売価の比率で自動で割り振っています。</p>
+  </div>
+  <div id="lotB" style="display:none">
+    <p class="muted" style="margin:0 0 6px">商品一覧 ＞ 山 0353</p>
+    <div class="lothead"><div>
+      <div class="lotnum">0353-0（山）</div>
+      <h1>【ジャンク】メガネグッズまとめ他小物まとめ</h1>
+      <p class="lead" style="margin:0">仕入先：オークション（関東） ／ 仕入日：2026/11/04</p>
+    </div></div>
+    <div class="grid three" style="margin-top:16px">
+      <div class="kpi"><div class="l">仕入額</div><div class="v">¥52,333</div></div>
+      <div class="kpi"><div class="l">売上合計</div><div class="v">¥0</div></div>
+      <div class="kpi"><div class="l">粗利合計</div><div class="v">—</div></div>
+      <div class="kpi"><div class="l">枝番</div><div class="v">まだなし</div></div>
+    </div>
+    <div class="card" style="margin-top:12px">
+      <h2>枝番を追加（売れそうなものだけ）</h2>
+      <p class="muted" style="margin:-6px 0 10px">商品名と予想売価を入れると、枝番号と原価が自動で入ります。あとから何回でも追加できます（売れた商品の原価は変わりません）。</p>
+      <div class="tablewrap"><table class="brtable">
+        <thead><tr><th style="width:90px">管理番号</th><th>商品名</th><th class="n" style="width:120px">予想売価</th><th class="n" style="width:120px">原価（割り振り）</th></tr></thead>
+        <tbody id="brRows"></tbody>
+      </table></div>
+      <p class="muted" id="brSum"></p>
+      <div style="display:flex;gap:8px;justify-content:space-between;flex-wrap:wrap"><button class="btn" id="brAdd">＋ 行を追加</button><button class="btn primary" id="brReg">枝番を登録する</button></div>
+    </div>
+  </div>
+</section>
+
+<!-- まとめて登録 -->
+<section class="screen" id="bulk">
+  <h1>まとめて登録（伝票の取り込み）</h1>
+  <p class="lead">伝票のCSVを入れるか、スプレッドシートからコピーして貼り付けます。山と単品が混ざっていて大丈夫です。山の行は「種類」のマスを押して切り替えます。</p>
+  <div class="howto">
+    <span><b>ドラッグ</b> 複数のマスを選ぶ</span>
+    <span><b>⌘+C / ⌘+V</b> コピー・貼り付け（スプレッドシートからもOK）</span>
+    <span><b>右下の■をドラッグ</b> 下にコピー</span>
+    <span><b>⌘+D</b> いちばん上の行を下にコピー</span>
+    <span><b>Delete</b> まとめて消す</span>
+    <span><b>ダブルクリック / 文字を打つ</b> マスを編集</span>
+  </div>
+
+  <div class="slipgrid">
+    <label class="drop" id="drop"><input type="file" id="slipFile" accept=".csv,text/csv" hidden>
+      <b>伝票のCSVをここにドラッグ</b><span class="muted">またはクリックしてファイルを選ぶ</span></label>
+    <div class="card slipbar">
+      <div class="muted" style="font-size:12px">伝票の共通の情報（全部の行に自動で入ります）</div>
+      <label>仕入先<input id="slipSupplier" placeholder="例：オークション（関東）"></label>
+      <label>仕入日<input id="slipDate" placeholder="例：2026/11/04"></label>
+      <button class="btn" id="sampleSlip">見本の伝票CSVを入れてみる</button>
+    </div>
+  </div>
+  <p id="slipInfo" class="muted" style="margin:8px 0 0"></p>
+
+  <div class="sheet-wrap">
+    <table class="sheet" id="sheet" tabindex="0"></table>
+  </div>
+  <div class="sheet-tools">
+    <button class="btn" id="addRows">＋ 10行追加</button>
+        <button class="btn" id="clear">すべて消す</button>
+    <span class="legend2"><b style="font-weight:600">ジャンル</b>は ▾ で一覧から選択　<span class="tag t-yama">山</span>/<span class="tag t-stock">単品</span> 押すと切り替え　<i class="sw auto"></i>自動で入れたマス　<i class="sw err"></i>直すマス</span>
+  </div>
+
+  <div class="card regbar">
+    <div><b id="summary">まだ何も入っていません</b><ul id="errlist"></ul><ul id="warnlist" class="warnlist"></ul></div>
+    <button class="btn primary" id="doReg" disabled>この内容で登録する</button>
+  </div>
+</section>
+</main>
+
+<button class="fab">＋ 登録</button>
+<nav class="bottom">
+  <button data-go="dash" class="on"><b>▦</b>ホーム</button>
+  <button data-go="items"><b>☰</b>商品</button>
+  <button data-go="lot"><b>◫</b>山</button>
+  <button><b>¥</b>販売</button>
+</nav>
+
+<script>
+const items=[
+ ["0237-0","Canon ビデオカメラ","カメラ","2026/08/26",10588,60000,"sold",["Catawiki*"],null],
+ ["0303-0","ドリームキャスト 本体","ゲーム","2025/09/22",0,6000,"sold",["メルカリ*"],null],
+ ["0120-3","ORIENT スター","時計","2026/09/14",2000,20000,"list",["メルカリ","ヤフオク"],58],
+ ["0120-4","CASIO G-SHOCK","時計","2026/09/14",1500,15000,"list",["メルカリ"],58],
+ ["0042-3","オリンパス フィルムカメラ","カメラ","2026/04/13",3000,12000,"list",["メルカリ","ヤフオク"],212],
+ ["0058-0","レトロ 薬箱 赤","雑貨","2026/05/11",1200,4000,"stock",[],184],
+ ["L00004","北欧 チェア（残り5個）","家具","2026/07/13",2500,9000,"list",["メルカリ"],121],
+ ["0311-0","吉左衛門 茶碗","茶道具","2026/10/30",8000,30000,"stock",[],12],
+ ["0350","ニコン 純正ストラップ","カメラ","2026/10/02",800,4000,"stock",[],41],
+ ["0351-2","メガネケース 革","雑貨","2026/10/20",300,1000,"list",["メルカリ"],23],
+];
+const st={stock:["在庫","t-stock"],list:["出品中","t-list"],sold:["売却済み","t-sold"]};
+const yen=v=>"¥"+v.toLocaleString();
+const chips=a=>a.length?a.map(c=>c.endsWith("*")?`<span class="chip sold">${c.slice(0,-1)}</span>`:`<span class="chip">${c}</span>`).join(""):'<span class="muted">未出品</span>';
+const days=d=>d==null?'<span class="muted">—</span>':(d>=90?`<span class="tag t-warn">${d}日</span>`:d+"日");
+document.getElementById("itemrows").innerHTML=items.map(r=>`<tr><td>${r[6]==="sold"?"":`<input type="checkbox" class="pick" data-no="${r[0]}">`}</td><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td class="n">${yen(r[4])}</td><td class="n">${yen(r[5])}</td><td><span class="tag ${st[r[6]][1]}">${st[r[6]][0]}</span></td><td>${chips(r[7])}</td><td class="n">${days(r[8])}</td></tr>`).join("");
+document.getElementById("itemcards").innerHTML=items.map(r=>`<div class="mc"><div class="top"><span class="muted">${r[6]==="sold"?"":`<input type="checkbox" class="pick" data-no="${r[0]}"> `}${r[0]}・${r[2]}</span><span class="tag ${st[r[6]][1]}">${st[r[6]][0]}</span></div><div class="name">${r[1]}</div><div class="meta"><span>原価 ${yen(r[4])} / 予想 ${yen(r[5])}</span><span>${r[8]==null?"":r[8]+"日"}</span></div><div style="margin-top:6px">${chips(r[7])}</div></div>`).join("");
+
+const months=[["6月",320,190],["7月",410,260],["8月",380,230],["9月",520,330],["10月",610,390],["11月",486,301]];
+const max=1150,h=180,base=190,bw=28,gap=92;
+document.getElementById("chart").innerHTML=months.map((m,i)=>{
+  const x=60+i*gap, s=m[1]/1000*120, g=m[2]/1000*120; // 値は千円。100万円＝120px
+  return `<rect x="${x}" y="${base-s}" width="${bw}" height="${s}" rx="4" fill="#93b4f7"/>
+          <rect x="${x+bw+4}" y="${base-g}" width="${bw}" height="${g}" rx="4" fill="#15803d"/>
+          <text x="${x+bw+2}" y="208" font-size="11" fill="#6b7280" text-anchor="middle">${m[0]}</text>`;}).join("");
+
+document.querySelectorAll("[data-go]").forEach(b=>b.addEventListener("click",()=>{
+  const id=b.dataset.go;
+  document.querySelectorAll(".screen").forEach(s=>s.classList.toggle("on",s.id===id));
+  document.querySelectorAll("[data-go]").forEach(x=>x.classList.toggle("on",x.dataset.go===id));
+  window.scrollTo(0,0);
+}));
+// ---- まとめて登録（伝票の取り込み・スプレッドシート風の表） ----
+const COLS=[["種類",64],["管理番号",96],["商品名",300],["ジャンル",90],["仕入先",150],["仕入日",100],["原価",90],["個数",54],["予想売価",90]];
+const GENRE_COL=3;
+const GENRES=["カメラ","時計","ゲーム","小家電","家電","パソコン","衣類","雑貨","茶道具","家具","おもちゃ","その他"]; // 本物のアプリでは「選択肢の一覧」で編集できる
+const NC=COLS.length, NUMCOL=new Set([6,7,8]);
+const ALIAS={"商品名 メーカー/ブランド":"商品名","f":"仕入日","在庫残":"個数","予想売上":"予想売価","数量":"個数","小計":"原価"};
+const num=s=>{const v=String(s??"").replace(/[¥,円\s]/g,"");return v===""?null:(isNaN(+v)?NaN:+v)};
+const existing=new Set(items.map(r=>r[0]));
+const NEXT_NO=352; // 前回の続きの番号（本物のアプリでは自動で調べる）
+const YAMA_WORDS=/まとめ|山売り|ロット|大量|詰め合わせ|\d+点/;
+const pad=n=>String(n).padStart(4,"0");
+let grid=[], autoCells=new Set();
+let sel={r1:0,c1:2,r2:0,c2:2}, dragging=false, filling=null, editing=null;
+const sheet=document.getElementById("sheet");
+const blank=()=>Array(NC).fill("");
+const ensureRows=n=>{while(grid.length<n)grid.push(blank())};
+const box=()=>({top:Math.min(sel.r1,sel.r2),bot:Math.max(sel.r1,sel.r2),left:Math.min(sel.c1,sel.c2),right:Math.max(sel.c1,sel.c2)});
+const cellEl=(r,c)=>sheet.querySelector(`td[data-r="${r}"][data-c="${c}"]`);
+const fmt=(v,c)=>{if(c===0)return v==="山"?'<span class="tag t-yama">山</span>':(v?'<span class="tag t-stock">単品</span>':"");if(c===GENRE_COL)return `<span class="ddv">${esc(v)}</span><span class="dd" title="一覧から選ぶ">▾</span>`;if(!NUMCOL.has(c))return esc(v);const n=num(v);return n==null||Number.isNaN(n)?esc(v):n.toLocaleString()};
+const esc=s=>String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;");
+const hasContent=r=>[2,3,6,7,8].some(c=>String(grid[r][c]).trim()!=="")||(!autoCells.has(r+":1")&&grid[r][1]);
+
+function applyAuto(){
+  autoCells.forEach(k=>{const [r,c]=k.split(":").map(Number);if(grid[r])grid[r][c]=""});autoCells.clear();
+  const supplier=document.getElementById("slipSupplier").value.trim(),date=document.getElementById("slipDate").value.trim();
+  let n=NEXT_NO;
+  grid.forEach((row,r)=>{
+    if(!hasContent(r))return;
+    if(!row[0]){row[0]=YAMA_WORDS.test(row[2])?"山":"単品";autoCells.add(r+":0")}
+    if(!row[1]){row[1]=row[0]==="山"?pad(n)+"-0":pad(n);autoCells.add(r+":1")}
+    n++;
+    if(!row[4]&&supplier){row[4]=supplier;autoCells.add(r+":4")}
+    if(!row[5]&&date){row[5]=date;autoCells.add(r+":5")}
+    if(!row[7]){row[7]="1";autoCells.add(r+":7")}
+  });
+}
+function draw(){
+  applyAuto();
+  sheet.innerHTML=`<thead><tr><th class="rn"></th>${COLS.map(([c,w],i)=>`<th style="min-width:${w}px" class="${NUMCOL.has(i)?"n":""}">${c}</th>`).join("")}</tr></thead><tbody>`+
+    grid.map((r,ri)=>`<tr><td class="rn">${ri+1}</td>${r.map((v,ci)=>`<td data-r="${ri}" data-c="${ci}" class="cell${NUMCOL.has(ci)?" n":""}${ci===0?" kind":""}">${fmt(v,ci)}</td>`).join("")}</tr>`).join("")+"</tbody>";
+  paintSel();recalc();
+}
+function paintSel(){
+  sheet.querySelectorAll("td.cell").forEach(td=>td.classList.remove("sel","anchor"));
+  sheet.querySelectorAll(".handle").forEach(h=>h.remove());
+  const b=box();
+  const fb=filling?{top:b.top,bot:Math.max(b.bot,filling.to),left:b.left,right:b.right}:b;
+  for(let r=fb.top;r<=fb.bot;r++)for(let c=fb.left;c<=fb.right;c++){const td=cellEl(r,c);td&&td.classList.add("sel")}
+  const a=cellEl(sel.r1,sel.c1);a&&a.classList.add("anchor");
+  const br=cellEl(fb.bot,fb.right);
+  if(br&&!editing){const h=document.createElement("div");h.className="handle";h.title="下にドラッグしてコピー";br.appendChild(h);
+    h.addEventListener("mousedown",e=>{e.preventDefault();e.stopPropagation();filling={to:box().bot}})}
+}
+function setCell(r,c,v){ensureRows(r+1);grid[r][c]=String(v??"").trim();autoCells.delete(r+":"+c)}
+// ---- マウス操作 ----
+sheet.addEventListener("mousedown",e=>{
+  const td=e.target.closest("td.cell");if(!td||e.target.classList.contains("handle"))return;
+  if(editing&&td.contains(editing.inp))return;
+  commitEdit();
+  const r=+td.dataset.r,c=+td.dataset.c;
+  if(e.target.classList.contains("dd")){sel={r1:r,c1:c,r2:r,c2:c};paintSel();e.preventDefault();startEdit(r,c,false);return}
+  if(c===0&&!e.shiftKey&&grid[r][0]){ // 種類のマスは押すたびに 単品⇔山
+    setCell(r,0,grid[r][0]==="山"?"単品":"山");
+    if(autoCells.has(r+":1"))grid[r][1]="";
+    sel={r1:r,c1:0,r2:r,c2:0};draw();sheet.focus();e.preventDefault();return;
+  }
+  if(e.shiftKey){sel.r2=r;sel.c2=c}else sel={r1:r,c1:c,r2:r,c2:c};
+  dragging=true;paintSel();sheet.focus();e.preventDefault();
+});
+sheet.addEventListener("mouseover",e=>{
+  const td=e.target.closest("td.cell");if(!td)return;
+  if(dragging){sel.r2=+td.dataset.r;sel.c2=+td.dataset.c;paintSel()}
+  if(filling){filling.to=Math.max(box().bot,+td.dataset.r);paintSel()}
+});
+document.addEventListener("mouseup",()=>{
+  dragging=false;
+  if(filling){const b=box(),to=filling.to;filling=null;
+    if(to>b.bot){const h=b.bot-b.top+1;for(let r=b.bot+1;r<=to;r++)for(let c=b.left;c<=b.right;c++){if(c===1)continue;setCell(r,c,grid[b.top+((r-b.top)%h)][c])}sel.r1=b.top;sel.r2=to;sel.c1=b.left;sel.c2=b.right;}
+    draw();}
+});
+sheet.addEventListener("dblclick",e=>{const td=e.target.closest("td.cell");if(td&&+td.dataset.c!==0)startEdit(+td.dataset.r,+td.dataset.c,false)});
+// ---- 編集 ----
+function startEdit(r,c,clear,initial=""){
+  if(c===0)return;
+  commitEdit();const td=cellEl(r,c);if(!td)return;
+  const inp=document.createElement("input");inp.className="editor"+(NUMCOL.has(c)?" n":"");
+  inp.value=clear?initial:grid[r][c];td.textContent="";td.appendChild(inp);editing={r,c,inp};
+  inp.focus();inp.setSelectionRange(inp.value.length,inp.value.length);
+  let dd=null,hi=-1;
+  if(c===GENRE_COL){
+    dd=document.createElement("div");dd.className="ddlist";td.appendChild(dd);
+    const show=()=>{const q=inp.value.trim();const opts=GENRES.filter(g=>!q||g.includes(q));
+      dd.innerHTML=opts.map((g,i)=>`<div class="opt${i===hi?" on":""}" data-v="${g}">${g}</div>`).join("")||`<div class="none">「${esc(q)}」は一覧にありません（Enterでそのまま入れる）</div>`;
+      dd.querySelectorAll(".opt").forEach(o=>o.addEventListener("mousedown",ev=>{ev.preventDefault();inp.value=o.dataset.v;commitEdit();sheet.focus()}));};
+    inp.addEventListener("input",()=>{hi=-1;show()});
+    inp.addEventListener("keydown",ev=>{const n=dd.querySelectorAll(".opt").length;
+      if(ev.key==="ArrowDown"){ev.preventDefault();hi=Math.min(n-1,hi+1);show()}
+      else if(ev.key==="ArrowUp"){ev.preventDefault();hi=Math.max(-1,hi-1);show()}
+      else if(ev.key==="Enter"&&hi>=0){const o=dd.querySelectorAll(".opt")[hi];if(o)inp.value=o.dataset.v}});
+    show();
+  }
+  inp.addEventListener("keydown",ev=>{
+    if(ev.key==="Enter"){ev.preventDefault();commitEdit();move(1,0)}
+    else if(ev.key==="Tab"){ev.preventDefault();commitEdit();move(0,ev.shiftKey?-1:1)}
+    else if(ev.key==="Escape"){editing=null;draw();sheet.focus()}
+  });
+  inp.addEventListener("blur",()=>setTimeout(commitEdit,0));
+}
+function commitEdit(){if(!editing)return;const {r,c,inp}=editing;editing=null;setCell(r,c,inp.value);draw();}
+function move(dr,dc,extend=false){
+  const r=Math.max(0,sel.r2+dr),c=Math.min(NC-1,Math.max(0,sel.c2+dc));
+  if(r>=grid.length){ensureRows(r+5);draw()}
+  if(extend){sel.r2=r;sel.c2=c}else sel={r1:r,c1:c,r2:r,c2:c};
+  paintSel();sheet.focus();cellEl(r,c)?.scrollIntoView({block:"nearest",inline:"nearest"});
+}
+// ---- キーボード ----
+sheet.addEventListener("keydown",e=>{
+  if(editing)return;
+  const mod=e.metaKey||e.ctrlKey,k=e.key;
+  const arrows={ArrowUp:[-1,0],ArrowDown:[1,0],ArrowLeft:[0,-1],ArrowRight:[0,1]};
+  if(arrows[k]){e.preventDefault();move(...arrows[k],e.shiftKey);return}
+  if(k==="Enter"){e.preventDefault();startEdit(sel.r1,sel.c1,false);return}
+  if(k==="Tab"){e.preventDefault();move(0,e.shiftKey?-1:1);return}
+  if(k==="Delete"||k==="Backspace"){e.preventDefault();const b=box();for(let r=b.top;r<=b.bot;r++)for(let c=b.left;c<=b.right;c++)setCell(r,c,"");draw();return}
+  if(mod&&k.toLowerCase()==="d"){e.preventDefault();const b=box();for(let r=b.top+1;r<=b.bot;r++)for(let c=b.left;c<=b.right;c++){if(c===1)continue;setCell(r,c,grid[b.top][c])}draw();return}
+  if(mod&&k.toLowerCase()==="a"){e.preventDefault();sel={r1:0,c1:0,r2:grid.length-1,c2:NC-1};paintSel();return}
+  if(!mod&&k.length===1){e.preventDefault();startEdit(sel.r1,sel.c1,true,k)}
+});
+// ---- コピー・貼り付け ----
+const selText=()=>{const b=box(),rows=[];for(let r=b.top;r<=b.bot;r++)rows.push(grid[r].slice(b.left,b.right+1).join("\t"));return rows.join("\n")};
+document.addEventListener("copy",e=>{if(document.activeElement!==sheet)return;e.clipboardData.setData("text/plain",selText());e.preventDefault()});
+document.addEventListener("cut",e=>{if(document.activeElement!==sheet)return;e.clipboardData.setData("text/plain",selText());e.preventDefault();const b=box();for(let r=b.top;r<=b.bot;r++)for(let c=b.left;c<=b.right;c++)setCell(r,c,"");draw()});
+document.addEventListener("paste",e=>{
+  if(document.activeElement!==sheet)return;
+  e.preventDefault();
+  let rows=(e.clipboardData.getData("text/plain")||"").replace(/\r/g,"").split("\n");
+  if(rows.length>1&&rows[rows.length-1]==="")rows.pop();
+  rows=rows.map(l=>l.split("\t"));
+  const b=box();let colMap=null,left=b.left;
+  const head=rows[0].map(h=>ALIAS[h.trim()]||h.trim());
+  if(rows.length>1&&head.some(h=>COLS.some(([c])=>c===h))){colMap=head.map(h=>COLS.findIndex(([c])=>c===h));rows=rows.slice(1);left=0}
+  const h=rows.length,w=rows[0].length;
+  const fillH=(b.bot-b.top+1)>h&&(b.bot-b.top+1)%h===0?b.bot-b.top+1:h;
+  const fillW=!colMap&&(b.right-b.left+1)>w&&(b.right-b.left+1)%w===0?b.right-b.left+1:w;
+  ensureRows(b.top+fillH+3);
+  for(let i=0;i<fillH;i++)for(let j=0;j<fillW;j++){
+    const c=colMap?colMap[j%w]:left+j;if(c==null||c<0||c>=NC)continue;
+    setCell(b.top+i,c,rows[i%h][j%w]);
+  }
+  sel={r1:b.top,c1:colMap?0:left,r2:b.top+fillH-1,c2:colMap?NC-1:Math.min(NC-1,left+fillW-1)};
+  draw();sheet.focus();
+});
+// ---- 伝票CSVの読み込み ----
+function parseCSV(text){
+  return text.replace(/\r/g,"").split("\n").map(line=>{const out=[];let cur="",q=false;
+    for(let i=0;i<line.length;i++){const ch=line[i];
+      if(q){if(ch==='"'&&line[i+1]==='"'){cur+='"';i++}else if(ch==='"')q=false;else cur+=ch}
+      else if(ch==='"')q=true;else if(ch===","){out.push(cur);cur=""}else cur+=ch}
+    out.push(cur);return out});
+}
+function loadSlip(text,fileName){
+  const rows=parseCSV(text);
+  const get=k=>(rows.find(r=>r[0]===k)||[])[1]||"";
+  const date=get("開催日"),hall=get("会場");
+  const hi=rows.findIndex((r,i)=>r.includes("商品名")&&r.includes("小計")&&(rows[i-1]||[])[0]==="請求明細");
+  if(hi<0){alert("この形式の伝票はまだ読み取れません。本物のアプリでは、初めての形式のときに列を選んでいただきます。");return}
+  const H=rows[hi],ix=k=>H.indexOf(k),lines=[];
+  for(let i=hi+1;i<rows.length&&rows[i].length>1;i++){const r=rows[i];
+    lines.push(["","",r[ix("商品名")],"","","",r[ix("小計")],r[ix("数量")],""])}
+  document.getElementById("slipSupplier").value=hall?`オークション（${hall}）`:"";
+  document.getElementById("slipDate").value=date;
+  const extra=rows.find(r=>r[0]==="入場料");
+  document.getElementById("slipInfo").innerHTML=`<b>${fileName}</b> を読み込みました：商品 ${lines.length}件`+(extra?`／入場料 ¥${(+extra[3]).toLocaleString()} は商品の原価に入れず、経費として別に記録します`:"");
+  grid=[];autoCells.clear();lines.forEach((l,i)=>grid[i]=l);ensureRows(Math.max(12,lines.length+4));
+  sel={r1:0,c1:0,r2:0,c2:0};draw();
+}
+const SAMPLE_SLIP=`"開催日","2026/11/04"
+"会場","関東"
+
+"請求明細"
+"レーン","商品ID","商品名","数量","単価","税","落札手数料","税","小計"
+"レーンB","5807165","Apple MacBookAir A2941","1","67500","6750","6750","675","81675"
+"レーンC","5806536","【ジャンク】メガネグッズまとめ他小物まとめ","1","43250","4325","4325","433","52333"
+"レーンC","5806632","BAKUNE Dry TENTIAL ロングスリーブTシャツ/ロングパンツセット　SIZE M ネイビー","1","12000","1200","1200","120","14520"
+"レーンC","5806657","ボトムまとめ 山売り","1","7750","775","775","78","9378"
+""
+"請求","金額","消費税","合計金額"
+"入場料","2000","200","2200"`;
+async function readFile(f){
+  const buf=await f.arrayBuffer();let text;
+  try{text=new TextDecoder("utf-8",{fatal:true}).decode(buf)}catch{text=new TextDecoder("shift_jis").decode(buf)} // 文字コードを自動で判定
+  loadSlip(text,f.name);
+}
+const drop=document.getElementById("drop");
+document.getElementById("slipFile").addEventListener("change",e=>e.target.files[0]&&readFile(e.target.files[0]));
+drop.addEventListener("dragover",e=>{e.preventDefault();drop.classList.add("over")});
+drop.addEventListener("dragleave",()=>drop.classList.remove("over"));
+drop.addEventListener("drop",e=>{e.preventDefault();drop.classList.remove("over");const f=e.dataTransfer.files[0];f&&readFile(f)});
+document.getElementById("sampleSlip").addEventListener("click",()=>loadSlip(SAMPLE_SLIP,"見本の伝票.csv"));
+["slipSupplier","slipDate"].forEach(id=>document.getElementById(id).addEventListener("input",draw));
+// ---- 確認 ----
+function recalc(){
+  const errs=[],warns=[],seen=new Map();let count=0,yama=0;
+  sheet.querySelectorAll("td.cell").forEach(td=>{td.classList.remove("err","auto","warn");td.title=""});
+  const mark=(r,c,msg)=>{const td=cellEl(r,c);if(td){td.classList.add("err");td.title=msg}errs.push(`${r+1}行目「${COLS[c][0]}」：${msg}`)};
+  grid.forEach((row,r)=>{
+    if(!row[0])return;count++;if(row[0]==="山")yama++;
+    if(existing.has(row[1]))mark(r,1,"すでに登録されています");
+    else if(seen.has(row[1]))mark(r,1,`${seen.get(row[1])+1}行目と重複しています`);
+    seen.set(row[1],r);
+    if(!row[2])mark(r,2,"商品名がありません");
+    NUMCOL.forEach(c=>{if(Number.isNaN(num(row[c])))mark(r,c,"数字を入れてください")});
+    if(row[GENRE_COL]&&!GENRES.includes(row[GENRE_COL])){const td=cellEl(r,GENRE_COL);if(td){td.classList.add("warn");td.title="一覧にないジャンルです"}warns.push(`${r+1}行目「ジャンル」：「${row[GENRE_COL]}」は一覧にありません。登録すると一覧に追加されます`)}
+  });
+  autoCells.forEach(k=>{const [r,c]=k.split(":");const td=cellEl(r,c);if(td&&!td.classList.contains("err"))td.classList.add("auto")});
+  document.getElementById("warnlist").innerHTML=warns.slice(0,5).map(e=>`<li>${e}</li>`).join("");
+  const s=document.getElementById("summary");
+  s.textContent=count?(errs.length?`${count}件のうち、直すところが${errs.length}か所あります`:`${count}件（単品 ${count-yama}・山 ${yama}）、すべて登録できます`):"まだ何も入っていません";
+  s.style.color=count?(errs.length?"var(--red)":"var(--green)"):"";
+  document.getElementById("errlist").innerHTML=errs.slice(0,8).map(e=>`<li>${e}</li>`).join("")+(errs.length>8?`<li>ほか${errs.length-8}か所</li>`:"");
+  document.getElementById("doReg").disabled=!count||errs.length>0;
+}
+document.getElementById("addRows").addEventListener("click",()=>{ensureRows(grid.length+10);draw()});
+document.getElementById("clear").addEventListener("click",()=>{grid=[];autoCells.clear();ensureRows(12);sel={r1:0,c1:2,r2:0,c2:2};document.getElementById("slipInfo").textContent="";draw()});
+document.getElementById("doReg").addEventListener("click",()=>alert("これは画面イメージなので、登録はされません。"));
+ensureRows(12);draw();
+
+// ---- 山の詳細：枝番を追加 ----
+const LOT_COST=52333;
+let branches=[["メガネ 金縁 ヴィンテージ","8000"],["サングラス Ray-Ban","15000"],["",""],["",""],["",""]];
+function drawBranches(){
+  const filled=branches.map((b,i)=>({i,name:b[0],exp:num(b[1])||0})).filter(b=>b.name);
+  const total=filled.reduce((a,b)=>a+b.exp,0);let left=LOT_COST,top=filled[0];
+  filled.forEach(b=>{b.cost=total?Math.floor(LOT_COST*b.exp/total):0;left-=b.cost;if(b.exp>(top?.exp||0))top=b});
+  if(top&&total)top.cost+=left;
+  const byI=Object.fromEntries(filled.map((b,k)=>[b.i,{no:`0353-${k+1}`,cost:b.cost}]));
+  document.getElementById("brRows").innerHTML=branches.map((b,i)=>`<tr>
+    <td class="muted">${byI[i]?byI[i].no:"—"}</td>
+    <td><input data-i="${i}" data-k="0" value="${esc(b[0])}" placeholder="商品名"></td>
+    <td><input data-i="${i}" data-k="1" value="${esc(b[1])}" placeholder="0" class="n" inputmode="numeric"></td>
+    <td class="n auto-txt">${byI[i]?yen(byI[i].cost):"—"}</td></tr>`).join("");
+  document.querySelectorAll("#brRows input").forEach(inp=>inp.addEventListener("change",()=>{branches[+inp.dataset.i][+inp.dataset.k]=inp.value;drawBranches()}));
+  document.getElementById("brSum").innerHTML=filled.length?`${filled.length}点に、山の仕入額 ${yen(LOT_COST)} を予想売価の比率で割り振りました`:"商品名と予想売価を入れると、原価が自動で入ります";
+}
+document.getElementById("brAdd").addEventListener("click",()=>{branches.push(["",""],["",""],["",""]);drawBranches()});
+document.getElementById("brReg").addEventListener("click",()=>alert("これは画面イメージなので、登録はされません。"));
+drawBranches();
+document.querySelectorAll("[data-lot]").forEach(b=>b.addEventListener("click",()=>{
+  document.querySelectorAll("[data-lot]").forEach(x=>x.classList.toggle("on",x===b));
+  document.getElementById("lotA").style.display=b.dataset.lot==="A"?"":"none";
+  document.getElementById("lotB").style.display=b.dataset.lot==="B"?"":"none";
+}));
+
+// ---- 商品一覧：まとめて売る ----
+const picked=new Set();
+function drawPickBar(){
+  const bar=document.getElementById("pickBar");
+  bar.style.display=picked.size?"flex":"none";
+  document.getElementById("pickCount").textContent=`${picked.size}点を選んでいます`;
+}
+document.querySelectorAll(".pick").forEach(cb=>cb.addEventListener("change",()=>{cb.checked?picked.add(cb.dataset.no):picked.delete(cb.dataset.no);
+  document.querySelectorAll(`.pick[data-no="${cb.dataset.no}"]`).forEach(x=>x.checked=cb.checked);drawPickBar()}));
+let bundle=[];
+function openBundle(){
+  bundle=items.filter(r=>picked.has(r[0])).map(r=>({no:r[0],name:r[1],cost:r[4],exp:r[5],amt:null}));
+  const lots=[...new Set(bundle.filter(b=>b.no.includes("-")).map(b=>b.no.split("-")[0]))];
+  document.getElementById("leftovers").innerHTML=lots.map(l=>`<label class="chk"><input type="checkbox" data-lot="${l}" class="lo"> 山${l}の残り（登録していない商品）も一緒に入れる</label>`).join("")||'<span class="muted">選んだ商品に山の枝番がないので、山の残りは入れられません</span>';
+  document.querySelectorAll(".lo").forEach(cb=>cb.addEventListener("change",()=>{
+    const no=`${cb.dataset.lot}-7`;
+    if(cb.checked)bundle.push({no,name:`山${cb.dataset.lot}の残り`,cost:0,exp:0,amt:null,left:true});else bundle=bundle.filter(b=>b.no!==no);
+    drawBundle()}));
+  document.getElementById("bundleDlg").showModal();drawBundle();
+}
+function drawBundle(){
+  const total=num(document.getElementById("bAmt").value)||0;
+  const auto=bundle.filter(b=>b.amt==null),fixed=bundle.reduce((a,b)=>a+(b.amt??0),0);
+  const rest=Math.max(0,total-fixed),expSum=auto.reduce((a,b)=>a+b.exp,0);
+  let left=rest;auto.forEach(b=>{b._a=expSum?Math.floor(rest*b.exp/expSum):Math.floor(rest/auto.length);left-=b._a});
+  if(auto.length){const top=auto.reduce((m,b)=>b.exp>m.exp?b:m,auto[0]);top._a+=left}
+  const sum=bundle.reduce((a,b)=>a+(b.amt??b._a),0);
+  document.getElementById("bRows").innerHTML=bundle.map((b,i)=>{const a=b.amt??b._a;return `<tr>
+    <td>${b.no}${b.left?' <span class="tag t-temp">追加</span>':""}<br><span class="muted">${b.name}</span>${b.no.includes("-")?`<br><span class="muted">→ 山${b.no.split("-")[0]}の売上に入ります</span>`:""}</td>
+    <td class="n">${yen(b.exp)}</td>
+    <td class="n"><input data-i="${i}" class="bamt n${b.amt==null?" auto-in":""}" value="${a}" inputmode="numeric"></td>
+    <td class="n ${a-b.cost>=0?"up":"down"}">${yen(a-b.cost)}</td></tr>`}).join("");
+  document.querySelectorAll(".bamt").forEach(inp=>inp.addEventListener("change",()=>{bundle[+inp.dataset.i].amt=num(inp.value)??0;drawBundle()}));
+  const ok=sum===total;
+  document.getElementById("bCheck").innerHTML=ok?`<span class="up">割り振りの合計 ${yen(sum)} ＝ 売れた金額 ${yen(total)}</span>`:`<span class="down">割り振りの合計 ${yen(sum)} が、売れた金額 ${yen(total)} と合っていません</span>`;
+}
+document.getElementById("bAmt").addEventListener("input",drawBundle);
+document.getElementById("bReset").addEventListener("click",()=>{bundle.forEach(b=>b.amt=null);drawBundle()});
+document.getElementById("pickSell").addEventListener("click",openBundle);
+document.getElementById("pickClear").addEventListener("click",()=>{picked.clear();document.querySelectorAll(".pick").forEach(x=>x.checked=false);drawPickBar()});
+document.getElementById("bClose").addEventListener("click",()=>document.getElementById("bundleDlg").close());
+document.getElementById("bSave").addEventListener("click",()=>alert("これは画面イメージなので、登録はされません。"));
+
+document.querySelectorAll("#items .pill").forEach(p=>p.addEventListener("click",()=>{document.querySelectorAll("#items .pill").forEach(x=>x.classList.remove("on"));p.classList.add("on")}));
+</script>
+</body>
+</html>
