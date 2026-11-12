@@ -65,6 +65,11 @@ ul.list{list-style:none;margin:0;padding:0}
 .filters input,.filters select{border:1px solid var(--line);border-radius:8px;padding:8px 10px;font:inherit;background:var(--card)}
 .filters input{flex:1;min-width:200px}
 .pills{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.dhead{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px}
+.dseg{flex:0 1 auto}
+.dseg button{padding:6px 12px;font-size:13px;cursor:pointer;white-space:nowrap}
+.dsum{display:flex;gap:18px;flex-wrap:wrap;font-size:13px;color:var(--sub);margin-top:4px}
+.dsum b{color:var(--text);font-size:15px}
 .pill{border:1px solid var(--line);background:var(--card);border-radius:99px;padding:5px 12px;font-size:12px;cursor:pointer}
 .pill.on{background:var(--text);color:#fff;border-color:var(--text)}
 .tablewrap{overflow-x:auto}
@@ -112,6 +117,7 @@ table.sheet{border-collapse:collapse;width:max-content;min-width:100%;font-size:
 .howto{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--sub);margin:0 0 12px}
 .howto b{color:var(--text);background:var(--gray-soft);border-radius:4px;padding:1px 6px;font-weight:600;margin-right:4px}
 .t-yama{background:#fdeee5;color:#b45309}
+tr.lotleft td{background:var(--orange-soft);border-top:2px solid var(--line)}
 .sheet td.kind{cursor:pointer;text-align:center}
 .slipgrid{display:grid;grid-template-columns:1fr 1.4fr;gap:12px;margin-top:4px}
 .drop{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border:2px dashed #b8c2d6;border-radius:12px;background:#fafbfd;padding:18px;cursor:pointer;text-align:center}
@@ -364,7 +370,7 @@ nav.bottom{display:none}
   <p class="lead">2026年11月11日（水）時点</p>
   <div class="tbdbanner" id="tbdBanner"><span>🚚</span><b></b><button class="btn">送料を入れる</button></div>
 
-  <div class="sec">今日</div>
+  <div class="sec">今日（EC）</div>
   <div class="grid kpis">
     <div class="kpi"><div class="l">売上</div><div class="v">¥72,123</div><div class="d up">▲ 昨日より +¥40,200</div></div>
     <div class="kpi"><div class="l">粗利</div><div class="v">¥50,907</div><div class="d muted">粗利率 71%</div></div>
@@ -373,17 +379,24 @@ nav.bottom{display:none}
     <div class="kpi"><div class="l">発送数</div><div class="v">1</div><div class="d down">未発送 4件</div></div>
   </div>
 
-  <div class="sec">今月（11月）</div>
+  <div class="sec">今月（EC・11月）</div>
   <div class="grid three">
-    <div class="kpi"><div class="l">売上</div><div class="v">¥486,300</div><div class="d"><span class="tag t-temp">為替 仮</span></div></div>
+    <div class="kpi"><div class="l">売上</div><div class="v">¥486,300</div><div class="d muted">目標 ¥1,000,000 の <b>49%</b>　<span class="tag t-temp">為替 仮</span></div></div>
     <div class="kpi"><div class="l">粗利</div><div class="v">¥301,550</div><div class="d muted">粗利率 62%</div></div>
-    <div class="kpi"><div class="l">売上目標</div><div class="v">49%</div><div class="d muted">目標 ¥1,000,000</div></div>
-    <div class="kpi"><div class="l">在庫（残原価）</div><div class="v">¥1,158,208</div><div class="d muted">412点</div></div>
+    <div class="kpi"><div class="l">在庫（残原価）</div><div class="v">¥1,158,208</div><div class="d muted">412点・出品率 <b>77%</b></div></div>
+    <div class="kpi"><div class="l">成約件数</div><div class="v">19件</div><div class="d up">▲ 先月の同じ日より +3件</div></div>
   </div>
 
+  <div class="card" style="margin-top:12px">
+    <div class="dhead"><h2 style="margin:0">今月の日ごとの数字（EC・11月）</h2>
+      <div class="seg dseg" id="dMetric"><button data-m="sp" class="on">売上・粗利</button><button data-m="buy">仕入額</button><button data-m="list">出品数</button><button data-m="deal">成約件数</button></div></div>
+    <div class="legend" id="dLegend"></div>
+    <svg viewBox="0 0 960 200" width="100%" role="img" aria-label="今月の日ごとのグラフ"><g id="dChart"></g></svg>
+    <div class="dsum" id="dSum"></div>
+  </div>
   <div class="grid two" style="margin-top:12px">
     <div class="card">
-      <h2>月ごとの売上と粗利</h2>
+      <h2>月ごとの売上と粗利（EC）</h2>
       <div class="legend"><span style="--c:#93b4f7">売上</span><span style="--c:#15803d">粗利</span></div>
       <svg viewBox="0 0 600 220" width="100%" role="img" aria-label="月ごとの売上と粗利のグラフ">
         <g font-size="11" fill="#6b7280">
@@ -398,7 +411,7 @@ nav.bottom{display:none}
       </svg>
     </div>
     <div class="card">
-      <h2>売り先別（今月）</h2>
+      <h2>売り先別（EC・今月）</h2>
       <div class="bars">
         <div class="row"><span>Catawiki</span><div class="bar"><i style="width:82%"></i></div><span class="n" style="text-align:right">¥241,800</span></div>
         <div class="row"><span>メルカリ</span><div class="bar"><i style="width:48%"></i></div><span style="text-align:right">¥142,000</span></div>
@@ -434,12 +447,12 @@ nav.bottom{display:none}
   <h1>商品一覧</h1>
   <p class="lead">全 1,284 点（在庫 412 点）。売れ残りをまとめて山売りしたいときは、商品にチェックを入れて「まとめて売る」を押します。<br><span class="muted">商品を押すと、いくら利益が出ているかが見られます。</span></p>
   <div class="filters">
-    <input placeholder="管理番号・商品名で検索">
+    <input id="invQ" placeholder="管理番号・商品名で検索" style="flex:1"><button class="btn primary" id="invGo">🔍 検索</button>
     <select><option>ジャンル：すべて</option><option>カメラ</option><option>ゲーム</option><option>茶道具</option><option>家具</option></select>
     <select><option>出品先：すべて</option><option>Catawiki</option><option>メルカリ</option><option>ヤフオク</option></select>
   </div>
   <div class="pills">
-    <button class="pill on">すべて</button><button class="pill">在庫（未出品）</button><button class="pill">出品中</button><button class="pill">売却済み</button><button class="pill">90日以上</button>
+    <span id="invPills"></span>
   </div>
 
   <div class="card tablewrap pc" style="padding:4px 8px">
@@ -451,16 +464,17 @@ nav.bottom{display:none}
   <div class="mcards" id="itemcards"></div>
   <div class="pickbar" id="pickBar"><b id="pickCount"></b><button class="btn" id="pickClear">選択を外す</button><button class="btn primary" id="pickSell">まとめて売る</button></div>
   <dialog id="bundleDlg">
-    <h2 style="margin:0 0 4px">まとめて売る（山売り）</h2>
-    <p class="muted" style="margin:0 0 12px">売れた金額を、予想売価の比率で各商品に割り振ります。金額のマスは手で直せます。</p>
+    <h2 style="margin:0 0 4px">まとめて売る（山売り・合わせ売り）</h2>
+    <p class="muted" style="margin:0 0 12px">販売の記録は<b>1件（1行）</b>になります。中身の商品はすべて売却済みになります。<br>売れた金額は、山ごとの成績が分かるように、予想売価の比率で中身に分けます（金額のマスは手で直せます）。</p>
     <div class="filters">
-      <select><option>売り先：市場</option><option>ヤフオク</option><option>メルカリ</option></select>
-      <input value="2026/11/12" style="flex:0 1 130px;min-width:120px">
-      <input id="bAmt" value="5000" inputmode="numeric" style="flex:0 1 150px;min-width:120px" placeholder="売れた金額">
+      <label class="muted" style="display:flex;gap:6px;align-items:center">売り先<select id="bCh"></select></label>
+      <input value="2026/11/13" style="flex:0 1 130px;min-width:120px">
+      <label class="muted" style="display:flex;gap:6px;align-items:center">売れた金額<input id="bAmt" value="36000" inputmode="numeric" style="width:110px" class="n"></label>
+      <label class="muted" style="display:flex;gap:6px;align-items:center">手数料<input id="bFee" value="3000" inputmode="numeric" style="width:90px" class="n"></label>
     </div>
     <div id="leftovers" style="margin-bottom:10px"></div>
     <div class="tablewrap"><table>
-      <thead><tr><th>管理番号</th><th class="n">予想売価</th><th class="n">売上（割り振り）</th><th class="n">粗利</th></tr></thead>
+      <thead><tr><th>管理番号</th><th class="n">予想売価</th><th class="n">原価</th><th class="n">売上（分けた額）</th></tr></thead>
       <tbody id="bRows"></tbody>
     </table></div>
     <p id="bCheck" style="font-size:13px"></p>
@@ -483,10 +497,10 @@ nav.bottom{display:none}
   </div>
 
   <div class="grid three" style="margin-top:16px">
-    <div class="kpi"><div class="l">仕入額</div><div class="v">¥10,000</div></div>
+    <div class="kpi"><div class="l">仕入額</div><div class="v">¥10,000</div><div class="d muted">予想売価の合計 ¥125,000・<b>原価率 8%</b></div></div>
     <div class="kpi"><div class="l">売上合計</div><div class="v">¥72,000</div></div>
-    <div class="kpi"><div class="l">粗利合計</div><div class="v up">¥48,350</div></div>
-    <div class="kpi"><div class="l">売れた点数</div><div class="v">3 / 6</div><div class="d muted">登録済みの商品</div></div>
+    <div class="kpi"><div class="l">粗利合計</div><div class="v up">¥47,350</div></div>
+    <div class="kpi"><div class="l">売れた点数</div><div class="v">2 / 5</div><div class="d muted">枝番（＋山の残りは売却済み）</div></div>
   </div>
 
   <div class="card" style="margin-top:12px">
@@ -499,26 +513,26 @@ nav.bottom{display:none}
 
   <div class="card tablewrap pc" style="padding:4px 8px">
     <table>
-      <thead><tr><th>管理番号</th><th>商品名</th><th class="n">予想売価</th><th class="n">原価（割り振り）</th><th>状態</th><th>出品先</th><th class="n">売値</th><th class="n">粗利</th></tr></thead>
+      <thead><tr><th>管理番号</th><th>商品名</th><th class="n">予想売価</th><th class="n">原価（自動）</th><th>状態</th><th>出品先</th><th class="n">売値</th><th class="n">粗利</th></tr></thead>
       <tbody>
-        <tr class="sold-row"><td>0120-1</td><td>SEIKO 5 自動巻き</td><td class="n">¥30,000</td><td class="n">¥3,000</td><td><span class="tag t-sold">売却済み</span></td><td><span class="chip sold">Catawiki</span></td><td class="n">¥34,000</td><td class="n up">¥24,100</td></tr>
-        <tr class="sold-row"><td>0120-2</td><td>CITIZEN クロノグラフ</td><td class="n">¥20,000</td><td class="n">¥2,000</td><td><span class="tag t-sold">売却済み</span></td><td><span class="chip sold">Catawiki</span><span class="chip">メルカリ</span></td><td class="n">¥28,000</td><td class="n up">¥19,750</td></tr>
-        <tr><td>0120-3</td><td>ORIENT スター</td><td class="n">¥20,000</td><td class="n">¥2,000</td><td><span class="tag t-list">出品中</span></td><td><span class="chip">メルカリ</span><span class="chip">ヤフオク</span></td><td class="n">—</td><td class="n">—</td></tr>
-        <tr><td>0120-4</td><td>CASIO G-SHOCK</td><td class="n">¥15,000</td><td class="n">¥1,500</td><td><span class="tag t-list">出品中</span></td><td><span class="chip">メルカリ</span></td><td class="n">—</td><td class="n">—</td></tr>
-        <tr><td>0120-5</td><td>SEIKO クオーツ</td><td class="n">¥15,000</td><td class="n">¥1,500</td><td><span class="tag t-stock">在庫</span></td><td class="muted">未出品</td><td class="n">—</td><td class="n">—</td></tr>
-        <tr class="sold-row"><td>0120-6</td><td>残り7点まとめ（市場）</td><td class="n">—</td><td class="n">¥0</td><td><span class="tag t-sold">売却済み</span></td><td><span class="chip sold">市場</span></td><td class="n">¥10,000</td><td class="n up">¥4,500</td></tr>
+        <tr class="sold-row"><td>0120-1</td><td>SEIKO 5 自動巻き</td><td class="n">¥30,000</td><td class="n">¥2,400</td><td><span class="tag t-sold">売却済み</span></td><td><span class="chip sold">Catawiki</span></td><td class="n">¥34,000</td><td class="n up">¥24,700</td></tr>
+        <tr class="sold-row"><td>0120-2</td><td>CITIZEN クロノグラフ</td><td class="n">¥20,000</td><td class="n">¥1,600</td><td><span class="tag t-sold">売却済み</span></td><td><span class="chip sold">Catawiki</span><span class="chip">メルカリ</span></td><td class="n">¥28,000</td><td class="n up">¥20,150</td></tr>
+        <tr><td>0120-3</td><td>ORIENT スター</td><td class="n">¥20,000</td><td class="n">¥1,600</td><td><span class="tag t-list">出品中</span></td><td><span class="chip">メルカリ</span><span class="chip">ヤフオク</span></td><td class="n">—</td><td class="n">—</td></tr>
+        <tr><td>0120-4</td><td>CASIO G-SHOCK</td><td class="n">¥15,000</td><td class="n">¥1,200</td><td><span class="tag t-list">出品中</span></td><td><span class="chip">メルカリ</span></td><td class="n">—</td><td class="n">—</td></tr>
+        <tr><td>0120-5</td><td>SEIKO クオーツ</td><td class="n">¥15,000</td><td class="n">¥1,200</td><td><span class="tag t-stock">未出品</span></td><td class="muted">—</td><td class="n">—</td><td class="n">—</td></tr>
+        <tr class="sold-row"><td>0120-0</td><td>山の残り 7点まとめ <span class="tag t-yama">山の残り</span></td><td class="n">¥25,000</td><td class="n">¥2,000</td><td><span class="tag t-sold">売却済み</span></td><td><span class="chip sold">古物市場</span></td><td class="n">¥10,000</td><td class="n up">¥2,500</td></tr>
       </tbody>
     </table>
   </div>
   <div class="mcards">
-    <div class="mc"><div class="top"><span class="muted">0120-1</span><span class="tag t-sold">売却済み</span></div><div class="name">SEIKO 5 自動巻き</div><div class="meta"><span>原価 ¥3,000 → 売値 ¥34,000</span><span class="up">粗利 ¥24,100</span></div></div>
-    <div class="mc"><div class="top"><span class="muted">0120-2</span><span class="tag t-sold">売却済み</span></div><div class="name">CITIZEN クロノグラフ</div><div class="meta"><span>原価 ¥2,000 → 売値 ¥28,000</span><span class="up">粗利 ¥19,750</span></div></div>
-    <div class="mc"><div class="top"><span class="muted">0120-3</span><span class="tag t-list">出品中</span></div><div class="name">ORIENT スター</div><div class="meta"><span>原価 ¥2,000 / 予想 ¥20,000</span><span>メルカリ・ヤフオク</span></div></div>
-    <div class="mc"><div class="top"><span class="muted">0120-4</span><span class="tag t-list">出品中</span></div><div class="name">CASIO G-SHOCK</div><div class="meta"><span>原価 ¥1,500 / 予想 ¥15,000</span><span>メルカリ</span></div></div>
-    <div class="mc"><div class="top"><span class="muted">0120-5</span><span class="tag t-stock">在庫</span></div><div class="name">SEIKO クオーツ</div><div class="meta"><span>原価 ¥1,500 / 予想 ¥15,000</span><span>未出品</span></div></div>
-    <div class="mc"><div class="top"><span class="muted">0120-6</span><span class="tag t-sold">売却済み</span></div><div class="name">残り7点まとめ（市場）</div><div class="meta"><span>原価 ¥0 → 売値 ¥10,000</span><span class="up">粗利 ¥4,500</span></div></div>
+    <div class="mc"><div class="top"><span class="muted">0120-1</span><span class="tag t-sold">売却済み</span></div><div class="name">SEIKO 5 自動巻き</div><div class="meta"><span>原価 ¥2,400 → 売値 ¥34,000</span><span class="up">粗利 ¥24,700</span></div></div>
+    <div class="mc"><div class="top"><span class="muted">0120-2</span><span class="tag t-sold">売却済み</span></div><div class="name">CITIZEN クロノグラフ</div><div class="meta"><span>原価 ¥1,600 → 売値 ¥28,000</span><span class="up">粗利 ¥20,150</span></div></div>
+    <div class="mc"><div class="top"><span class="muted">0120-3</span><span class="tag t-list">出品中</span></div><div class="name">ORIENT スター</div><div class="meta"><span>原価 ¥1,600 / 予想 ¥20,000</span><span>メルカリ・ヤフオク</span></div></div>
+    <div class="mc"><div class="top"><span class="muted">0120-4</span><span class="tag t-list">出品中</span></div><div class="name">CASIO G-SHOCK</div><div class="meta"><span>原価 ¥1,200 / 予想 ¥15,000</span><span>メルカリ</span></div></div>
+    <div class="mc"><div class="top"><span class="muted">0120-5</span><span class="tag t-stock">未出品</span></div><div class="name">SEIKO クオーツ</div><div class="meta"><span>原価 ¥1,200 / 予想 ¥15,000</span><span>未出品</span></div></div>
+    <div class="mc"><div class="top"><span class="muted">0120-0</span><span class="tag t-sold">売却済み</span></div><div class="name">山の残り 7点まとめ</div><div class="meta"><span>原価 ¥2,000 → 売値 ¥10,000</span><span class="up">粗利 ¥2,500</span></div></div>
   </div>
-  <p class="muted">原価は、山の仕入額 ¥10,000 を予想売価の比率で自動で割り振っています。</p>
+  <p class="muted">枝番の原価は「予想売価 × 原価率 8%」で自動で決まります（仕入額 ¥10,000 ÷ 予想売価の合計 ¥125,000）。<br>枝番に入らなかった原価 ¥2,000 は 0120-0（山の残り）に残り、残りを売ったときの原価になります。</p>
   </div>
   <div id="lotB" style="display:none">
     <p class="muted" style="margin:0 0 6px">商品一覧 ＞ 山 0353</p>
@@ -528,16 +542,20 @@ nav.bottom{display:none}
       <p class="lead" style="margin:0">仕入先：オークション（関東） ／ 仕入日：2026/11/04</p>
     </div></div>
     <div class="grid three" style="margin-top:16px">
-      <div class="kpi"><div class="l">仕入額</div><div class="v">¥52,333</div></div>
+      <div class="kpi"><div class="l">仕入額</div><div class="v">¥52,333</div><div class="d muted" id="brKpi"></div></div>
       <div class="kpi"><div class="l">売上合計</div><div class="v">¥0</div></div>
       <div class="kpi"><div class="l">粗利合計</div><div class="v">—</div></div>
       <div class="kpi"><div class="l">枝番</div><div class="v">まだなし</div></div>
     </div>
     <div class="card" style="margin-top:12px">
       <h2>枝番を追加（売れそうなものだけ）</h2>
-      <p class="muted" style="margin:-6px 0 10px">商品名と予想売価を入れると、枝番号と原価が自動で入ります。あとから何回でも追加できます（売れた商品の原価は変わりません）。</p>
+      <p class="muted" style="margin:-6px 0 10px">商品名と予想売価を入れると、枝番号と原価が自動で入ります。原価は「予想売価 × 山の原価率」です。<br>売ると決めたものだけ、あとから何回でも追加できます（前に作った枝番の原価は変わりません）。</p>
+      <div class="filters" style="align-items:center">
+        <label class="muted" style="display:flex;gap:6px;align-items:center">山全体の予想売価（合計）<input id="brLotExp" value="150000" inputmode="numeric" class="n" style="width:120px"></label>
+        <span id="brRate"></span>
+      </div>
       <div class="tablewrap"><table class="brtable">
-        <thead><tr><th style="width:90px">管理番号</th><th>商品名</th><th class="n" style="width:120px">予想売価</th><th class="n" style="width:120px">原価（割り振り）</th></tr></thead>
+        <thead><tr><th style="width:90px">管理番号</th><th>商品名</th><th class="n" style="width:120px">予想売価</th><th class="n" style="width:120px">原価（自動）</th></tr></thead>
         <tbody id="brRows"></tbody>
       </table></div>
       <p class="muted" id="brSum"></p>
@@ -567,10 +585,10 @@ nav.bottom{display:none}
       <div class="flabel" id="mQtyRow">個数</div>
       <div class="stepper" id="mQtyBox"><button id="mMinus">−</button><b id="mQty">1</b><button id="mPlus">＋</button></div>
       <div id="mKidsBox" style="display:none">
-        <div class="flabel">山の中身（わかる分だけ。あとから足せます）</div>
+        <div class="flabel">山の中身（売ると決めたものだけ。あとから足せます）</div>
         <div id="mKids"></div>
         <button class="btn" id="mAddKid" style="width:100%">＋ 中身を追加</button>
-        <div class="muted" style="font-size:12px;margin-top:6px">原価は予想売価の比率で自動で割り振ります</div>
+        <div class="muted" style="font-size:12px;margin-top:6px">山のときの「予想売価」は、山全体でいくらで売れそうか（合計）です。中身の原価は 予想売価 × 原価率 で自動で入ります</div>
       </div>
       <div class="mno">管理番号 <b id="mNo"></b> <span class="muted">（自動）</span></div>
       <p id="mErr" class="merr"></p>
@@ -640,7 +658,8 @@ nav.bottom{display:none}
 
       <div id="sPriceArea">
         <label class="f"><span>売却日</span><input id="sDate" value="2026/11/12"></label>
-        <label class="f"><span>売値 <b class="cur" id="curPrice"></b></span><input id="sPrice" inputmode="decimal" placeholder="0"></label>
+        <label class="f" id="qtyWrap" style="display:none"><span>個数 <small class="muted" id="qtyLeft"></small></span><input id="sQty" inputmode="numeric" value="1"></label>
+        <label class="f"><span><span id="priceLbl">売値</span> <b class="cur" id="curPrice"></b></span><input id="sPrice" inputmode="decimal" placeholder="0"></label>
         <label class="f" id="shipWrap"><span>設定送料（お客様からもらう送料） <b class="cur" id="curShip"></b></span><input id="sShip" inputmode="decimal" placeholder="0"></label>
         <label class="f"><span>手数料 <b class="cur" id="curFee"></b></span><input id="sFee" inputmode="decimal" placeholder="0"><small id="feeHint" class="hint"></small></label>
         <div class="f"><span id="realLabel">実送料（実際にかかった送料・円）</span>
@@ -714,25 +733,108 @@ nav.bottom{display:none}
 </nav>
 
 <script>
+// 山：仕入額と、山全体の予想売価（合計）。原価率 ＝ 仕入額 ÷ 予想売価の合計（見本の数字）
+const LOTS={
+  "0120":{name:"腕時計まとめ 12点",cost:10000,exp:125000},
+  "0353":{name:"【ジャンク】メガネグッズまとめ他小物まとめ",cost:52333,exp:150000},
+  "0460":{name:"茶道具まとめ 20点",cost:24000,exp:80000},
+  "0470":{name:"古着まとめ 30点",cost:18000,exp:90000},
+};
+const lotPct=l=>+(LOTS[l].cost/LOTS[l].exp*100).toFixed(1);
 const items=[
  ["0237-0","Canon ビデオカメラ","カメラ","2026/08/26",10588,60000,"sold",["Catawiki*"],null],
  ["0303-0","ドリームキャスト 本体","ゲーム","2025/09/22",0,6000,"sold",["メルカリ*"],null],
- ["0120-3","ORIENT スター","時計","2026/09/14",2000,20000,"list",["メルカリ","ヤフオク"],58],
- ["0120-4","CASIO G-SHOCK","時計","2026/09/14",1500,15000,"list",["メルカリ"],58],
+ ["0120-3","ORIENT スター","時計","2026/09/14",1600,20000,"list",["メルカリ","ヤフオク"],58],
+ ["0120-4","CASIO G-SHOCK","時計","2026/09/14",1200,15000,"list",["メルカリ"],58],
  ["0042-3","オリンパス フィルムカメラ","カメラ","2026/04/13",3000,12000,"list",["メルカリ","ヤフオク"],212],
  ["0058-0","レトロ 薬箱 赤","雑貨","2026/05/11",1200,4000,"stock",[],184],
- ["L00004","北欧 チェア（残り5個）","家具","2026/07/13",2500,9000,"list",["メルカリ"],121],
+ ["L00004","北欧 チェア","家具","2026/07/13",2500,9000,"list",["メルカリ"],121],
  ["0311-0","吉左衛門 茶碗","茶道具","2026/10/30",8000,30000,"stock",[],12],
  ["0350","ニコン 純正ストラップ","カメラ","2026/10/02",800,4000,"stock",[],41],
  ["0351-2","メガネケース 革","雑貨","2026/10/20",300,1000,"list",["メルカリ"],23],
+ // 見本の行を増やす（画面のイメージ用。実際の商品ではありません）
+ ["0401","SEIKO 5 自動巻き","時計","2026/09/21",2000,6000,"sold",["Catawiki*"],null],
+ ["0402-2","CITIZEN エコドライブ","時計","2026/06/02",500,2000,"list",["ヤフオク"],150],
+ ["0403","CASIO データバンク","時計","2026/09/14",300,600,"sold",["メルカリ*"],null],
+ ["0404","オリエント バンビーノ","時計","2026/11/07",5000,25000,"list",["メルカリ"],5],
+ ["0405","TISSOT クオーツ","時計","2026/06/19",1000,2000,"list",["ヤフオク"],150],
+ ["0406","Canon AE-1","カメラ","2026/10/14",300,900,"sold",["メルカリ*"],null],
+ ["0407-3","Nikon FM2","カメラ","2026/07/27",8000,32000,"list",["メルカリ"],121],
+ ["0408","PENTAX SP","カメラ","2026/10/04",8000,24000,"list",["メルカリ"],58],
+ ["0409","ミノルタ α-7","カメラ","2026/06/07",8000,16000,"list",["Catawiki", "メルカリ"],150],
+ ["0410","FUJIFILM 写ルンです まとめ","カメラ","2026/08/19",3000,12000,"list",["メルカリ", "ヤフオク"],95],
+ ["0411","タクマー 55mm F1.8","カメラ","2026/11/01",1500,4500,"list",["ヤフオク"],23],
+ ["0412-4","Canon EF 50mm","カメラ","2026/07/16",500,2000,"stock",[],121],
+ ["0413","萩焼 湯呑","茶道具","2026/06/03",4000,16000,"sold",["ヤフオク*"],null],
+ ["0414","九谷焼 茶碗","茶道具","2026/11/01",800,3200,"list",["Catawiki"],23],
+ ["0415","鉄瓶 南部","茶道具","2026/07/19",300,600,"list",["メルカリ", "ヤフオク"],121],
+ ["0416","棗 漆","茶道具","2026/06/16",2000,8000,"list",["Catawiki"],150],
+ ["0417-1","建水 銅","茶道具","2026/10/16",500,1000,"list",["メルカリ"],41],
+ ["0418","スーパーファミコン 本体","ゲーム","2026/05/19",300,1200,"list",["Catawiki"],203],
+ ["0419","ゲームボーイ カラー","ゲーム","2026/05/12",1500,7500,"sold",["ヤフオク*"],null],
+ ["0420","PS2 ソフト まとめ","ゲーム","2026/06/04",2000,6000,"list",["ヤフオク"],150],
+ ["0421","NINTENDO 64 本体","ゲーム","2026/10/13",1500,4500,"list",["Catawiki"],34],
+ ["0422-2","セガサターン 本体","ゲーム","2026/08/13",500,1500,"list",["ヤフオク"],95],
+ ["0423","LEVI'S 501 デニム","アパレル","2026/09/12",3000,12000,"list",["Catawiki"],66],
+ ["0424","ハーレーダビッドソン Tシャツ","アパレル","2026/11/01",1000,3000,"sold",["メルカリ*"],null],
+ ["0425","NIKE スウェット","アパレル","2026/08/27",1000,2000,"list",["メルカリ", "ヤフオク"],95],
+ ["0426","ミリタリー ジャケット","アパレル","2026/11/01",1500,3000,"list",["メルカリ", "ヤフオク"],23],
+ ["0427-3","ルイヴィトン 財布","ブランド品","2026/11/01",8000,32000,"list",["Catawiki", "メルカリ"],23],
+ ["0428","GUCCI ショルダーバッグ","ブランド品","2026/08/28",8000,16000,"stock",[],95],
+ ["0429","マイセン カップ&ソーサー","ブランド品","2026/09/13",5000,25000,"list",["Catawiki"],66],
+ ["0430","バカラ グラス","ブランド品","2026/10/03",3000,6000,"list",["Catawiki"],34],
+ ["0431","SONY ウォークマン","家電","2026/10/20",800,1600,"sold",["メルカリ*"],null],
+ ["0432-4","Technics ターンテーブル","家電","2026/07/04",8000,24000,"list",["Catawiki", "メルカリ"],121],
+ ["0433","ナショナル ラジオ","家電","2026/10/20",300,600,"stock",[],34],
+ ["0434","竹細工 かご","家具","2026/06/12",1500,6000,"list",["メルカリ"],150],
+ ["0435","木製 スツール","家具","2026/08/16",4000,20000,"list",["ヤフオク"],95],
+ ["0436","昭和レトロ ランプ","家具","2026/10/16",500,2000,"list",["ヤフオク"],41],
+ ["0437-1","油絵 風景画","絵画、美術品","2026/10/17",5000,10000,"stock",[],34],
+ ["0438","掛軸 山水","絵画、美術品","2026/07/10",5000,10000,"list",["メルカリ"],121],
+ ["0439","ブロンズ 置物","絵画、美術品","2026/11/01",1500,6000,"list",["ヤフオク"],23],
+ ["0440","着物 訪問着","着物関係","2026/05/08",5000,20000,"list",["ヤフオク"],203],
+ ["0441","帯 袋帯","着物関係","2026/10/07",1000,5000,"list",["メルカリ", "ヤフオク"],34],
+ ["0442-2","ZIPPO ライター","雑貨","2026/10/16",300,600,"stock",[],41],
+ ["0443","サングラス レイバン","雑貨","2026/08/26",8000,32000,"list",["メルカリ", "ヤフオク"],95],
+ ["0444","民芸品 こけし","雑貨","2026/10/04",2000,4000,"list",["ヤフオク"],34],
+ ["0445","ブリキ おもちゃ","ホビー","2026/08/20",2000,6000,"list",["Catawiki", "メルカリ"],95],
+ ["0446","ミニカー トミカ まとめ","ホビー","2026/05/12",300,1500,"list",["メルカリ"],203],
+ ["0447-3","MacBook Air 2015","PC、OA機器","2026/10/16",500,2500,"list",["Catawiki"],34],
+ ["0448","iPad 第6世代","PC、OA機器","2026/09/15",2000,4000,"list",["メルカリ"],66],
+ ["0449","ヤマハ アコースティックギター","楽器","2026/11/01",800,2400,"sold",["Catawiki*"],null],
+ ["0450","カシオ キーボード","楽器","2026/06/27",4000,12000,"list",["Catawiki"],150],
 ];
-const st={stock:["在庫","t-stock"],list:["出品中","t-list"],sold:["売却済み","t-sold"]};
+const st={stock:["未出品","t-stock"],list:["出品中","t-list"],sold:["売却済み","t-sold"]};
 const yen=v=>"¥"+v.toLocaleString();
 const chips=a=>a.length?a.map(c=>c.endsWith("*")?`<span class="chip sold">${c.slice(0,-1)}</span>`:`<span class="chip">${c}</span>`).join(""):'<span class="muted">未出品</span>';
 const days=d=>d==null?'<span class="muted">—</span>':(d>=90?`<span class="tag t-warn">${d}日</span>`:d+"日");
 document.getElementById("itemrows").innerHTML=items.map(r=>`<tr><td>${r[6]==="sold"?"":`<input type="checkbox" class="pick" data-no="${r[0]}">`}</td><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td class="n">${yen(r[4])}</td><td class="n">${yen(r[5])}</td><td><span class="tag ${st[r[6]][1]}">${st[r[6]][0]}</span></td><td>${chips(r[7])}</td><td class="n">${days(r[8])}</td></tr>`).join("");
 document.getElementById("itemcards").innerHTML=items.map(r=>`<div class="mc"><div class="top"><span class="muted">${r[6]==="sold"?"":`<input type="checkbox" class="pick" data-no="${r[0]}"> `}${r[0]}・${r[2]}</span><span class="tag ${st[r[6]][1]}">${st[r[6]][0]}</span></div><div class="name">${r[1]}</div><div class="meta"><span>原価 ${yen(r[4])} / 予想 ${yen(r[5])}</span><span>${r[8]==null?"":r[8]+"日"}</span></div><div style="margin-top:6px">${chips(r[7])}</div></div>`).join("");
 
+// ---- 今月の日ごとのグラフ（見本） ----
+(function(){
+  // [日, 売上, 粗利, 仕入額, 出品数, 成約件数]
+  const D=[[1,24500,8200,0,6,3],[2,98400,41200,12000,4,1],[3,0,0,0,8,0],[4,17300,10220,35000,5,2],[5,9800,6100,0,9,1],[6,142000,38500,0,3,1],[7,0,0,8000,7,0],[8,19000,10800,0,4,2],[9,37840,19184,52000,2,1],[10,24000,13853,0,6,2],[11,82578,57597,0,5,2],[12,72123,50907,0,3,4]];
+  const M={sp:{l:"売上・粗利",s:[[1,"#93b4f7","売上"],[2,"#15803d","粗利"]],yen:true},buy:{s:[[3,"#d97706","仕入額"]],yen:true},list:{s:[[4,"#7c3aed","出品数"]]},deal:{s:[[5,"#0891b2","成約件数"]]}};
+  const fm=(v,yen)=>yen?(v>=10000?Math.round(v/1000)/10+"万":v.toLocaleString()):v;
+  function draw(k){
+    const m=M[k],max=Math.max(...D.flatMap(d=>m.s.map(x=>d[x[0]])))||1,top=Math.ceil(max/(m.yen?50000:2))*(m.yen?50000:2);
+    const base=170,H=150,x0=46,cw=(960-x0-10)/30,bw=m.s.length>1?cw*0.36:cw*0.6;
+    let g=`<g font-size="10" fill="#6b7280">`;
+    [0,0.5,1].forEach(t=>{const y=base-H*t;g+=`<line x1="${x0}" y1="${y}" x2="950" y2="${y}" stroke="${t?"#f0f1f3":"#e5e7eb"}"/><text x="${x0-6}" y="${y+3}" text-anchor="end">${fm(top*t,m.yen)}</text>`});
+    for(let d=1;d<=30;d+=1){const x=x0+(d-1)*cw;if(d%5===1||d===30)g+=`<text x="${x+cw/2}" y="${base+16}" text-anchor="middle">${d}</text>`}
+    g+=`<text x="${x0+12*cw+2}" y="${base+28}" fill="#2563eb">今日</text></g>`;
+    D.forEach(d=>m.s.forEach((sr,i)=>{const v=d[sr[0]],h=v/top*H,x=x0+(d[0]-1)*cw+(cw-bw*m.s.length)/2+i*bw;
+      if(v)g+=`<rect x="${x}" y="${base-h}" width="${bw-1}" height="${h}" rx="2" fill="${sr[1]}"><title>11/${d[0]} ${sr[2]} ${m.yen?"¥":""}${v.toLocaleString()}</title></rect>`}));
+    document.getElementById("dChart").innerHTML=g;
+    document.getElementById("dLegend").innerHTML=m.s.map(x=>`<span style="--c:${x[1]}">${x[2]}</span>`).join("");
+    const tot=i=>D.reduce((a,d)=>a+d[i],0);
+    document.getElementById("dSum").innerHTML=m.s.map(x=>`<span>${x[2]}の合計 <b>${m.yen?"¥":""}${tot(x[0]).toLocaleString()}${m.yen?"":"件"}</b></span>`).join("")+`<span>（11/1〜11/12）</span>`;
+    document.querySelectorAll("#dMetric button").forEach(b=>b.classList.toggle("on",b.dataset.m===k));
+  }
+  document.querySelectorAll("#dMetric button").forEach(b=>b.onclick=()=>draw(b.dataset.m));
+  draw("sp");
+})();
 const months=[["6月",320,190],["7月",410,260],["8月",380,230],["9月",520,330],["10月",610,390],["11月",486,301]];
 const max=1150,h=180,base=190,bw=28,gap=92;
 document.getElementById("chart").innerHTML=months.map((m,i)=>{
@@ -1011,20 +1113,27 @@ ensureRows(12);draw();
 // ---- 山の詳細：枝番を追加 ----
 const LOT_COST=52333;
 let branches=[["メガネ 金縁 ヴィンテージ","8000"],["サングラス Ray-Ban","15000"],["",""],["",""],["",""]];
+// 山の原価率 ＝ 仕入額 ÷ 山全体の予想売価。枝番の原価 ＝ 予想売価 × 原価率（ほかの枝番には影響しない）
 function drawBranches(){
+  const lotExp=num(document.getElementById("brLotExp").value)||0, rate=lotExp?LOT_COST/lotExp:0;
   const filled=branches.map((b,i)=>({i,name:b[0],exp:num(b[1])||0})).filter(b=>b.name);
-  const total=filled.reduce((a,b)=>a+b.exp,0);let left=LOT_COST,top=filled[0];
-  filled.forEach(b=>{b.cost=total?Math.floor(LOT_COST*b.exp/total):0;left-=b.cost;if(b.exp>(top?.exp||0))top=b});
-  if(top&&total)top.cost+=left;
+  filled.forEach(b=>b.cost=Math.round(b.exp*rate));
+  const used=filled.reduce((a,b)=>a+b.cost,0), left=LOT_COST-used, expUsed=filled.reduce((a,b)=>a+b.exp,0);
   const byI=Object.fromEntries(filled.map((b,k)=>[b.i,{no:`0353-${k+1}`,cost:b.cost}]));
+  const pct=(rate*100).toFixed(1).replace(/\.0$/,"");
+  document.getElementById("brRate").innerHTML=lotExp?`原価率 <b>${pct}%</b> <span class="muted">（${yen(LOT_COST)} ÷ ${yen(lotExp)}）</span>`:'<span class="down">山全体の予想売価を入れてください</span>';
+  document.getElementById("brKpi").innerHTML=lotExp?`予想売価の合計 ${yen(lotExp)}・<b>原価率 ${pct}%</b>`:"";
   document.getElementById("brRows").innerHTML=branches.map((b,i)=>`<tr>
     <td class="muted">${byI[i]?byI[i].no:"—"}</td>
     <td><input data-i="${i}" data-k="0" value="${esc(b[0])}" placeholder="商品名"></td>
     <td><input data-i="${i}" data-k="1" value="${esc(b[1])}" placeholder="0" class="n" inputmode="numeric"></td>
-    <td class="n auto-txt">${byI[i]?yen(byI[i].cost):"—"}</td></tr>`).join("");
+    <td class="n auto-txt">${byI[i]?yen(byI[i].cost):"—"}</td></tr>`).join("")+
+    `<tr class="lotleft"><td>0353-0</td><td>山の残り <span class="tag t-yama">山の残り</span><br><span class="muted">枝番にしなかった物。まとめて売るときの原価になります</span></td><td class="n">${yen(Math.max(0,lotExp-expUsed))}</td><td class="n ${left<0?"down":""}"><b>${yen(left)}</b></td></tr>`;
   document.querySelectorAll("#brRows input").forEach(inp=>inp.addEventListener("change",()=>{branches[+inp.dataset.i][+inp.dataset.k]=inp.value;drawBranches()}));
-  document.getElementById("brSum").innerHTML=filled.length?`${filled.length}点に、山の仕入額 ${yen(LOT_COST)} を予想売価の比率で割り振りました`:"商品名と予想売価を入れると、原価が自動で入ります";
+  document.getElementById("brSum").innerHTML=left<0?`<span class="down">枝番の原価の合計 ${yen(used)} が、仕入額 ${yen(LOT_COST)} を超えています。山全体の予想売価を見直してください</span>`
+    :filled.length?`枝番 ${filled.length}点の原価 ${yen(used)}、山の残り（0353-0）の原価 ${yen(left)}。合わせて仕入額 ${yen(LOT_COST)} です`:"商品名と予想売価を入れると、原価が自動で入ります";
 }
+document.getElementById("brLotExp").addEventListener("input",drawBranches);
 document.getElementById("brAdd").addEventListener("click",()=>{branches.push(["",""],["",""],["",""]);drawBranches()});
 document.getElementById("brReg").addEventListener("click",()=>alert("これは画面イメージなので、登録はされません。"));
 drawBranches();
@@ -1044,38 +1153,56 @@ function drawPickBar(){
 document.querySelectorAll(".pick").forEach(cb=>cb.addEventListener("change",()=>{cb.checked?picked.add(cb.dataset.no):picked.delete(cb.dataset.no);
   document.querySelectorAll(`.pick[data-no="${cb.dataset.no}"]`).forEach(x=>x.checked=cb.checked);drawPickBar()}));
 let bundle=[];
+// 山の残り（-0）：枝番にしなかった物。原価は「仕入額 − 枝番の原価」
+const isLotLeft=no=>/-0$/.test(no)&&!!LOTS[no.split("-")[0]];
 function openBundle(){
+  const bCh=document.getElementById("bCh");if(!bCh.options.length)bCh.innerHTML=Object.keys(CH).filter(k=>!CH[k].tbd).map(k=>`<option${k==="ヤフオク"?" selected":""}>${k}</option>`).join("");
   bundle=items.filter(r=>picked.has(r[0])).map(r=>({no:r[0],name:r[1],cost:r[4],exp:r[5],amt:null}));
-  const lots=[...new Set(bundle.filter(b=>b.no.includes("-")).map(b=>b.no.split("-")[0]))];
-  document.getElementById("leftovers").innerHTML=lots.map(l=>`<label class="chk"><input type="checkbox" data-lot="${l}" class="lo"> 山${l}の残り（登録していない商品）も一緒に入れる</label>`).join("")||'<span class="muted">選んだ商品に山の枝番がないので、山の残りは入れられません</span>';
+  const lots=[...new Set(bundle.filter(b=>b.no.includes("-")).map(b=>b.no.split("-")[0]))]
+    .filter(l=>!picked.has(l+"-0")&&items.some(r=>r[0]===l+"-0"&&inStock(r)));
+  document.getElementById("leftovers").innerHTML=lots.map(l=>`<label class="chk"><input type="checkbox" data-lot="${l}" class="lo"> 山${l}の残り（${l}-0・枝番にしていない物）も一緒に入れる</label>`).join("");
   document.querySelectorAll(".lo").forEach(cb=>cb.addEventListener("change",()=>{
-    const no=`${cb.dataset.lot}-7`;
-    if(cb.checked)bundle.push({no,name:`山${cb.dataset.lot}の残り`,cost:0,exp:0,amt:null,left:true});else bundle=bundle.filter(b=>b.no!==no);
+    const no=`${cb.dataset.lot}-0`,r=items.find(x=>x[0]===no);
+    if(cb.checked)bundle.push({no,name:r[1],cost:r[4],exp:r[5],amt:null,left:true});else bundle=bundle.filter(b=>b.no!==no);
     drawBundle()}));
   document.getElementById("bundleDlg").showModal();drawBundle();
 }
 function drawBundle(){
-  const total=num(document.getElementById("bAmt").value)||0;
+  const total=num(document.getElementById("bAmt").value)||0, fee=num(document.getElementById("bFee").value)||0;
   const auto=bundle.filter(b=>b.amt==null),fixed=bundle.reduce((a,b)=>a+(b.amt??0),0);
   const rest=Math.max(0,total-fixed),expSum=auto.reduce((a,b)=>a+b.exp,0);
   let left=rest;auto.forEach(b=>{b._a=expSum?Math.floor(rest*b.exp/expSum):Math.floor(rest/auto.length);left-=b._a});
   if(auto.length){const top=auto.reduce((m,b)=>b.exp>m.exp?b:m,auto[0]);top._a+=left}
-  const sum=bundle.reduce((a,b)=>a+(b.amt??b._a),0);
+  const sum=bundle.reduce((a,b)=>a+(b.amt??b._a),0), cost=bundle.reduce((a,b)=>a+b.cost,0), profit=total-fee-cost;
   document.getElementById("bRows").innerHTML=bundle.map((b,i)=>{const a=b.amt??b._a;return `<tr>
-    <td>${b.no}${b.left?' <span class="tag t-temp">追加</span>':""}<br><span class="muted">${b.name}</span>${b.no.includes("-")?`<br><span class="muted">→ 山${b.no.split("-")[0]}の売上に入ります</span>`:""}</td>
-    <td class="n">${yen(b.exp)}</td>
-    <td class="n"><input data-i="${i}" class="bamt n${b.amt==null?" auto-in":""}" value="${a}" inputmode="numeric"></td>
-    <td class="n ${a-b.cost>=0?"up":"down"}">${yen(a-b.cost)}</td></tr>`}).join("");
+    <td>${b.no}${isLotLeft(b.no)?' <span class="tag t-yama">山の残り</span>':""}<br><span class="muted">${b.name}</span>${b.no.includes("-")?`<br><span class="muted">→ 山${b.no.split("-")[0]}の売上に入ります</span>`:""}</td>
+    <td class="n">${yen(b.exp)}</td><td class="n">${yen(b.cost)}</td>
+    <td class="n"><input data-i="${i}" class="bamt n${b.amt==null?" auto-in":""}" value="${a}" inputmode="numeric"></td></tr>`}).join("")+
+    `<tr class="tot"><td colspan="2"><b>この販売（1件）</b></td><td class="n">${yen(cost)}</td><td class="n"><b>${yen(total)}</b></td></tr>`;
   document.querySelectorAll(".bamt").forEach(inp=>inp.addEventListener("change",()=>{bundle[+inp.dataset.i].amt=num(inp.value)??0;drawBundle()}));
   const ok=sum===total;
-  document.getElementById("bCheck").innerHTML=ok?`<span class="up">割り振りの合計 ${yen(sum)} ＝ 売れた金額 ${yen(total)}</span>`:`<span class="down">割り振りの合計 ${yen(sum)} が、売れた金額 ${yen(total)} と合っていません</span>`;
+  document.getElementById("bCheck").innerHTML=(ok?`<span class="up">分けた額の合計 ${yen(sum)} ＝ 売れた金額 ${yen(total)}</span>`:`<span class="down">分けた額の合計 ${yen(sum)} が、売れた金額 ${yen(total)} と合っていません</span>`)+
+    `<br>粗利 ＝ 売れた金額 ${yen(total)} − 手数料 ${yen(fee)} − 原価 ${yen(cost)} ＝ <b class="${profit>=0?"up":"down"}">${yen(profit)}</b>`;
+  document.getElementById("bSave").disabled=!ok||!bundle.length;
 }
-document.getElementById("bAmt").addEventListener("input",drawBundle);
+document.getElementById("bAmt").addEventListener("input",drawBundle);document.getElementById("bFee").addEventListener("input",drawBundle);
 document.getElementById("bReset").addEventListener("click",()=>{bundle.forEach(b=>b.amt=null);drawBundle()});
 document.getElementById("pickSell").addEventListener("click",openBundle);
 document.getElementById("pickClear").addEventListener("click",()=>{picked.clear();document.querySelectorAll(".pick").forEach(x=>x.checked=false);drawPickBar()});
 document.getElementById("bClose").addEventListener("click",()=>document.getElementById("bundleDlg").close());
-document.getElementById("bSave").addEventListener("click",()=>alert("これは画面イメージなので、登録はされません。"));
+document.getElementById("bSave").addEventListener("click",()=>{
+  // 1件の販売として記録。中身はすべて売却済みにする
+  const ch=document.getElementById("bCh").value,total=num(document.getElementById("bAmt").value)||0,fee=num(document.getElementById("bFee").value)||0;
+  const kids=bundle.map(b=>{const r=items.find(x=>x[0]===b.no);const k={no:b.no,amt:b.amt??b._a,cost:b.cost,prev:{status:r[6],chips:[...r[7]]}};
+    k.others=r[7].map(c=>c.replace("*","")).filter(c=>c!==ch);r[6]="sold";r[7]=[ch+"*"];r._flash=true;setTimeout(()=>{r._flash=false},2500);return k});
+  const others=[...new Set(kids.flatMap(k=>k.others))];
+  const rec={id:recId++,no:kids.map(k=>k.no).join(" ＋ "),name:`まとめて売る（中身${kids.length}点）`,ch,priceY:total,profit:total-fee-kids.reduce((a,k)=>a+k.cost,0),kids,others};
+  saleLog.unshift(rec);
+  document.getElementById("bundleDlg").close();picked.clear();drawPickBar();afterChange();
+  const lotsDone=kids.filter(k=>isLotLeft(k.no)).map(k=>"山"+k.no.split("-")[0]);
+  toast(`1件の販売として記録しました（${rec.no}）${lotsDone.length?`。${lotsDone.join("・")}の残りは0になりました`:""}${others.length?`<br><span class="delist">⚠ ${others.join("・")} の出品を取り下げてください</span>`:""}`,
+    ()=>{undoSale(rec);afterChange()},"取り消しました。中身の商品は元の状態に戻りました");
+});
 
 // ---- 販売を記録 ----
 const RATES={JPY:1,EUR:177.36,USD:152.40}; // 見本の数字（11月・仮）
@@ -1094,28 +1221,49 @@ const CH={
 const SPECIAL={"廃棄":"捨てた（原価を損失として記録）","備品にした":"会社で使う（売上に入れない）"};
 Object.assign(st,{disposed:["廃棄","t-warn"],fixture:["備品","t-stock"]});
 // 在庫の見本を足す
-[["0120-5","SEIKO クオーツ","時計","2026/09/14",1500,15000,"stock",[],58],
+[["0120-5","SEIKO クオーツ","時計","2026/09/14",1200,15000,"stock",[],58],
  ["0352","Apple MacBookAir A2941","PC、OA機器","2026/11/04",81675,110000,"stock",[],8],
  ["0354","BAKUNE Dry TENTIAL ロングスリーブTシャツ/ロングパンツセット","アパレル","2026/11/04",14520,22000,"list",["メルカリ"],8],
  ["0360-1","オリンパス OM-1 ボディ","カメラ","2026/10/21",4000,18000,"list",["メルカリ","ヤフオク"],22],
  ["0361","オリンパス ズイコー 50mm F1.8","カメラ","2026/10/21",2500,9000,"stock",[],22]].forEach(r=>items.push(r));
+// 縦積在庫（同じ商品が複数個）：管理番号 → {total:仕入個数, sold:売れた個数}
+const STOCKQ={"0399":{total:10,sold:2},"L00004":{total:8,sold:3}};
+items.push(["0399","CASIO チープカシオ A158W","時計","2026/10/20",1500,4000,"list",["メルカリ","ヤフオク"],23]);
+// 山の見本：枝番の原価 ＝ 予想売価 × 原価率、-0（山の残り）の原価 ＝ 仕入額 − 枝番の原価
+[["0353-0","【ジャンク】メガネグッズまとめ他小物まとめ","雑貨","2026/11/04",52333,150000,"stock",[],9],
+ ["0460-1","楽焼 茶碗","茶道具","2026/08/02",6000,20000,"list",["ヤフオク"],103],
+ ["0460-2","棗 漆塗り","茶道具","2026/08/02",3000,10000,"list",["メルカリ"],103],
+ ["0460-0","茶道具まとめ 残り16点","茶道具","2026/08/02",15000,50000,"stock",[],103],
+ ["0470-1","リーバイス 501 ヴィンテージ","アパレル","2026/07/20",3000,15000,"list",["メルカリ"],116],
+ ["0470-0","古着まとめ 残り29点","アパレル","2026/07/20",15000,75000,"stock",[],116]].forEach(r=>items.push(r));
+const qLeft=no=>STOCKQ[no]?STOCKQ[no].total-STOCKQ[no].sold:null;
 const findItem=no=>{const r=items.find(x=>x[0]===String(no||"").trim());return r?[r[0],r[1],r[4],r]:null};
 const inStock=r=>r[6]==="stock"||r[6]==="list";
 const r0=v=>Math.round(v);
 document.getElementById("rateEUR").textContent=RATES.EUR;document.getElementById("rateUSD").textContent=RATES.USD.toFixed(2);
 
 // ---- 商品一覧の再表示（販売を記録すると状態が変わる） ----
+// 絞り込み：「在庫」は今あるすべての在庫（未出品＋出品中）
+let invF="all",invQ="";
+const INV_F=[["all","すべて",()=>true],["now","在庫",r=>inStock(r)],["stock","未出品",r=>r[6]==="stock"],["list","出品中",r=>r[6]==="list"],["sold","売却済み",r=>!inStock(r)],["old","90日以上",r=>inStock(r)&&r[8]>=90]];
+const qtyTag=r=>(isLotLeft(r[0])?' <span class="tag t-yama">山の残り</span>':"")+(STOCKQ[r[0]]?` <span class="tag t-list">残り${qLeft(r[0])}／${STOCKQ[r[0]].total}個</span>`:"");
+function invList(){const f=INV_F.find(x=>x[0]===invF)[2],k=norm(invQ);return items.filter(r=>f(r)&&(!k||norm(r[0]+r[1]).includes(k)))}
 function renderItems(){
-  document.getElementById("itemrows").innerHTML=items.map(r=>`<tr data-no="${r[0]}" class="clickable ${r._flash?"flash":""}"><td>${inStock(r)?`<input type="checkbox" class="pick" data-no="${r[0]}"${picked.has(r[0])?" checked":""}>`:""}</td><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td class="n">${yen(r[4])}</td><td class="n">${yen(r[5])}</td><td><span class="tag ${st[r[6]][1]}">${st[r[6]][0]}</span></td><td>${chips(r[7])}</td><td class="n">${inStock(r)?days(r[8]):'<span class="muted">—</span>'}</td></tr>`).join("");
-  document.getElementById("itemcards").innerHTML=items.map(r=>`<div data-no="${r[0]}" class="mc clickable ${r._flash?"flash":""}"><div class="top"><span class="muted">${inStock(r)?`<input type="checkbox" class="pick" data-no="${r[0]}"${picked.has(r[0])?" checked":""}> `:""}${r[0]}・${r[2]}</span><span class="tag ${st[r[6]][1]}">${st[r[6]][0]}</span></div><div class="name">${r[1]}</div><div class="meta"><span>原価 ${yen(r[4])} / 予想 ${yen(r[5])}</span><span>${inStock(r)&&r[8]!=null?r[8]+"日":""}</span></div><div style="margin-top:6px">${chips(r[7])}</div></div>`).join("");
+  const list=invList();
+  document.getElementById("invPills").innerHTML=INV_F.map(([k,l])=>`<button class="pill${k===invF?" on":""}" data-f="${k}">${l}</button>`).join("");
+  document.querySelectorAll("#invPills .pill").forEach(b=>b.onclick=()=>{invF=b.dataset.f;renderItems()});
+  document.getElementById("itemrows").innerHTML=(list.length?"":`<tr><td colspan="10" class="muted" style="padding:16px">当てはまる商品はありません</td></tr>`)+list.map(r=>`<tr data-no="${r[0]}" class="clickable ${r._flash?"flash":""}"><td>${inStock(r)?`<input type="checkbox" class="pick" data-no="${r[0]}"${picked.has(r[0])?" checked":""}>`:""}</td><td>${r[0]}</td><td>${r[1]}${qtyTag(r)}</td><td>${r[2]}</td><td>${r[3]}</td><td class="n">${yen(r[4])}</td><td class="n">${yen(r[5])}</td><td><span class="tag ${st[r[6]][1]}">${st[r[6]][0]}</span></td><td>${chips(r[7])}</td><td class="n">${inStock(r)?days(r[8]):'<span class="muted">—</span>'}</td></tr>`).join("");
+  document.getElementById("itemcards").innerHTML=list.map(r=>`<div data-no="${r[0]}" class="mc clickable ${r._flash?"flash":""}"><div class="top"><span class="muted">${inStock(r)?`<input type="checkbox" class="pick" data-no="${r[0]}"${picked.has(r[0])?" checked":""}> `:""}${r[0]}・${r[2]}</span><span class="tag ${st[r[6]][1]}">${st[r[6]][0]}</span></div><div class="name">${r[1]}${qtyTag(r)}</div><div class="meta"><span>原価 ${yen(r[4])} / 予想 ${yen(r[5])}</span><span>${inStock(r)&&r[8]!=null?r[8]+"日":""}</span></div><div style="margin-top:6px">${chips(r[7])}</div></div>`).join("");
   document.querySelectorAll(".pick").forEach(cb=>cb.addEventListener("change",()=>{cb.checked?picked.add(cb.dataset.no):picked.delete(cb.dataset.no);
     document.querySelectorAll(`.pick[data-no="${cb.dataset.no}"]`).forEach(x=>x.checked=cb.checked);drawPickBar()}));
   const n=items.filter(inStock).length;document.querySelector("#items .lead").firstChild.textContent=`全 1,284 点（在庫 ${400+n} 点）。`;
 }
-renderItems();
-
 // ---- 商品名・管理番号で探す ----
 const norm=s=>String(s).normalize("NFKC").toLowerCase().replace(/[ァ-ヶ]/g,c=>String.fromCharCode(c.charCodeAt(0)-0x60)).replace(/\s+/g,"");
+renderItems();
+document.getElementById("invGo").onclick=()=>{invQ=document.getElementById("invQ").value;renderItems()};
+document.getElementById("invQ").addEventListener("keydown",e=>{if(e.key==="Enter"){invQ=e.target.value;renderItems()}});
+document.getElementById("invQ").addEventListener("input",e=>{if(!e.target.value){invQ="";renderItems()}});
 const sugg=document.createElement("div");sugg.className="sugg";document.body.appendChild(sugg);
 let suggFor=null,suggHi=0,suggList=[];
 function searchItems(q){const k=norm(q);if(!k)return [];
@@ -1172,13 +1320,17 @@ let batchSeq=0;
 function applySale(rec){
   const r=findItem(rec.no)[3];
   rec.prev={status:r[6],chips:[...r[7]]};
+  if(STOCKQ[rec.no]&&!SPECIAL[rec.ch]){const q=STOCKQ[rec.no];q.sold+=rec.qty||1;rec.left=q.total-q.sold;
+    if(rec.left>0){r._flash=true;setTimeout(()=>{r._flash=false},2500);saleLog.unshift(rec);return}} // まだ残りがある：出品中のまま、取り下げも不要
   if(rec.ch==="廃棄")r[6]="disposed";else if(rec.ch==="備品にした")r[6]="fixture";
   else{r[6]="sold";rec.others=r[7].map(c=>c.replace("*","")).filter(c=>c!==rec.ch);r[7]=[rec.ch+"*"]} // ほかの出品先は外して、取り下げを知らせる
   r._flash=true;setTimeout(()=>{r._flash=false},2500);
   saleLog.unshift(rec);
 }
 function undoSale(rec){
+  if(rec.kids){rec.kids.forEach(k=>{const r=items.find(x=>x[0]===k.no);r[6]=k.prev.status;r[7]=k.prev.chips;r._flash=true;setTimeout(()=>{r._flash=false},2500)});rec.undone=true;return}
   const r=findItem(rec.no)[3];r[6]=rec.prev.status;r[7]=rec.prev.chips;rec.undone=true;
+  if(STOCKQ[rec.no]&&rec.left!=null)STOCKQ[rec.no].sold-=rec.qty||1;
   r._flash=true;setTimeout(()=>{r._flash=false},2500);
 }
 function afterChange(){renderItems();drawToday();drawOne();drawMany()}
@@ -1197,7 +1349,7 @@ function toast(msg,undoFn,undoMsg){
 }
 function drawToday(){
   const list=saleLog.filter(h=>!h.undone);
-  sEl("sToday").innerHTML=list.length?list.map(h=>`<li><span>${h.no} ${h.name}<br><span class="muted">${h.ch}${h.profit!=null?"・売値 "+yen(r0(h.priceY)):""}${h.batch?"・まとめて入力":""}</span>${h.others&&h.others.length?`<br><span class="delist">⚠ ${h.others.join("・")} の出品を取り下げてください</span>`:""}</span>
+  sEl("sToday").innerHTML=list.length?list.map(h=>`<li><span>${h.no} ${h.name}<br><span class="muted">${h.ch}${h.qty>1?`・${h.qty}個`:""}${h.profit!=null?"・売値 "+yen(r0(h.priceY)):""}${h.left>0?`・残り${h.left}個`:""}${h.batch?"・まとめて入力":""}</span>${h.others&&h.others.length?`<br><span class="delist">⚠ ${h.others.join("・")} の出品を取り下げてください</span>`:""}</span>
      <span style="text-align:right">${h.profit!=null?`<span class="n ${h.profit>=0?"up":"down"}">${yen(r0(h.profit))}</span><br>`:""}<button class="linkbtn" data-id="${h.id}">取り消す</button></span></li>`).join("")
     :'<li class="muted">まだありません</li>';
   sEl("sToday").querySelectorAll(".linkbtn").forEach(b=>b.addEventListener("click",()=>{
@@ -1220,10 +1372,13 @@ attachSearch(sEl("sQ"),r=>selectOne(r));
 function drawOne(){
   const it=sSel?findItem(sSel):null;
   if(it&&!inStock(it[3])){sSel=null;return drawOne()}
-  sEl("sItem").innerHTML=it?`<div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start"><div><span class="muted">${it[0]}</span><br><b>${it[1]}</b><br>原価 ${yen(it[2])}${it[3][7].length?"・出品先 "+it[3][7].join("・"):""}</div><button class="linkbtn" id="sChange">変更</button></div>`:"商品名か管理番号の一部を入れると、候補が出ます";
+  sEl("sItem").innerHTML=it?`<div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start"><div><span class="muted">${it[0]}</span><br><b>${it[1]}</b><br>原価 ${yen(it[2])}${STOCKQ[it[0]]?`（1個あたり）・<b>在庫 残り${qLeft(it[0])}個</b>／${STOCKQ[it[0]].total}個`:""}${it[3][7].length?"・出品先 "+it[3][7].join("・"):""}</div><button class="linkbtn" id="sChange">変更</button></div>`:"商品名か管理番号の一部を入れると、候補が出ます";
   sEl("sItem").className="itembox"+(it?" picked":" muted");
   if(it)sEl("sChange").onclick=()=>selectOne(null);
-  const cost=it?it[2]:0;
+  const multi=it&&STOCKQ[it[0]];sEl("qtyWrap").style.display=multi?"":"none";
+  let qty=1;if(multi){qty=Math.max(1,Math.min(qLeft(it[0]),Math.floor(num(sEl("sQty").value)||1)));sEl("qtyLeft").textContent=`（在庫 残り${qLeft(it[0])}個）`}
+  sEl("priceLbl").textContent=multi&&qty>1?`売値（${qty}個の合計）`:"売値";
+  const cost=it?it[2]*qty:0;
   if(SPECIAL[sCh]){
     sEl("sPriceArea").style.display="none";
     const loss=sCh==="廃棄";
@@ -1247,11 +1402,11 @@ function drawOne(){
     (c.ship?line("＋ 設定送料（円）",yen(r0(r.shipY)),num(sEl("sShip").value)||0):"")+
     `<tr><td>− 実送料${sEl("sShipTbd").checked?' <span class="tag t-temp">仮</span>':""}</td><td class="n">${yen(r0(r.realY))}</td></tr>`+
     line("− 手数料（円）",yen(r0(r.feeY)),r.feeIn!=null?+(+r.feeIn).toFixed(2):0)+
-    `<tr><td>− 原価</td><td class="n">${yen(cost)}</td></tr>`+
+    `<tr><td>− 原価${qty>1?`<br><small class="muted">${yen(it[2])} × ${qty}個</small>`:""}</td><td class="n">${yen(cost)}</td></tr>`+
     `<tr class="tot"><td>粗利</td><td class="n ${r.profit>=0?"up":"down"}">${r.profit<0?"−":""}${yen(Math.abs(r0(r.profit)))}</td></tr>`;
   sEl("sCalcNote").innerHTML=fx?`為替は11月の仮レートです。月末に11月の平均TTMで自動で計算し直します。`:"";
 }
-["sPrice","sShip","sReal","sShipTbd"].forEach(id=>sEl(id).addEventListener("input",drawOne));
+["sPrice","sShip","sReal","sShipTbd","sQty"].forEach(id=>sEl(id).addEventListener("input",drawOne));
 function setShipTbd(on){
   sEl("sShipTbd").checked=on;sEl("sTbdBtn").classList.toggle("on",on);
   const r=sEl("sReal");r.classList.toggle("tmp-in",on);r.placeholder=on?"仮の送料（だいたいの金額）":"0";
@@ -1265,12 +1420,14 @@ sEl("sTbdBtn").addEventListener("click",()=>{setShipTbd(!sEl("sShipTbd").checked
 sEl("sFee").addEventListener("input",()=>{sFeeTouched=true;drawOne()});
 sEl("sSave").addEventListener("click",()=>{
   const it=sSel?findItem(sSel):null;if(!it){alert("売れた商品を選んでください");sEl("sQ").focus();return}
-  const rec={id:recId++,no:it[0],name:it[1],ch:sCh,tbd:sEl("sShipTbd").checked&&!SPECIAL[sCh]};
-  if(!SPECIAL[sCh]){const r=calcSale({ch:sCh,price:sEl("sPrice").value,ship:sEl("sShip").value,fee:sEl("sFee").value,real:sEl("sReal").value,cost:it[2],feeTouched:sFeeTouched});rec.profit=r.profit;rec.priceY=r.priceY;rec.calc=r}
+  const qty=STOCKQ[it[0]]?Math.max(1,Math.min(qLeft(it[0]),Math.floor(num(sEl("sQty").value)||1))):1;
+  const rec={id:recId++,no:it[0],name:it[1],ch:sCh,qty,tbd:sEl("sShipTbd").checked&&!SPECIAL[sCh]};
+  if(!SPECIAL[sCh]){const r=calcSale({ch:sCh,price:sEl("sPrice").value,ship:sEl("sShip").value,fee:sEl("sFee").value,real:sEl("sReal").value,cost:it[2]*qty,feeTouched:sFeeTouched});rec.profit=r.profit;rec.priceY=r.priceY;rec.calc=r}
   applySale(rec);
-  ["sPrice","sShip","sFee","sReal"].forEach(id=>sEl(id).value="");sEl("sSent").checked=false;setShipTbd(false);sFeeTouched=false;sSel=null;sEl("sQ").style.display="";
+  ["sPrice","sShip","sFee","sReal"].forEach(id=>sEl(id).value="");sEl("sSent").checked=false;sEl("sQty").value="1";setShipTbd(false);sFeeTouched=false;sSel=null;sEl("sQ").style.display="";
   afterChange();
-  toast(`${rec.no} ${rec.name} を記録しました。商品一覧で「${SPECIAL[rec.ch]?(rec.ch==="廃棄"?"廃棄":"備品"):"売却済み"}」になりました${delistMsg([rec])}`,()=>{undoSale(rec);afterChange()});
+  toast(rec.left>0?`${rec.no} ${rec.name} を ${rec.qty}個 記録しました。在庫は 残り${rec.left}個 です（出品はそのまま）`
+    :`${rec.no} ${rec.name} を記録しました。商品一覧で「${SPECIAL[rec.ch]?(rec.ch==="廃棄"?"廃棄":"備品"):STOCKQ[rec.no]?"売り切れ（売却済み）":"売却済み"}」になりました${delistMsg([rec])}`,()=>{undoSale(rec);afterChange()});
 });
 drawChips();sSel="0120-3";sEl("sQ").style.display="none";sEl("sPrice").value="120";sEl("sShip").value="30";sEl("sFee").value="18.6";sEl("sReal").value="5200";sFeeTouched=true;drawOne();drawToday();
 
@@ -1359,7 +1516,7 @@ const SOLD_INFO={ // 見本：スプレッドシートの実際の行と同じ�
   "0237-0":{ch:"Catawiki",date:"2026/11/11",price:370,ship:60,fee:54.18,real:10850},
   "0303-0":{ch:"メルカリ",date:"2026/11/11",price:6500,ship:0,fee:650,real:160},
 };
-const LOT_INFO={"0120":{name:"腕時計まとめ 12点",cost:10000,sales:72000,profit:48350,sold:3,total:6}};
+const LOT_INFO={"0120":{name:"腕時計まとめ 12点",cost:10000,sales:72000,profit:47350,sold:3,total:6}};
 const dd=document.createElement("dialog");dd.id="itemDlg";dd.className="itemdlg";document.body.appendChild(dd);
 document.querySelectorAll("dialog").forEach(d=>document.body.appendChild(d)); // どの画面からでも開けるように
 function saleCalcFor(r){
@@ -1411,12 +1568,15 @@ function openItem(no){
       <table class="calc small">${rows.map(x=>`<tr><td>${x[0]}<br><small class="muted">手数料 ${x[4]==="auto"?"":"目安 "}${+(x[1]*100).toFixed(1)}%</small></td><td class="n">− ${yen(r0(x[2]))}</td><td class="n ${x[3]>=0?"up":"down"}"><b>${yen(r0(x[3]))}</b></td></tr>`).join("")}</table>`;
   }
   const lotBox=lot&&!isLotHead&&LOT_INFO[lot]?`<div class="lotbox"><div><b>山${lot}（${LOT_INFO[lot].name}）全体</b><br><span class="muted">仕入額 ${yen(LOT_INFO[lot].cost)}・売上 ${yen(LOT_INFO[lot].sales)}・売れた ${LOT_INFO[lot].sold}/${LOT_INFO[lot].total}点</span></div><div style="text-align:right"><span class="up"><b>粗利 ${yen(LOT_INFO[lot].profit)}</b></span><br><button class="linkbtn" id="toLot">山の画面へ</button></div></div>`
+    :lot&&isLotHead&&LOTS[lot]?`<div class="lotbox"><span class="muted"><b>山${lot}の残り</b>（枝番にしていない物）。原価は 仕入額 ${yen(LOTS[lot].cost)} − 枝番の原価 ${yen(LOTS[lot].cost-r[4])} ＝ ${yen(r[4])} です。<br>ほかの山の残りと一緒に売るときは、商品一覧でチェックを入れて「まとめて売る」を押します。</span></div>`
+    :lot&&!isLotHead&&LOTS[lot]?`<div class="lotbox"><span class="muted">この商品は山${lot}の枝番です。原価は 予想売価 × 山の原価率 ${lotPct(lot)}% で自動で決まっています。</span></div>`
     :lot&&!isLotHead?`<div class="lotbox"><span class="muted">この商品は山${lot}の枝番です。山全体の利益は山の画面で見られます。</span></div>`:"";
   dd.innerHTML=`<div class="dlghead"><div><div class="muted">${r[0]}・${r[2]}</div><h2 style="margin:2px 0 0">${r[1]}</h2></div><button class="x" id="idClose" title="閉じる">×</button></div>
     <div class="infogrid">
       <div><span>状態</span><b><span class="tag ${st[r[6]][1]}">${st[r[6]][0]}</span></b></div>
       <div><span>仕入日</span><b>${r[3]}</b></div>
-      <div><span>原価</span><b>${yen(r[4])}</b></div>
+      <div><span>原価${STOCKQ[r[0]]?"（1個）":""}</span><b>${yen(r[4])}</b></div>
+      ${STOCKQ[r[0]]?`<div><span>在庫</span><b>残り${qLeft(r[0])}個／${STOCKQ[r[0]].total}個</b></div>`:""}
       <div><span>${inStock(r)?"滞留日数":"出品先"}</span><b>${inStock(r)?(r[8]!=null?r[8]+"日":"—"):chips(r[7])}</b></div>
     </div>
     ${(RETURNS[r[0]]||[]).map(x=>`<div class="rethist">↩ ${x.date.slice(5)} に <b>${x.ch}</b> から返品で戻りました（同じ番号で売り直せます）。この返品の損：<b>${yen(r0(x.loss))}</b></div>`).join("")}
@@ -1557,12 +1717,14 @@ document.querySelectorAll("#items .pill").forEach(p=>p.addEventListener("click",
   const g=id=>document.getElementById(id);
   const m={kind:"単品",kindAuto:true,genre:"",genreAuto:true,qty:1,kids:[],list:[]};
   const d=new Date();g("mDate").value=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
-  // 山の原価を予想売価の比率で割り振る（端数は予想売価がいちばん高い商品へ）
-  function alloc(cost,exps){
-    const tot=exps.reduce((a,b)=>a+b,0);if(!cost||!tot)return exps.map(()=>0);
-    const a=exps.map(e=>Math.floor(cost*e/tot));const top=exps.indexOf(Math.max(...exps));
-    a[top]+=cost-a.reduce((x,y)=>x+y,0);return a;
+  // 山の中身の原価 ＝ 予想売価 × 原価率（仕入額 ÷ 山全体の予想売価）。残りは -0（山の残り）に残る
+  function alloc(){
+    const cost=num(g("mCost").value)||0,lotExp=num(g("mExp").value)||0,rate=lotExp?cost/lotExp:0;
+    const al=m.kids.map(k=>Math.round((num(k.exp)||0)*rate));
+    return {al,rate,left:cost-al.reduce((a,b)=>a+b,0),lotExp};
   }
+  function leftText(){const {rate,left,lotExp}=alloc(),base=no(m.list.length);
+    return lotExp?`原価率 ${+(rate*100).toFixed(1)}%（原価 ÷ 予想売価）。${base}-0（山の残り）の原価 <b class="${left<0?"down":""}">${yen(left)}</b>${left<0?"　予想売価の合計を見直してください":""}`:"予想売価（山全体でいくらで売れそうか）を入れると、中身の原価が自動で入ります"}
   const no=i=>pad(NEXT_NO+i);
   function drawKind(){
     g("mKind").querySelectorAll("button").forEach(b=>b.classList.toggle("on",b.dataset.k===m.kind));
@@ -1575,9 +1737,9 @@ document.querySelectorAll("#items .pill").forEach(p=>p.addEventListener("click",
     g("mGAuto").textContent=m.genre&&m.genreAuto?"商品名から推測しました（違えば押して選び直し）":"";
   }
   function drawKids(){
-    const cost=num(g("mCost").value)||0, exps=m.kids.map(k=>num(k.exp)||0), al=alloc(cost,exps), base=no(m.list.length);
+    const {al}=alloc(), base=no(m.list.length);
     g("mKids").innerHTML=m.kids.map((k,i)=>`<div class="kid"><input data-i="${i}" data-f="name" placeholder="中身の商品名" value="${esc(k.name)}"><input data-i="${i}" data-f="exp" inputmode="numeric" placeholder="予想売価" value="${esc(k.exp)}"><button class="x" data-del="${i}">×</button>
-      <div class="al">${base}-${i+1}　原価 ${yen(al[i])}</div></div>`).join("");
+      <div class="al">${base}-${i+1}　原価 ${yen(al[i])}</div></div>`).join("")+`<div class="muted" id="mLeft" style="font-size:12px;margin-top:4px">${leftText()}</div>`;
   }
   function drawList(){
     g("mList").innerHTML=m.list.length?m.list.map((r,i)=>`<div class="mitem"><div><div class="muted" style="font-size:12px">${no(i)}${r.kind==="山"?"-0":""}・${r.genre||"ジャンル未設定"}${r.kind==="山"?'　<span class="tag t-yama">山</span>':""}</div>
@@ -1596,11 +1758,11 @@ document.querySelectorAll("#items .pill").forEach(p=>p.addEventListener("click",
   g("mGenres").addEventListener("click",e=>{const b=e.target.closest("[data-g]");if(!b)return;m.genre=m.genre===b.dataset.g&&!m.genreAuto?"":b.dataset.g;m.genreAuto=false;drawGenres()});
   g("mMinus").onclick=()=>{m.qty=Math.max(1,m.qty-1);g("mQty").textContent=m.qty};
   g("mPlus").onclick=()=>{m.qty++;g("mQty").textContent=m.qty};
-  g("mCost").addEventListener("input",drawKids);
+  g("mCost").addEventListener("input",drawKids);g("mExp").addEventListener("input",drawKids);
   g("mAddKid").onclick=()=>{m.kids.push({name:"",exp:""});drawKids();g("mKids").querySelector(`[data-i="${m.kids.length-1}"]`).focus()};
   g("mKids").addEventListener("input",e=>{const t=e.target;if(t.dataset.i==null)return;m.kids[+t.dataset.i][t.dataset.f]=t.value;
-    if(t.dataset.f==="exp"){const cost=num(g("mCost").value)||0,al=alloc(cost,m.kids.map(k=>num(k.exp)||0)),base=no(m.list.length);
-      g("mKids").querySelectorAll(".al").forEach((el,i)=>el.textContent=`${base}-${i+1}　原価 ${yen(al[i])}`)}});
+    if(t.dataset.f==="exp"){const {al}=alloc(),base=no(m.list.length);
+      g("mKids").querySelectorAll(".al").forEach((el,i)=>el.textContent=`${base}-${i+1}　原価 ${yen(al[i])}`);g("mLeft").innerHTML=leftText()}});
   g("mKids").addEventListener("click",e=>{const b=e.target.closest("[data-del]");if(!b)return;m.kids.splice(+b.dataset.del,1);drawKids()});
   g("mList").addEventListener("click",e=>{const b=e.target.closest("[data-rm]");if(!b)return;const r=m.list.splice(+b.dataset.rm,1)[0];drawList();toast(`「${esc(r.name)}」をリストから外しました`,null)});
   g("rAdd").onclick=()=>{
