@@ -196,6 +196,8 @@ tr.clickable:hover td{background:#f7f9fc}
 .infogrid span{color:var(--sub)}.infogrid b{font-size:14px}
 .profitbig{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;background:var(--green-soft);border-radius:12px;padding:12px 14px;margin-bottom:10px}
 .profitbig.down{background:var(--red-soft)}
+.delist{display:inline-block;margin-top:4px;color:var(--orange);font-weight:600;font-size:12px}
+#toast .delist{color:#fdba74}
 .retbox{border:1px solid var(--line);border-radius:12px;padding:12px;margin-top:12px;display:flex;flex-direction:column;gap:10px}
 .retbox .f{display:flex;flex-direction:column;gap:4px;font-size:13px}
 .retbox input{padding:8px 10px;border:1px solid var(--line);border-radius:8px;font:inherit;text-align:right}
@@ -350,7 +352,6 @@ nav.bottom{display:none}
     <button data-go="dash" class="on">ダッシュボード</button>
     <button data-go="items">商品一覧</button>
     <button data-go="lot">山の詳細</button>
-    <button data-go="sales">販売を記録</button>
     <button data-go="report">月次レポート</button>
   </nav>
   <div class="hright"><button class="btn" data-go="sales">販売を記録</button><button class="btn primary" data-go="bulk">＋ 商品を登録</button></div>
@@ -1172,7 +1173,7 @@ function applySale(rec){
   const r=findItem(rec.no)[3];
   rec.prev={status:r[6],chips:[...r[7]]};
   if(rec.ch==="廃棄")r[6]="disposed";else if(rec.ch==="備品にした")r[6]="fixture";
-  else{r[6]="sold";r[7]=r[7].filter(c=>c!==rec.ch);r[7].unshift(rec.ch+"*")}
+  else{r[6]="sold";rec.others=r[7].map(c=>c.replace("*","")).filter(c=>c!==rec.ch);r[7]=[rec.ch+"*"]} // ほかの出品先は外して、取り下げを知らせる
   r._flash=true;setTimeout(()=>{r._flash=false},2500);
   saleLog.unshift(rec);
 }
@@ -1181,6 +1182,11 @@ function undoSale(rec){
   r._flash=true;setTimeout(()=>{r._flash=false},2500);
 }
 function afterChange(){renderItems();drawToday();drawOne();drawMany()}
+// 同時出品：ほかに出品中の販路があれば、取り下げを知らせる
+function delistMsg(recs){
+  const l=recs.filter(h=>h.others&&h.others.length);if(!l.length)return"";
+  return `<br><span class="delist">⚠ ほかに出品中：${l.map(h=>`${h.no} → <b>${h.others.join("・")}</b>`).join("、")} の出品を取り下げてください</span>`;
+}
 let toastTimer=null;
 function toast(msg,undoFn,undoMsg){
   let t=document.getElementById("toast");if(!t){t=document.createElement("div");t.id="toast";document.body.appendChild(t)}
@@ -1191,7 +1197,7 @@ function toast(msg,undoFn,undoMsg){
 }
 function drawToday(){
   const list=saleLog.filter(h=>!h.undone);
-  sEl("sToday").innerHTML=list.length?list.map(h=>`<li><span>${h.no} ${h.name}<br><span class="muted">${h.ch}${h.profit!=null?"・売値 "+yen(r0(h.priceY)):""}${h.batch?"・まとめて入力":""}</span></span>
+  sEl("sToday").innerHTML=list.length?list.map(h=>`<li><span>${h.no} ${h.name}<br><span class="muted">${h.ch}${h.profit!=null?"・売値 "+yen(r0(h.priceY)):""}${h.batch?"・まとめて入力":""}</span>${h.others&&h.others.length?`<br><span class="delist">⚠ ${h.others.join("・")} の出品を取り下げてください</span>`:""}</span>
      <span style="text-align:right">${h.profit!=null?`<span class="n ${h.profit>=0?"up":"down"}">${yen(r0(h.profit))}</span><br>`:""}<button class="linkbtn" data-id="${h.id}">取り消す</button></span></li>`).join("")
     :'<li class="muted">まだありません</li>';
   sEl("sToday").querySelectorAll(".linkbtn").forEach(b=>b.addEventListener("click",()=>{
@@ -1264,7 +1270,7 @@ sEl("sSave").addEventListener("click",()=>{
   applySale(rec);
   ["sPrice","sShip","sFee","sReal"].forEach(id=>sEl(id).value="");sEl("sSent").checked=false;setShipTbd(false);sFeeTouched=false;sSel=null;sEl("sQ").style.display="";
   afterChange();
-  toast(`${rec.no} ${rec.name} を記録しました。商品一覧で「${SPECIAL[rec.ch]?(rec.ch==="廃棄"?"廃棄":"備品"):"売却済み"}」になりました`,()=>{undoSale(rec);afterChange()});
+  toast(`${rec.no} ${rec.name} を記録しました。商品一覧で「${SPECIAL[rec.ch]?(rec.ch==="廃棄"?"廃棄":"備品"):"売却済み"}」になりました${delistMsg([rec])}`,()=>{undoSale(rec);afterChange()});
 });
 drawChips();sSel="0120-3";sEl("sQ").style.display="none";sEl("sPrice").value="120";sEl("sShip").value="30";sEl("sFee").value="18.6";sEl("sReal").value="5200";sFeeTouched=true;drawOne();drawToday();
 
@@ -1320,7 +1326,7 @@ document.getElementById("mSave").addEventListener("click",()=>{
     const rec={id:recId++,no:it[0],name:it[1],ch:m.ch,profit:r.profit,priceY:r.priceY,calc:r,batch:b,tbd:!!m.tbd};applySale(rec);recs.push(rec)});
   mRows=mRows.filter(m=>!valid.includes(m));while(mRows.length<6)mRows.push(newRow());
   afterChange();
-  toast(`${recs.length}件を記録しました。商品一覧で「売却済み」になりました`,()=>{recs.forEach(undoSale);afterChange()});
+  toast(`${recs.length}件を記録しました。商品一覧で「売却済み」になりました${delistMsg(recs)}`,()=>{recs.forEach(undoSale);afterChange()});
 });
 drawMany();
 
@@ -1538,7 +1544,7 @@ function drawTbd(){
   }));
   box.querySelectorAll("input[data-i]").forEach(inp=>inp.addEventListener("keydown",e=>{if(e.key==="Enter")box.querySelector(`button[data-i="${inp.dataset.i}"]`).click()}));
 }
-function goTbd(){document.querySelector('nav.top [data-go="sales"]').click();document.querySelector('#salesTabs [data-st="tbd"]').click()}
+function goTbd(){document.querySelector('.hright [data-go="sales"]').click();document.querySelector('#salesTabs [data-st="tbd"]').click()}
 document.getElementById("tbdBanner").querySelector("button").addEventListener("click",goTbd);
 drawTbd();
 // 記録・取り消しのたびに数を更新
