@@ -218,6 +218,99 @@ table.calc.small td{padding:6px 4px;font-size:13px}
 .tbdin input.errin{border-color:var(--red)}
 @media (max-width:760px){.tbdin{width:100%}.tbdin input{flex:1}}
 .btn[disabled]{opacity:.45;cursor:not-allowed}
+/* スマホ用の登録 */
+.mobonly{display:none}
+.mf .card{margin-bottom:12px}
+.mf label,.mf .flabel{display:block;font-size:12px;color:var(--sub);margin:12px 0 4px}
+.mf label input{display:block;width:100%;box-sizing:border-box;font:inherit;font-size:16px;padding:12px;border:1px solid var(--line);border-radius:10px;margin-top:4px;background:#fff;color:var(--text)}
+.mf label input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.mf .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.mf .mcommon label{margin-top:6px}
+.seg{display:flex;background:var(--gray-soft);border-radius:10px;padding:3px}
+.seg button{flex:1;border:0;background:none;padding:10px 4px;font:inherit;font-size:14px;border-radius:8px;color:var(--sub)}
+.seg button.on{background:var(--card);color:var(--text);font-weight:700;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.gchips{display:flex;flex-wrap:wrap;gap:6px}
+.gchips .chipbtn{padding:9px 12px}
+.stepper{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.stepper button{border:0;background:var(--gray-soft);width:48px;height:44px;font-size:20px}
+.stepper b{min-width:52px;text-align:center;font-size:16px}
+.kid{display:grid;grid-template-columns:1fr 92px 36px;gap:6px;align-items:center;margin-bottom:8px}
+.kid input{font:inherit;font-size:16px;padding:10px;border:1px solid var(--line);border-radius:8px;width:100%;box-sizing:border-box}
+.kid .x,.mitem .x{border:0;background:none;font-size:18px;color:var(--sub)}
+.kid .al{grid-column:1/-1;font-size:12px;color:var(--accent);margin-top:-4px}
+.mno{margin:14px 0 4px;font-size:13px}
+.merr{color:#b91c1c;font-size:13px;margin:4px 0}
+.btn.big{width:100%;padding:14px;font-size:16px;border-radius:12px}
+.mitem{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:8px;display:flex;justify-content:space-between;gap:8px}
+.mitem .name{font-weight:600;margin:2px 0 4px}
+.mitem .meta{font-size:12px;color:var(--sub)}
+.mbar{position:sticky;bottom:64px;padding:10px 0;background:linear-gradient(transparent,var(--bg) 30%)}
+@media (max-width:760px){.pconly{display:none!important}.mobonly{display:block}h1 .mobonly{display:inline}}
+.realrow{display:flex;gap:8px}
+.realrow input{flex:1;min-width:0}
+.realrow input.tmp-in,.tbdcell input.tmp-in{background:var(--orange-soft);color:var(--orange);font-weight:600;border-color:#f3c4a6}
+.tbdbtn{flex:none;padding:8px 16px}
+.tbdbtn.on{background:var(--orange);border-color:var(--orange);color:#fff}
+.tbdcell{display:flex;align-items:center;gap:4px;padding:0 4px}
+.tbdcell input{flex:1;min-width:60px}
+.tbdcell .mini{border:1px solid var(--line);background:var(--card);border-radius:6px;font:inherit;font-size:11px;padding:3px 6px;cursor:pointer;white-space:nowrap;color:var(--sub)}
+.tbdcell .tag{cursor:pointer}
+/* 月次レポート */
+.replist{display:grid;gap:8px;margin-bottom:16px}
+.reprow{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.reprow.on{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
+.reprow .m{font-weight:700;min-width:96px}
+.reprow .info{flex:1;min-width:180px;font-size:13px;color:var(--sub)}
+.reprow .info b{color:var(--text)}
+.repbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+.repbar b{margin-right:auto;font-size:15px}
+.repdoc{border:1px solid var(--line);border-radius:8px;padding:28px 32px;background:#fff;color:#111;font-size:12px;overflow-x:auto}
+.repdoc h2{font-size:18px;margin:0}
+.repdoc h3{font-size:14px;margin:22px 0 6px;padding-bottom:4px;border-bottom:2px solid #111;display:flex;justify-content:space-between;gap:8px}
+.repdoc h3 small{font-weight:400;color:#555;font-size:11px}
+.repdoc .rhead{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;border-bottom:1px solid #ccc;padding-bottom:10px;margin-bottom:12px}
+.repdoc .rhead img{height:20px}
+.repdoc .rmeta{font-size:11px;color:#555;text-align:right;line-height:1.6}
+.repdoc table{width:100%;border-collapse:collapse;margin-top:4px}
+.repdoc th,.repdoc td{border-bottom:1px solid #e3e3e3;padding:5px 6px;text-align:left;white-space:nowrap}
+.repdoc th{background:#f4f4f4;font-weight:600;font-size:11px}
+.repdoc td.n,.repdoc th.n{text-align:right}
+.repdoc tr.tot td{font-weight:700;border-top:2px solid #111;background:#fafafa}
+.repdoc .neg{color:#b91c1c}
+.repdoc .kp{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:8px 0 4px}
+.repdoc .kp div{border:1px solid #ddd;border-radius:6px;padding:8px 10px}
+.repdoc .kp span{display:block;font-size:10px;color:#555}
+.repdoc .kp b{font-size:16px}
+.repdoc .rnote{font-size:10px;color:#555;margin-top:18px;line-height:1.6}
+.recon{border:1px solid var(--line);border-radius:10px;padding:12px;margin:0 0 12px;background:var(--card)}
+.recon .rc-head{display:flex;flex-direction:column;gap:2px;margin-bottom:8px}
+.recon .rc-head .muted{font-size:12px}
+.recon .rc-warn{background:#fff4cc;color:#5c4800;border-radius:8px;padding:8px 10px;margin-bottom:8px;font-size:13px}
+.recon .rc-tmp{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:6px}
+.recon input.n{width:110px;text-align:right;padding:6px 8px;border:1px solid var(--line);border-radius:6px;font:inherit}
+.recon .rc-t{width:100%;border-collapse:collapse;font-size:13px}
+.recon .rc-t th,.recon .rc-t td{padding:6px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
+.recon .rc-t .n{text-align:right}
+.recon .nowrap{white-space:nowrap}
+.recon .ok{color:#15803d;font-weight:700}
+.recon .neg{color:#b91c1c;font-weight:700}
+.recon .btn.mini{padding:4px 8px;font-size:12px}
+.recon .rc-foot{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:10px}
+.fxq{background:#e0ecff;color:#1e40af;border-radius:4px;padding:0 4px;font-size:10px;font-weight:400}
+.repdoc .wmark{border:2px dashed #d97706;color:#b45309;text-align:center;font-weight:700;padding:4px;margin-bottom:10px;border-radius:6px}
+.repdoc .tmp{background:#fff4cc;color:#8a6d00;border-radius:4px;padding:0 4px;font-size:10px}
+@media (max-width:760px){.repdoc{padding:16px}.repdoc .kp{grid-template-columns:repeat(2,1fr)}}
+@media print{
+  @page{size:A4;margin:12mm}
+  body{background:#fff}
+  body>*:not(main),main>*:not(#report),#report>*:not(#repView),#repView>*:not(#repDoc){display:none!important}
+  main{padding:0;max-width:none}
+  #repView{border:0;padding:0;box-shadow:none}
+  #repDoc{border:0;padding:0;overflow:visible}
+  .repdoc .kp{grid-template-columns:repeat(4,1fr)}
+  .repdoc h3{break-after:avoid}
+  .repdoc tr{break-inside:avoid}
+}
 nav.bottom{display:none}
 .fab{display:none}
 
@@ -251,10 +344,10 @@ nav.bottom{display:none}
     <button data-go="dash" class="on">ダッシュボード</button>
     <button data-go="items">商品一覧</button>
     <button data-go="lot">山の詳細</button>
-    <button data-go="bulk">まとめて登録</button>
     <button data-go="sales">販売を記録</button>
+    <button data-go="report">月次レポート</button>
   </nav>
-  <div class="hright"><button class="btn" data-go="sales">販売を記録</button><button class="btn primary">＋ 商品を登録</button></div>
+  <div class="hright"><button class="btn" data-go="sales">販売を記録</button><button class="btn primary" data-go="bulk">＋ 商品を登録</button></div>
 </div></header>
 
 <main>
@@ -448,9 +541,41 @@ nav.bottom{display:none}
 
 <!-- まとめて登録 -->
 <section class="screen" id="bulk">
-  <h1>まとめて登録（伝票の取り込み）</h1>
-  <p class="lead">伝票のCSVを入れるか、スプレッドシートからコピーして貼り付けます。山と単品が混ざっていて大丈夫です。山の行は「種類」のマスを押して切り替えます。</p>
-  <div class="howto">
+  <h1>商品を登録</h1>
+  <!-- スマホ用：1件ずつ入れやすい登録 -->
+  <div class="mobonly mf">
+    <div class="card mcommon">
+      <div class="muted" style="font-size:12px">仕入れの情報（続けて登録するとき、そのまま使います）</div>
+      <div class="row2"><label>仕入先<input id="mSup" placeholder="例：オークション（関東）"></label><label>仕入日<input id="mDate" type="date"></label></div>
+    </div>
+    <div class="card">
+      <div class="seg" id="mKind"><button data-k="単品" class="on">単品</button><button data-k="山">山（まとめて仕入れ）</button></div>
+      <label>商品名<input id="mName" placeholder="例：CASIO G-SHOCK" autocomplete="off"></label>
+      <div class="flabel">ジャンル <span class="auto-txt" id="mGAuto"></span></div>
+      <div class="gchips" id="mGenres"></div>
+      <div class="row2">
+        <label>原価（円）<input id="mCost" inputmode="numeric" placeholder="0"></label>
+        <label>予想売価（円）<input id="mExp" inputmode="numeric" placeholder="0"></label>
+      </div>
+      <div class="flabel" id="mQtyRow">個数</div>
+      <div class="stepper" id="mQtyBox"><button id="mMinus">−</button><b id="mQty">1</b><button id="mPlus">＋</button></div>
+      <div id="mKidsBox" style="display:none">
+        <div class="flabel">山の中身（わかる分だけ。あとから足せます）</div>
+        <div id="mKids"></div>
+        <button class="btn" id="mAddKid" style="width:100%">＋ 中身を追加</button>
+        <div class="muted" style="font-size:12px;margin-top:6px">原価は予想売価の比率で自動で割り振ります</div>
+      </div>
+      <div class="mno">管理番号 <b id="mNo"></b> <span class="muted">（自動）</span></div>
+      <p id="mErr" class="merr"></p>
+      <button class="btn primary big" id="rAdd">リストに追加して、次を入力</button>
+    </div>
+    <div class="sec">今回登録するもの <span id="mCount" class="muted"></span></div>
+    <div id="mList"></div>
+    <p class="muted" style="font-size:12px">伝票のCSVを取り込むときは、パソコンの「＋ 商品を登録」画面が便利です。</p>
+    <div class="mbar"><button class="btn primary big" id="mReg" disabled>登録する</button></div>
+  </div>
+  <p class="lead pconly">伝票のCSVを入れるか、スプレッドシートからコピーして貼り付けます。山と単品が混ざっていて大丈夫です。山の行は「種類」のマスを押して切り替えます。</p>
+  <div class="howto pconly">
     <span><b>ドラッグ</b> 複数のマスを選ぶ</span>
     <span><b>⌘+C / ⌘+V</b> コピー・貼り付け（スプレッドシートからもOK）</span>
     <span><b>右下の■をドラッグ</b> 下にコピー</span>
@@ -459,7 +584,7 @@ nav.bottom{display:none}
     <span><b>ダブルクリック / 文字を打つ</b> マスを編集</span>
   </div>
 
-  <div class="slipgrid">
+  <div class="slipgrid pconly">
     <label class="drop" id="drop"><input type="file" id="slipFile" accept=".csv,text/csv" hidden>
       <b>伝票のCSVをここにドラッグ</b><span class="muted">またはクリックしてファイルを選ぶ</span></label>
     <div class="card slipbar">
@@ -469,18 +594,18 @@ nav.bottom{display:none}
       <button class="btn" id="sampleSlip">見本の伝票CSVを入れてみる</button>
     </div>
   </div>
-  <p id="slipInfo" class="muted" style="margin:8px 0 0"></p>
+  <p id="slipInfo" class="muted pconly" style="margin:8px 0 0"></p>
 
-  <div class="sheet-wrap">
+  <div class="sheet-wrap pconly">
     <table class="sheet" id="sheet" tabindex="0"></table>
   </div>
-  <div class="sheet-tools">
+  <div class="sheet-tools pconly">
     <button class="btn" id="addRows">＋ 10行追加</button>
         <button class="btn" id="clear">すべて消す</button>
     <span class="legend2"><b style="font-weight:600">ジャンル</b>は商品名から推測して自動で入れます（▾ で選び直せます）　<span class="tag t-yama">山</span>/<span class="tag t-stock">単品</span> 押すと切り替え　<i class="sw auto"></i>自動で入れたマス　<i class="sw err"></i>直すマス</span>
   </div>
 
-  <div class="card regbar">
+  <div class="card regbar pconly">
     <div><b id="summary">まだ何も入っていません</b><ul id="errlist"></ul><ul id="warnlist" class="warnlist"></ul></div>
     <button class="btn primary" id="doReg" disabled>この内容で登録する</button>
   </div>
@@ -511,8 +636,10 @@ nav.bottom{display:none}
         <label class="f"><span>売値 <b class="cur" id="curPrice"></b></span><input id="sPrice" inputmode="decimal" placeholder="0"></label>
         <label class="f" id="shipWrap"><span>設定送料（お客様からもらう送料） <b class="cur" id="curShip"></b></span><input id="sShip" inputmode="decimal" placeholder="0"></label>
         <label class="f"><span>手数料 <b class="cur" id="curFee"></b></span><input id="sFee" inputmode="decimal" placeholder="0"><small id="feeHint" class="hint"></small></label>
-        <label class="f"><span>実送料（実際にかかった送料・円）</span><input id="sReal" inputmode="numeric" placeholder="0">
-          <label class="chk small"><input type="checkbox" id="sShipTbd"> 送料未定（あとで入れる）</label></label>
+        <div class="f"><span id="realLabel">実送料（実際にかかった送料・円）</span>
+          <div class="realrow"><input id="sReal" inputmode="numeric" placeholder="0"><button type="button" class="chipbtn tbdbtn" id="sTbdBtn">未定</button></div>
+          <input type="checkbox" id="sShipTbd" hidden>
+          <small class="hint" id="realHint">まだ分からないときは「未定」を押して、仮の金額を入れます。あとで「送料未定」タブで直せます</small></div>
         <label class="chk"><input type="checkbox" id="sSent"> 発送済み</label>
       </div>
       <button class="btn primary big" id="sSave">記録する</button>
@@ -533,7 +660,7 @@ nav.bottom{display:none}
 
   <!-- まとめて入力 -->
   <div id="st-many" style="display:none">
-    <p class="muted" style="margin:0 0 8px">実送料を空欄のまま記録すると「送料未定」になり、あとで「送料未定」タブから入れられます。通知を見ながら1行ずつ入れていきます。商品名の一部（例：「オリンパス」）を入れると候補が出るので、選んでください。売り先を選ぶと、売り先を選ぶと手数料（自動の販路）と粗利が入ります。スプレッドシートから行を貼り付けることもできます（本物のアプリでは「まとめて登録」と同じ操作になります）。</p>
+    <p class="muted" style="margin:0 0 8px">実送料がまだ分からないときは、実送料のマスの「未定」を押して仮の金額を入れます（「未定 800」「仮 800」のように打っても、貼り付けてもOK）。あとで「送料未定」タブから入れられます。通知を見ながら1行ずつ入れていきます。商品名の一部（例：「オリンパス」）を入れると候補が出るので、選んでください。売り先を選ぶと手数料（自動の販路）と粗利が入ります。スプレッドシートから行を貼り付けることもできます（本物のアプリでは「商品を登録」の表と同じ操作になります）。</p>
     <div class="sheet-wrap"><table class="mtable" id="mTable"></table></div>
     <div class="sheet-tools"><button class="btn" id="mAdd">＋ 5行追加</button><span class="legend2"><i class="sw auto"></i>自動で入ったマス　<i class="sw warn2"></i>いつもと違う手数料</span></div>
     <div class="card regbar"><b id="mSum"></b><button class="btn primary" id="mSave">まとめて記録する</button></div>
@@ -541,7 +668,7 @@ nav.bottom{display:none}
 
   <!-- 送料未定 -->
   <div id="st-tbd" style="display:none">
-    <p class="muted" style="margin:0 0 10px">「送料未定」で記録した販売の一覧です。実際にかかった送料が分かったら、ここで入れてください。入れると粗利が計算し直され、一覧から消えます。</p>
+    <p class="muted" style="margin:0 0 10px">「送料未定」で記録した販売の一覧です。今は仮の送料で粗利を計算しています。本当の送料が分かったら、ここで入れて「確定」を押してください。粗利が計算し直され、一覧から消えます。</p>
     <div id="tbdRows"></div>
   </div>
 
@@ -552,14 +679,30 @@ nav.bottom{display:none}
     <p class="muted">「毎回入力」の販路は、過去の手数料率の平均を目安として表示し、平均から大きく外れたときに知らせます。</p>
   </div>
 </section>
+<!-- 月次レポート -->
+<section class="screen" id="report">
+  <h1>月次レポート</h1>
+  <p class="lead">毎月1日に、前の月の販売を販路ごとにまとめた下書きを自動で作ります。<b>10日までに</b>仮の送料を確定し、通帳の振込額を入れて「確定」すると、freeeに貼る根拠のPDFとして保存されます。販路ごとのPDFと、freeeに取り込むCSVも出せます。</p>
+  <div class="replist" id="repList"></div>
+  <div class="card repview" id="repView">
+    <div class="repbar">
+      <b id="repTitle"></b>
+      <span class="repbtns"><button class="btn" id="repPrint">⬇ 全販路のPDF</button></span>
+    </div>
+    <div class="recon" id="repRecon"></div>
+    <div class="muted" style="font-size:12px;margin:-4px 0 10px">※ 画面イメージでは印刷の画面が開きます。「送信先」を「PDFに保存」にすると、PDFとして保存できます。本物のアプリでは、作ったPDFファイルをそのままダウンロードします。</div>
+    <div class="repdoc" id="repDoc"></div>
+  </div>
+</section>
 </main>
 
-<button class="fab">＋ 登録</button>
+<button class="fab" data-go="bulk">＋ 登録</button>
 <nav class="bottom">
   <button data-go="dash" class="on"><b>▦</b>ホーム</button>
   <button data-go="items"><b>☰</b>商品</button>
   <button data-go="lot"><b>◫</b>山</button>
   <button data-go="sales"><b>¥</b>販売</button>
+  <button data-go="report"><b>▤</b>レポート</button>
 </nav>
 
 <script>
@@ -594,6 +737,7 @@ document.querySelectorAll("[data-go]").forEach(b=>b.addEventListener("click",()=
   const id=b.dataset.go;
   document.querySelectorAll(".screen").forEach(s=>s.classList.toggle("on",s.id===id));
   document.querySelectorAll("[data-go]").forEach(x=>x.classList.toggle("on",x.dataset.go===id));
+  document.querySelector(".fab").style.display=id==="bulk"?"none":""; // 登録画面では「＋登録」ボタンを隠す
   window.scrollTo(0,0);
 }));
 // ---- まとめて登録（伝票の取り込み・スプレッドシート風の表） ----
@@ -1031,12 +1175,12 @@ function undoSale(rec){
 }
 function afterChange(){renderItems();drawToday();drawOne();drawMany()}
 let toastTimer=null;
-function toast(msg,undoFn){
+function toast(msg,undoFn,undoMsg){
   let t=document.getElementById("toast");if(!t){t=document.createElement("div");t.id="toast";document.body.appendChild(t)}
   t.innerHTML=`<span>${msg}</span>${undoFn?'<button class="btn" id="toastUndo">元に戻す</button>':""}<button class="x" id="toastX">×</button><i class="bar"></i>`;
   t.className="show";clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.className="",10000);
   t.querySelector("#toastX").onclick=()=>t.className="";
-  if(undoFn)t.querySelector("#toastUndo").onclick=()=>{undoFn();t.className="";toast("取り消しました。商品は元の状態（在庫・出品中）に戻りました",null)};
+  if(undoFn)t.querySelector("#toastUndo").onclick=()=>{undoFn();t.className="";toast(undoMsg||"取り消しました。商品は元の状態（在庫・出品中）に戻りました",null)};
 }
 function drawToday(){
   const list=saleLog.filter(h=>!h.undone);
@@ -1088,20 +1232,30 @@ function drawOne(){
   sEl("sCalc").innerHTML=
     line("売値（円）",yen(r0(r.priceY)),num(sEl("sPrice").value)||0)+
     (c.ship?line("＋ 設定送料（円）",yen(r0(r.shipY)),num(sEl("sShip").value)||0):"")+
-    `<tr><td>− 実送料${sEl("sShipTbd").checked?' <span class="tag t-temp">未定</span>':""}</td><td class="n">${yen(r0(r.realY))}</td></tr>`+
+    `<tr><td>− 実送料${sEl("sShipTbd").checked?' <span class="tag t-temp">仮</span>':""}</td><td class="n">${yen(r0(r.realY))}</td></tr>`+
     line("− 手数料（円）",yen(r0(r.feeY)),r.feeIn!=null?+(+r.feeIn).toFixed(2):0)+
     `<tr><td>− 原価</td><td class="n">${yen(cost)}</td></tr>`+
     `<tr class="tot"><td>粗利</td><td class="n ${r.profit>=0?"up":"down"}">${r.profit<0?"−":""}${yen(Math.abs(r0(r.profit)))}</td></tr>`;
   sEl("sCalcNote").innerHTML=fx?`為替は11月の仮レートです。月末に11月の平均TTMで自動で計算し直します。`:"";
 }
 ["sPrice","sShip","sReal","sShipTbd"].forEach(id=>sEl(id).addEventListener("input",drawOne));
+function setShipTbd(on){
+  sEl("sShipTbd").checked=on;sEl("sTbdBtn").classList.toggle("on",on);
+  const r=sEl("sReal");r.classList.toggle("tmp-in",on);r.placeholder=on?"仮の送料（だいたいの金額）":"0";
+  sEl("sTbdBtn").textContent=on?"✓ 未定":"未定";
+  sEl("realLabel").textContent=on?"実送料（仮の金額・円）":"実送料（実際にかかった送料・円）";
+  sEl("realHint").textContent=on?"だいたいの送料を仮に入れておくと、その金額で粗利を計算します。本当の送料が分かったら「送料未定」タブで直します":"まだ分からないときは「未定」を押して、仮の金額を入れます。あとで「送料未定」タブで直せます";
+  if(on)r.focus();
+  drawOne();
+}
+sEl("sTbdBtn").addEventListener("click",()=>{setShipTbd(!sEl("sShipTbd").checked);sEl("sReal").focus()});
 sEl("sFee").addEventListener("input",()=>{sFeeTouched=true;drawOne()});
 sEl("sSave").addEventListener("click",()=>{
   const it=sSel?findItem(sSel):null;if(!it){alert("売れた商品を選んでください");sEl("sQ").focus();return}
   const rec={id:recId++,no:it[0],name:it[1],ch:sCh,tbd:sEl("sShipTbd").checked&&!SPECIAL[sCh]};
   if(!SPECIAL[sCh]){const r=calcSale({ch:sCh,price:sEl("sPrice").value,ship:sEl("sShip").value,fee:sEl("sFee").value,real:sEl("sReal").value,cost:it[2],feeTouched:sFeeTouched});rec.profit=r.profit;rec.priceY=r.priceY;rec.calc=r}
   applySale(rec);
-  ["sPrice","sShip","sFee","sReal"].forEach(id=>sEl(id).value="");sEl("sSent").checked=false;sEl("sShipTbd").checked=false;sFeeTouched=false;sSel=null;sEl("sQ").style.display="";
+  ["sPrice","sShip","sFee","sReal"].forEach(id=>sEl(id).value="");sEl("sSent").checked=false;setShipTbd(false);sFeeTouched=false;sSel=null;sEl("sQ").style.display="";
   afterChange();
   toast(`${rec.no} ${rec.name} を記録しました。商品一覧で「${SPECIAL[rec.ch]?(rec.ch==="廃棄"?"廃棄":"備品"):"売却済み"}」になりました`,()=>{undoSale(rec);afterChange()});
 });
@@ -1113,7 +1267,7 @@ let mRows=[
   {no:"0042-3",ch:"メルカリ",date:"2026/11/12",price:"9800",ship:"",fee:"",real:"750",ft:false},
   {no:"0120-4",ch:"ヤフオク",date:"2026/11/12",price:"16500",ship:"",fee:"1500",real:"1100",ft:true},
   {no:"0352",ch:"Catawiki",date:"2026/11/11",price:"560",ship:"45",fee:"78",real:"9800",ft:true},
-  {no:"0058-0",ch:"古物市場",date:"2026/11/11",price:"3000",ship:"",fee:"30",real:"",ft:true},
+  {no:"0058-0",ch:"古物市場",date:"2026/11/11",price:"3000",ship:"",fee:"30",real:"800",tbd:true,ft:true},
   newRow(),newRow(),
 ];
 function drawMany(){
@@ -1133,10 +1287,15 @@ function drawMany(){
       <td><div class="cin"><input data-i="${i}" data-k="price" value="${m.price}" class="n"><i>${sign}</i></div></td>
       <td>${c.ship?`<div class="cin"><input data-i="${i}" data-k="ship" value="${m.ship}" class="n"><i>${sign}</i></div>`:'<span class="muted" style="padding:0 8px">なし</span>'}</td>
       <td class="${r.warn?"warn2":""}" title="${r.warn}"><div class="cin"><input data-i="${i}" data-k="fee" value="${feeVal}" class="n${r.feeAuto?" auto-in":""}"><i>${sign}</i></div></td>
-      <td><input data-i="${i}" data-k="real" value="${m.real}" class="n" placeholder="未定"></td>
+      <td>${m.tbd?`<div class="tbdcell"><span class="tag t-temp" title="送料未定。仮の金額で計算します">仮</span><input data-i="${i}" data-k="real" value="${m.real}" class="n tmp-in" placeholder="仮の金額"><button class="mini" data-untbd="${i}" title="未定をやめる（この金額で確定）">確定</button></div>`
+        :`<div class="tbdcell"><input data-i="${i}" data-k="real" value="${m.real}" class="n" placeholder="0"><button class="mini" data-tbd="${i}" title="送料がまだ分からない">未定</button></div>`}</td>
       <td class="n ${r.profit>=0?"up":"down"}" style="padding:0 8px;font-weight:600">${m.price&&it?(r.profit<0?"−":"")+yen(Math.abs(r0(r.profit))):'<span class="muted">—</span>'}</td>
     </tr>`}).join("")+"</tbody>";
-  t.querySelectorAll("input:not(.mq),select").forEach(el=>el.addEventListener("change",()=>{const m=mRows[+el.dataset.i];m[el.dataset.k]=el.value;if(el.dataset.k==="fee")m.ft=el.value!=="";if(el.dataset.k==="ch"){m.ft=false;m.fee=""}drawMany()}));
+  t.querySelectorAll("[data-tbd]").forEach(b=>b.addEventListener("click",()=>{const i=+b.dataset.tbd;mRows[i].tbd=true;drawMany();document.querySelector(`#mTable [data-i="${i}"][data-k="real"]`)?.focus()}));
+  t.querySelectorAll("[data-untbd]").forEach(b=>b.addEventListener("click",()=>{const i=+b.dataset.untbd;mRows[i].tbd=false;drawMany();document.querySelector(`#mTable [data-i="${i}"][data-k="real"]`)?.focus()}));
+  t.querySelectorAll("input:not(.mq),select").forEach(el=>el.addEventListener("change",()=>{const m=mRows[+el.dataset.i];
+    if(el.dataset.k==="real"&&/^\s*(未定|仮)/.test(el.value)){m.tbd=true;m.real=el.value.replace(/^\s*(未定|仮)[\s:：]*/,"");drawMany();return} // 「未定」と打っても（貼り付けても）未定にする
+    m[el.dataset.k]=el.value;if(el.dataset.k==="fee")m.ft=el.value!=="";if(el.dataset.k==="ch"){m.ft=false;m.fee=""}drawMany()}));
   t.querySelectorAll(".mq").forEach(el=>{const i=+el.dataset.i;attachSearch(el,r=>{
       if(mRows.some((m,j)=>j!==i&&m.no===r[0])){alert(`${r[0]} はほかの行ですでに選んでいます`);return}
       mRows[i].no=r[0];mRows[i].q="";drawMany();
@@ -1151,7 +1310,7 @@ document.getElementById("mSave").addEventListener("click",()=>{
   const valid=mRows.filter(m=>findItem(m.no)&&m.price);if(!valid.length){alert("記録できる行がありません（商品と売値を入れてください）");return}
   const b=++batchSeq,recs=[];
   valid.forEach(m=>{const it=findItem(m.no);const r=calcSale({ch:m.ch,price:m.price,ship:m.ship,fee:m.fee,real:m.real,cost:it[2],feeTouched:m.ft});
-    const rec={id:recId++,no:it[0],name:it[1],ch:m.ch,profit:r.profit,priceY:r.priceY,calc:r,batch:b,tbd:String(m.real).trim()===""};applySale(rec);recs.push(rec)});
+    const rec={id:recId++,no:it[0],name:it[1],ch:m.ch,profit:r.profit,priceY:r.priceY,calc:r,batch:b,tbd:!!m.tbd};applySale(rec);recs.push(rec)});
   mRows=mRows.filter(m=>!valid.includes(m));while(mRows.length<6)mRows.push(newRow());
   afterChange();
   toast(`${recs.length}件を記録しました。商品一覧で「売却済み」になりました`,()=>{recs.forEach(undoSale);afterChange()});
@@ -1209,7 +1368,7 @@ function openItem(no){
         <table class="calc">
           <tr><td>売値（円）${sub(c.raw?c.raw.price:null)}</td><td class="n">${yen(r0(c.priceY))}</td></tr>
           ${cfg.ship?`<tr><td>＋ 設定送料（円）${sub(c.raw?c.raw.ship:null)}</td><td class="n">${yen(r0(c.shipY))}</td></tr>`:""}
-          <tr><td>− 実送料${c.tbd?' <span class="tag t-temp">未定</span>':""}</td><td class="n">${c.tbd?'<button class="linkbtn" id="toTbd">送料を入れる</button>':yen(r0(c.realY))}</td></tr>
+          <tr><td>− 実送料${c.tbd?' <span class="tag t-temp">仮</span>':""}</td><td class="n">${yen(r0(c.realY))}${c.tbd?'<br><button class="linkbtn" id="toTbd">本当の送料を入れる</button>':""}</td></tr>
           <tr><td>− 手数料（円）${sub(c.raw?c.raw.fee:null)}</td><td class="n">${yen(r0(c.feeY))}</td></tr>
           <tr><td>− 原価</td><td class="n">${yen(r[4])}</td></tr>
           <tr class="tot"><td>粗利</td><td class="n ${c.profit>=0?"up":"down"}">${c.profit<0?"−":""}${yen(Math.abs(r0(c.profit)))}</td></tr>
@@ -1262,7 +1421,7 @@ document.getElementById("itemcards").addEventListener("click",onItemClick);
   btn.addEventListener("click",()=>{
     const ov=document.createElement("div");ov.id="phoneOv";
     ov.innerHTML=`<div class="phonebar"><b>スマホ表示（iPhone の幅）</b><button class="btn" id="phoneBack">💻 パソコン表示に戻る</button></div>
-      <div class="phone"><iframe src="${location.pathname}?phone=1" title="スマホ表示"></iframe></div>`;
+      <div class="phone"><iframe src="${location.pathname}?phone=1&t=${Date.now()}" title="スマホ表示"></iframe></div>`;
     document.body.appendChild(ov);document.body.style.overflow="hidden";
     ov.querySelector("#phoneBack").onclick=()=>{ov.remove();document.body.style.overflow=""};
   });
@@ -1271,8 +1430,8 @@ document.getElementById("itemcards").addEventListener("click",onItemClick);
 // 見本：送料がまだ入っていない販売
 items.push(["0298-0","Nikon AF-S 50mm f/1.8G","カメラ","2026/10/03",3500,12000,"sold",["ヤフオク*"],null]);
 items.push(["0315","SEIKO プレザージュ 自動巻き","時計","2026/10/15",9000,26000,"sold",["Catawiki*","メルカリ"],null]);
-SOLD_INFO["0298-0"]={ch:"ヤフオク",date:"2026/11/10",price:14800,ship:1200,fee:1347,real:null,tbd:true};
-SOLD_INFO["0315"]={ch:"Catawiki",date:"2026/11/09",price:180,ship:35,fee:27.9,real:null,tbd:true};
+SOLD_INFO["0298-0"]={ch:"ヤフオク",date:"2026/11/10",price:14800,ship:1200,fee:1347,real:1000,tbd:true};
+SOLD_INFO["0315"]={ch:"Catawiki",date:"2026/11/09",price:180,ship:35,fee:27.9,real:5000,tbd:true};
 renderItems();
 function tbdList(){
   const out=[];
@@ -1289,9 +1448,9 @@ function setRealShip(x,val){
   else{x.s.real=val;x.s.tbd=false}
   return [before,saleCalcFor(x.r).profit];
 }
-function unsetRealShip(x,oldReal){
+function unsetRealShip(x,oldReal){ // 元の仮の金額に戻す
   if(x.src==="log"){const c=x.log.calc;c.profit=c.profit+c.realY-oldReal;c.realY=oldReal;x.log.profit=c.profit;x.log.tbd=true}
-  else{x.s.real=null;x.s.tbd=true}
+  else{x.s.real=oldReal;x.s.tbd=true}
 }
 function drawTbd(){
   const list=tbdList();
@@ -1299,20 +1458,20 @@ function drawTbd(){
   document.getElementById("tbdTab").style.display="";
   const banner=document.getElementById("tbdBanner");
   banner.style.display=list.length?"flex":"none";
-  banner.querySelector("b").textContent=`送料がまだ入っていない販売が ${list.length}件 あります`;
+  banner.querySelector("b").textContent=`送料が仮のままの販売が ${list.length}件 あります`;
   const box=document.getElementById("tbdRows");
   box.innerHTML=list.length?list.map((x,i)=>{const c=saleCalcFor(x.r);return `<div class="tbdrow">
       <div class="tbdinfo"><span class="muted">${x.r[0]}・${x.ch}・${x.date}</span><b>${x.r[1]}</b>
-        <span class="muted">今の粗利（送料0円として） <b class="${c.profit>=0?"up":"down"}">${yen(r0(c.profit))}</b></span></div>
-      <div class="tbdin"><input data-i="${i}" inputmode="numeric" placeholder="実送料（円）"><button class="btn primary" data-i="${i}">入れる</button></div>
+        <span class="muted">仮の送料 <b>${c.realY?yen(r0(c.realY)):"なし（0円）"}</b>　仮の粗利 <b class="${c.profit>=0?"up":"down"}">${yen(r0(c.profit))}</b></span></div>
+      <div class="tbdin"><input data-i="${i}" inputmode="numeric" placeholder="本当の送料（円）"><button class="btn primary" data-i="${i}">確定</button></div>
     </div>`}).join("")
     :'<div class="card" style="text-align:center"><b class="up">送料未定の販売はありません</b><p class="muted" style="margin:4px 0 0">すべての販売に実送料が入っています。</p></div>';
   box.querySelectorAll("button[data-i]").forEach(b=>b.addEventListener("click",()=>{
     const i=+b.dataset.i,inp=box.querySelector(`input[data-i="${i}"]`),v=num(inp.value);
     if(v==null||Number.isNaN(v)){inp.focus();inp.classList.add("errin");return}
-    const x=list[i],[b4,af]=setRealShip(x,v);
+    const x=list[i],old=saleCalcFor(x.r).realY,[b4,af]=setRealShip(x,v);
     drawTbd();
-    toast(`${x.r[0]} の実送料 ${yen(v)} を入れました。粗利 ${yen(r0(b4))} → ${yen(r0(af))}`,()=>{unsetRealShip(x,0);drawTbd()});
+    toast(`${x.r[0]} の送料を ${yen(v)} で確定しました（仮 ${yen(r0(old))}）。粗利 ${yen(r0(b4))} → ${yen(r0(af))}`,()=>{unsetRealShip(x,old);drawTbd()},`取り消しました。${x.r[0]} の送料は仮 ${yen(r0(old))} に戻りました`);
   }));
   box.querySelectorAll("input[data-i]").forEach(inp=>inp.addEventListener("keydown",e=>{if(e.key==="Enter")box.querySelector(`button[data-i="${inp.dataset.i}"]`).click()}));
 }
@@ -1323,6 +1482,235 @@ drawTbd();
 const _afterChange=afterChange;afterChange=function(){_afterChange();drawTbd()};
 
 document.querySelectorAll("#items .pill").forEach(p=>p.addEventListener("click",()=>{document.querySelectorAll("#items .pill").forEach(x=>x.classList.remove("on"));p.classList.add("on")}));
+
+// ---- スマホ用：1件ずつ入れやすい登録 ----
+(function(){
+  const g=id=>document.getElementById(id);
+  const m={kind:"単品",kindAuto:true,genre:"",genreAuto:true,qty:1,kids:[],list:[]};
+  const d=new Date();g("mDate").value=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+  // 山の原価を予想売価の比率で割り振る（端数は予想売価がいちばん高い商品へ）
+  function alloc(cost,exps){
+    const tot=exps.reduce((a,b)=>a+b,0);if(!cost||!tot)return exps.map(()=>0);
+    const a=exps.map(e=>Math.floor(cost*e/tot));const top=exps.indexOf(Math.max(...exps));
+    a[top]+=cost-a.reduce((x,y)=>x+y,0);return a;
+  }
+  const no=i=>pad(NEXT_NO+i);
+  function drawKind(){
+    g("mKind").querySelectorAll("button").forEach(b=>b.classList.toggle("on",b.dataset.k===m.kind));
+    const yama=m.kind==="山";
+    g("mKidsBox").style.display=yama?"":"none";g("mQtyRow").style.display=g("mQtyBox").style.display=yama?"none":"";
+    g("mNo").textContent=no(m.list.length)+(yama?"-0":"");
+  }
+  function drawGenres(){
+    g("mGenres").innerHTML=GENRES.map(x=>`<button class="chipbtn${x===m.genre?" on":""}" data-g="${x}">${x}</button>`).join("");
+    g("mGAuto").textContent=m.genre&&m.genreAuto?"商品名から推測しました（違えば押して選び直し）":"";
+  }
+  function drawKids(){
+    const cost=num(g("mCost").value)||0, exps=m.kids.map(k=>num(k.exp)||0), al=alloc(cost,exps), base=no(m.list.length);
+    g("mKids").innerHTML=m.kids.map((k,i)=>`<div class="kid"><input data-i="${i}" data-f="name" placeholder="中身の商品名" value="${esc(k.name)}"><input data-i="${i}" data-f="exp" inputmode="numeric" placeholder="予想売価" value="${esc(k.exp)}"><button class="x" data-del="${i}">×</button>
+      <div class="al">${base}-${i+1}　原価 ${yen(al[i])}</div></div>`).join("");
+  }
+  function drawList(){
+    g("mList").innerHTML=m.list.length?m.list.map((r,i)=>`<div class="mitem"><div><div class="muted" style="font-size:12px">${no(i)}${r.kind==="山"?"-0":""}・${r.genre||"ジャンル未設定"}${r.kind==="山"?'　<span class="tag t-yama">山</span>':""}</div>
+      <div class="name">${esc(r.name)}</div><div class="meta">原価 ${yen(r.cost)} / 予想 ${yen(r.exp)}${r.kind==="山"?`・中身 ${r.kids.length}点`:`・${r.qty}個`}　${esc(r.sup||"")}</div></div><button class="x" data-rm="${i}" title="外す">×</button></div>`).join("")
+      :'<div class="muted" style="padding:4px 0 8px">まだありません。上で入力して「リストに追加」を押してください。</div>';
+    g("mCount").textContent=m.list.length?`${m.list.length}件・原価の合計 ${yen(m.list.reduce((a,r)=>a+r.cost,0))}`:"";
+    g("mReg").disabled=!m.list.length;g("mReg").parentNode.style.display=m.list.length?"":"none";g("mReg").textContent=m.list.length?`${m.list.length}件を登録する`:"登録する";
+    drawKind();
+  }
+  g("mKind").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;m.kind=b.dataset.k;m.kindAuto=false;if(m.kind==="山"&&!m.kids.length)m.kids.push({name:"",exp:""});drawKind();drawKids()});
+  g("mName").addEventListener("input",()=>{
+    const v=g("mName").value;
+    if(m.genreAuto){m.genre=guessGenre(v);drawGenres()}
+    if(m.kindAuto){const k=YAMA_WORDS.test(v)?"山":"単品";if(k!==m.kind){m.kind=k;if(k==="山"&&!m.kids.length)m.kids.push({name:"",exp:""});drawKind();drawKids()}}
+  });
+  g("mGenres").addEventListener("click",e=>{const b=e.target.closest("[data-g]");if(!b)return;m.genre=m.genre===b.dataset.g&&!m.genreAuto?"":b.dataset.g;m.genreAuto=false;drawGenres()});
+  g("mMinus").onclick=()=>{m.qty=Math.max(1,m.qty-1);g("mQty").textContent=m.qty};
+  g("mPlus").onclick=()=>{m.qty++;g("mQty").textContent=m.qty};
+  g("mCost").addEventListener("input",drawKids);
+  g("mAddKid").onclick=()=>{m.kids.push({name:"",exp:""});drawKids();g("mKids").querySelector(`[data-i="${m.kids.length-1}"]`).focus()};
+  g("mKids").addEventListener("input",e=>{const t=e.target;if(t.dataset.i==null)return;m.kids[+t.dataset.i][t.dataset.f]=t.value;
+    if(t.dataset.f==="exp"){const cost=num(g("mCost").value)||0,al=alloc(cost,m.kids.map(k=>num(k.exp)||0)),base=no(m.list.length);
+      g("mKids").querySelectorAll(".al").forEach((el,i)=>el.textContent=`${base}-${i+1}　原価 ${yen(al[i])}`)}});
+  g("mKids").addEventListener("click",e=>{const b=e.target.closest("[data-del]");if(!b)return;m.kids.splice(+b.dataset.del,1);drawKids()});
+  g("mList").addEventListener("click",e=>{const b=e.target.closest("[data-rm]");if(!b)return;const r=m.list.splice(+b.dataset.rm,1)[0];drawList();toast(`「${esc(r.name)}」をリストから外しました`,null)});
+  g("rAdd").onclick=()=>{
+    const name=g("mName").value.trim(),cost=num(g("mCost").value),exp=num(g("mExp").value);
+    const errs=[];if(!name)errs.push("商品名を入れてください");if(cost==null||Number.isNaN(cost))errs.push("原価を数字で入れてください（0円でもOK）");if(exp!=null&&Number.isNaN(exp))errs.push("予想売価は数字で入れてください");
+    g("mErr").textContent=errs.join("　");if(errs.length)return;
+    const kids=m.kind==="山"?m.kids.filter(k=>k.name.trim()):[];
+    m.list.push({kind:m.kind,name,genre:m.genre,cost,exp:exp||0,qty:m.qty,kids,sup:g("mSup").value.trim(),date:g("mDate").value});
+    const added=no(m.list.length-1)+(m.kind==="山"?"-0":"");
+    g("mName").value=g("mCost").value=g("mExp").value="";Object.assign(m,{kind:"単品",kindAuto:true,genre:"",genreAuto:true,qty:1,kids:[]});g("mQty").textContent=1;
+    drawGenres();drawKids();drawList();g("mName").focus();
+    toast(`${added} を追加しました`,null);
+  };
+  g("mReg").onclick=()=>alert("これは画面イメージなので、登録はされません。");
+  drawGenres();drawKids();drawList();
+})();
+
+// ---- 月次レポート（販路ごとの販売のまとめ・PDF） ----
+(function(){
+  const g=id=>document.getElementById(id);
+  // 見本：10月の販売（本物のアプリでは販売の記録から自動で集める）
+  // [管理番号, 商品名, 販路, 売却日, 売値(販路の通貨), 設定送料(販路の通貨), 手数料(販路の通貨・nullは自動), 実送料(円), 原価, 仮の送料か]
+  const OCT=[
+    ["0237-0","Canon ビデオカメラ","Catawiki","2026/10/04",420,45,65.1,6800,10588],
+    ["0281-2","ミノルタ レンズ 50mm","Catawiki","2026/10/12",95,30,14.7,4200,1800],
+    ["0290","SEIKO ダイバー 自動巻き","Catawiki","2026/10/27",260,35,40.3,5100,8500],
+    ["0303-0","ドリームキャスト 本体","メルカリ","2026/10/02",6800,0,null,1050,0],
+    ["0266-1","オリンパス PEN EE-3","メルカリ","2026/10/09",12800,0,null,750,3000],
+    ["0274","LEVI'S 501 デニム","メルカリ","2026/10/18",5400,0,null,750,1200],
+    ["0288-3","竹細工 花かご","メルカリ","2026/10/25",3200,0,null,1050,500,true],
+    ["0259","ORIENT 腕時計","ヤフオク","2026/10/07",18500,1200,1683,1100,4000],
+    ["0277-0","茶碗 楽焼","ヤフオク","2026/10/21",9800,1000,892,1200,2500],
+    ["0283","CASIO G-SHOCK DW-6900","JOOM","2026/10/15",88,18,null,2900,2000],
+    ["0262","SEIKO グランドセイコー","Chrono24","2026/10/11",168000,2000,null,2400,95000],
+    ["0270-0","レトロ 家具 まとめ","古物市場","2026/10/30",22000,0,2200,0,8000],
+    ["0279","スツール 木製","ジモティー","2026/10/19",2500,0,0,0,600],
+  ];
+  const OCT_RATE={EUR:176.80,USD:151.90}; // 見本：10月の平均TTM（確定）
+  // 振込から送料が引かれる販路（販路の設定に「送料が振込から引かれる」を足すイメージ）
+  const SHIP_DEDUCT={"メルカリ":true,"ヤフオク":true};
+  // 外貨の販路（税区分・為替の差は税理士に確認中）
+  const isFx=ch=>CH[ch].cur!=="JPY";
+  const MONTHS=[
+    {key:"2026-11",label:"2026年11月",state:"open"},
+    {key:"2026-10",label:"2026年10月",state:"draft",made:"2026/11/01 9:00",rows:OCT,rate:OCT_RATE,
+      paid:{"Catawiki":135101,"ヤフオク":25625,"JOOM":14051,"Chrono24":149000,"古物市場":19800,"ジモティー":2500}},
+    {key:"2026-09",label:"2026年9月",state:"done",made:"2026/10/01 9:00",fixed:"2026/10/08 15:20",ver:1,sample:true},
+    {key:"2026-08",label:"2026年8月",state:"done",made:"2026/09/01 9:00",fixed:"2026/09/09 11:05",ver:1,sample:true},
+  ];
+  const fmtY=v=>(v<0?"−":"")+"¥"+Math.abs(Math.round(v)).toLocaleString();
+  const fmtC=(v,cur)=>cur==="JPY"?Math.round(v).toLocaleString():(cur==="EUR"?"€":"$")+(+v).toFixed(2);
+  const R=Math.round;
+  function calc(r,rate){
+    const [no,name,ch,date,price,ship,fee,real,cost,tmp]=r,c=CH[ch],k=c.cur==="JPY"?1:rate[c.cur];
+    const feeC=fee==null?(c.fee==="auto"?price*c.rate:0):fee;
+    const priceY=price*k,shipY=c.ship?ship*k:0,feeY=feeC*k,profit=priceY+shipY-real-feeY-cost;
+    return {r,no,name,ch,date,cur:c.cur,price,ship:c.ship?ship:null,feeC,priceY,shipY,feeY,real,cost,profit,tmp:!!tmp};
+  }
+  function sum(list){return list.reduce((a,x)=>({n:a.n+1,priceY:a.priceY+x.priceY,shipY:a.shipY+x.shipY,real:a.real+x.real,feeY:a.feeY+x.feeY,cost:a.cost+x.cost,profit:a.profit+x.profit}),{n:0,priceY:0,shipY:0,real:0,feeY:0,cost:0,profit:0})}
+  // freeeに登録する3つの行と振込予定額（販路ごと）
+  function freeeOf(ch,list){
+    const t=sum(list),sales=R(t.priceY+t.shipY),fee=R(t.feeY),ship=SHIP_DEDUCT[ch]?R(t.real):0;
+    return {ch,n:t.n,sales,fee,ship,expect:sales-fee-ship,tmp:list.filter(x=>x.tmp).length};
+  }
+  function chsOf(rows){return [...new Set(rows.map(x=>x.ch))]}
+  function build(m,only){
+    let rows=m.rows.map(r=>calc(r,m.rate));if(only)rows=rows.filter(x=>x.ch===only);
+    const chs=chsOf(rows),all=sum(rows),tmpN=rows.filter(x=>x.tmp).length,paid=m.paid||{};
+    const pct=(a,b)=>b?(a/b*100).toFixed(1)+"%":"—";
+    const sumRow=(label,t,cls="")=>`<tr class="${cls}"><td>${label}</td><td class="n">${t.n}</td><td class="n">${fmtY(t.priceY)}</td><td class="n">${fmtY(t.shipY)}</td><td class="n">${fmtY(t.real)}</td><td class="n">${fmtY(t.feeY)}</td><td class="n">${fmtY(t.cost)}</td><td class="n${t.profit<0?" neg":""}">${fmtY(t.profit)}</td><td class="n">${pct(t.profit,t.priceY+t.shipY)}</td></tr>`;
+    const fr=chs.map(ch=>freeeOf(ch,rows.filter(x=>x.ch===ch)));
+    const frRow=f=>{const p=paid[f.ch],d=p==null?null:p-f.expect;
+      return `<tr><td>${f.ch}${isFx(f.ch)?' <span class="fxq">外貨</span>':""}</td><td class="n">${fmtY(f.sales)}</td><td class="n">${fmtY(f.fee)}</td><td class="n">${SHIP_DEDUCT[f.ch]?fmtY(f.ship):"—"}${f.tmp?' <span class="tmp">仮</span>':""}</td><td class="n"><b>${fmtY(f.expect)}</b></td><td class="n">${p==null?"未入力":fmtY(p)}</td><td class="n${d?" neg":""}">${d==null?"—":d===0?"0（一致）":(d>0?"+":"")+fmtY(d).replace("¥","¥")}</td></tr>`};
+    const draft=m.state==="draft";
+    const title=only?`${m.label}　${only}`:m.label;
+    return `${draft?'<div class="wmark">下書き（まだ確定していません）</div>':""}
+      <div class="rhead"><div><img src="joynt-logo.png" alt="JOYNT"><h2>月次販売レポート　${title}</h2></div>
+      <div class="rmeta">対象：${m.label.replace("年","/").replace("月","")}/01 〜 末日に売れた商品<br>為替：1€ = ${m.rate.EUR.toFixed(2)}円 / 1$ = ${m.rate.USD.toFixed(2)}円（${m.label.slice(5)}の平均TTM・確定）<br>作成：${m.made}${m.fixed?`　確定：${m.fixed}（第${m.ver}版）`:"　（下書き）"}</div></div>
+      <h3>振込との突き合わせ（freee登録用）</h3>
+      <table><thead><tr><th>販路</th><th class="n">売上高</th><th class="n">販売手数料</th><th class="n">荷造運賃（振込から引かれる送料）</th><th class="n">振込予定額</th><th class="n">実際の振込額</th><th class="n">差額</th></tr></thead><tbody>
+      ${fr.map(frRow).join("")}
+      ${fr.length>1?(()=>{const s=k=>fr.reduce((a,f)=>a+f[k],0),pp=fr.reduce((a,f)=>a+(paid[f.ch]||0),0);return `<tr class="tot"><td>合計</td><td class="n">${fmtY(s("sales"))}</td><td class="n">${fmtY(s("fee"))}</td><td class="n">${fmtY(s("ship"))}</td><td class="n">${fmtY(s("expect"))}</td><td class="n">${fmtY(pp)}</td><td class="n"></td></tr>`})():""}
+      </tbody></table>
+      <div class="kp"><div><span>売上（売値＋設定送料）</span><b>${fmtY(all.priceY+all.shipY)}</b></div><div><span>粗利</span><b>${fmtY(all.profit)}</b></div><div><span>粗利率</span><b>${pct(all.profit,all.priceY+all.shipY)}</b></div><div><span>販売件数</span><b>${all.n}件</b></div></div>
+      ${only?"":`<h3>販路ごとのまとめ</h3>
+      <table><thead><tr><th>販路</th><th class="n">件数</th><th class="n">売値（円）</th><th class="n">設定送料</th><th class="n">実送料</th><th class="n">手数料</th><th class="n">原価</th><th class="n">粗利</th><th class="n">粗利率</th></tr></thead><tbody>
+      ${chs.map(ch=>sumRow(ch,sum(rows.filter(x=>x.ch===ch)))).join("")}${sumRow("合計",all,"tot")}</tbody></table>`}
+      ${chs.map(ch=>{const list=rows.filter(x=>x.ch===ch),t=sum(list),cur=CH[ch].cur,fx=cur!=="JPY";
+        return `<h3>${ch}<small>${t.n}件・粗利 ${fmtY(t.profit)}${fx?`・${cur==="EUR"?"ユーロ":"ドル"}は ${m.rate[cur].toFixed(2)}円で換算`:""}</small></h3>
+        <table><thead><tr><th>売却日</th><th>管理番号</th><th>商品名</th>${fx?`<th class="n">売値（${cur==="EUR"?"€":"$"}）</th>`:""}<th class="n">売値（円）</th><th class="n">設定送料</th><th class="n">実送料</th><th class="n">手数料</th><th class="n">原価</th><th class="n">粗利</th></tr></thead><tbody>
+        ${list.map(x=>`<tr><td>${x.date.slice(5)}</td><td>${x.no}</td><td>${x.name}</td>${fx?`<td class="n">${fmtC(x.price,cur)}</td>`:""}<td class="n">${fmtY(x.priceY)}</td><td class="n">${x.ship==null?"—":fmtY(x.shipY)}</td><td class="n">${fmtY(x.real)}${x.tmp?' <span class="tmp">仮</span>':""}</td><td class="n">${fmtY(x.feeY)}</td><td class="n">${fmtY(x.cost)}</td><td class="n${x.profit<0?" neg":""}">${fmtY(x.profit)}</td></tr>`).join("")}
+        <tr class="tot"><td colspan="${fx?4:3}">${ch} 合計</td><td class="n">${fmtY(t.priceY)}</td><td class="n">${fmtY(t.shipY)}</td><td class="n">${fmtY(t.real)}</td><td class="n">${fmtY(t.feeY)}</td><td class="n">${fmtY(t.cost)}</td><td class="n">${fmtY(t.profit)}</td></tr></tbody></table>`}).join("")}
+      <div class="rnote">売上高 ＝ 売値（円）＋ 設定送料（円）。振込予定額 ＝ 売上高 − 販売手数料 − 振込から引かれる送料（メルカリ・ヤフオク）。原価は仕入先の請求書で登録済みのため、振込の計算には入れません。<br>
+      粗利 ＝ 売値（円）＋ 設定送料（円）− 実送料 − 手数料（円）− 原価。外貨の販路は${m.label.slice(5)}の平均TTMで円に換算しています。<br>
+      ${tmpN?`<span class="tmp">仮</span> の印は、送料がまだ仮の金額の販売です（${tmpN}件）。確定する前に本当の送料を入れてください。<br>`:""}
+      廃棄・備品にした商品は売上に入れていません。</div>`;
+  }
+  let cur="2026-10";
+  function dataOf(m){return m.rows?m:{...m,rows:OCT,rate:OCT_RATE,paid:null}} // 9月・8月は見本として10月の中身を使う
+  function drawList(){
+    g("repList").innerHTML=MONTHS.map(m=>m.state==="open"
+      ?`<div class="reprow"><span class="m">${m.label}</span><span class="info">集計中。<b>12/1に下書きを自動で作ります</b>（11月の平均TTMが確定してから）。<br>今のところ 送料が仮のままの販売が <b>${typeof tbdList==="function"?tbdList().length:0}件</b> あります。</span><button class="btn" data-pre="1">途中経過を見る</button></div>`
+      :m.state==="draft"
+      ?`<div class="reprow${m.key===cur?" on":""}"><span class="m">${m.label}</span><span class="info"><span class="tag t-warn">下書き</span>　<b>${m.label.slice(5).replace("月","")==="10"?"11/10":"翌月10日"}までに</b>振込額を入れて確定してください</span>
+        <button class="btn primary" data-view="${m.key}">振込を確認する</button></div>`
+      :`<div class="reprow${m.key===cur?" on":""}"><span class="m">${m.label}</span><span class="info"><span class="tag t-sold">確定済み</span>　確定 ${m.fixed}（第${m.ver}版）</span>
+        <button class="btn" data-view="${m.key}">見る</button><button class="btn" data-dl="${m.key}">⬇ PDF</button></div>`).join("");
+    g("repList").querySelectorAll("[data-view]").forEach(b=>b.onclick=()=>show(b.dataset.view));
+    g("repList").querySelectorAll("[data-dl]").forEach(b=>b.onclick=()=>{show(b.dataset.dl);printDoc()});
+    g("repList").querySelectorAll("[data-pre]").forEach(b=>b.onclick=()=>alert("本物のアプリでは、11月の途中までの数字（為替は仮のレート）で同じ形のレポートを見られます。"));
+  }
+  function printDoc(only){
+    const m=MONTHS.find(x=>x.key===cur);
+    if(only){g("repDoc").innerHTML=build(dataOf(m),only)}
+    setTimeout(()=>{window.print();if(only)g("repDoc").innerHTML=build(dataOf(m))},50);
+  }
+  // 画面だけに出す「振込の確認」パネル（PDFには入らない）
+  function drawRecon(m){
+    const d=dataOf(m),rows=d.rows.map(r=>calc(r,d.rate)),draft=m.state==="draft",paid=d.paid||{};
+    const fr=chsOf(rows).map(ch=>freeeOf(ch,rows.filter(x=>x.ch===ch)));
+    const tmps=rows.filter(x=>x.tmp);
+    const left=fr.filter(f=>paid[f.ch]==null).length;
+    g("repRecon").innerHTML=`
+      <div class="rc-head"><b>${draft?"振込を確認して確定する":"振込の確認（確定済み）"}</b>
+        <span class="muted">販路ごとに、PDFとfreeeの取込ファイルを出せます。振込のあった取引に、その販路のPDFを貼ってください。</span></div>
+      ${draft&&tmps.length?`<div class="rc-warn">送料が仮のままの販売が <b>${tmps.length}件</b> あります。本当の送料を入れてください。
+        ${tmps.map(x=>`<div class="rc-tmp">${x.no} ${x.name}（${x.ch}）仮 ${fmtY(x.real)} → <input class="n" data-real="${x.no}" inputmode="numeric" placeholder="本当の送料"><button class="btn" data-fixreal="${x.no}">確定</button></div>`).join("")}</div>`:""}
+      <div class="tablewrap"><table class="rc-t"><thead><tr><th>販路</th><th class="n">振込予定額</th><th class="n">実際の振込額</th><th class="n">差額</th><th></th></tr></thead><tbody>
+      ${fr.map(f=>{const p=paid[f.ch],df=p==null?null:p-f.expect;
+        return `<tr><td>${f.ch}${isFx(f.ch)?' <span class="fxq" title="税区分・為替の差の扱いは税理士に確認中">外貨・確認中</span>':""}<div class="muted" style="font-size:11px">売上 ${fmtY(f.sales)} − 手数料 ${fmtY(f.fee)}${SHIP_DEDUCT[f.ch]?` − 送料 ${fmtY(f.ship)}${f.tmp?' <span class="tmp">仮</span>':""}`:""}</div></td>
+        <td class="n"><b>${fmtY(f.expect)}</b></td>
+        <td class="n">${draft?`<input class="n" data-paid="${f.ch}" inputmode="numeric" value="${p==null?"":p}" placeholder="通帳の金額">`:fmtY(p??f.expect)}</td>
+        <td class="n">${df==null?'<span class="muted">未入力</span>':df===0?'<span class="ok">✓ 一致</span>':`<span class="neg">${df>0?"+":""}${fmtY(df)}</span>`}</td>
+        <td class="nowrap"><button class="btn mini" data-chpdf="${f.ch}">⬇ PDF</button> <button class="btn mini" data-chcsv="${f.ch}">⬇ CSV</button></td></tr>`}).join("")}
+      </tbody></table></div>
+      <div class="rc-foot">
+        <button class="btn" data-allcsv="1">⬇ freee取込用CSV（全販路）</button>
+        ${draft?`<button class="btn primary" id="repFix">確定して保存（第1版）</button>
+        <span class="muted">${left?`あと ${left}販路 の振込額が未入力です`:tmps.length?`仮の送料が ${tmps.length}件 残っています`:"確定できます"}</span>`:""}
+      </div>`;
+    const R2=g("repRecon");
+    R2.querySelectorAll("[data-paid]").forEach(i=>i.onchange=()=>{const v=i.value.replace(/[^\d-]/g,"");if(v==="")delete m.paid[i.dataset.paid];else m.paid[i.dataset.paid]=+v;refresh()});
+    R2.querySelectorAll("[data-fixreal]").forEach(b=>b.onclick=()=>{const no=b.dataset.fixreal,inp=R2.querySelector(`[data-real="${no}"]`),v=inp.value.replace(/\D/g,"");
+      if(v===""){inp.focus();return}const r=m.rows.find(r=>r[0]===no);r[7]=+v;r[9]=false;toast(`${no} の送料を ${fmtY(+v)} で確定しました`);refresh()});
+    R2.querySelectorAll("[data-chpdf]").forEach(b=>b.onclick=()=>printDoc(b.dataset.chpdf));
+    R2.querySelectorAll("[data-chcsv]").forEach(b=>b.onclick=()=>csv(m,[b.dataset.chcsv]));
+    R2.querySelector("[data-allcsv]").onclick=()=>csv(m,fr.map(f=>f.ch));
+    const fx=g("repFix");if(fx)fx.onclick=()=>{
+      if(left){alert(`まだ振込額が入っていない販路があります（${fr.filter(f=>paid[f.ch]==null).map(f=>f.ch).join("・")}）。`);return}
+      if(tmps.length){alert("仮の送料が残っています。本当の送料を入れてから確定してください。");return}
+      const diff=fr.filter(f=>paid[f.ch]!==f.expect);
+      if(diff.length&&!confirm(`差額がある販路があります（${diff.map(f=>f.ch).join("・")}）。このまま確定しますか？\n差額はPDFにそのまま残ります。`))return;
+      m.state="done";m.ver=1;m.fixed="2026/11/12 "+new Date().toTimeString().slice(0,5);toast(`${m.label}を確定して保存しました（第1版）`);refresh()};
+  }
+  // freeeに取り込むCSV（見本の形。本物は freee の取込画面の形式に合わせる）
+  function csv(m,chs){
+    const d=dataOf(m),rows=d.rows.map(r=>calc(r,d.rate)),mon=m.label.slice(5);
+    const [y,mm]=m.key.split("-"),last=new Date(+y,+mm,0).getDate(),date=`${y}-${mm}-${last}`;
+    const lines=[["発生日","取引先","勘定科目","税区分","金額","備考"]];
+    chs.forEach(ch=>{const f=freeeOf(ch,rows.filter(x=>x.ch===ch)),tax=isFx(ch)?"（税理士に確認）":null;
+      lines.push([date,ch,"売上高",tax||"課税売上10%",f.sales,`${ch}　${mon}売上`]);
+      if(f.fee)lines.push([date,ch,"販売手数料",tax||"課対仕入10%",-f.fee,`${ch}　${mon}販売手数料`]);
+      if(f.ship)lines.push([date,ch,"荷造運賃","課対仕入10%",-f.ship,`${ch}　${mon}送料`]);});
+    const text="﻿"+lines.map(l=>l.join(",")).join("\r\n");
+    const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([text],{type:"text/csv"}));
+    a.download=`JOYNT_freee取込_${m.key}${chs.length===1?"_"+chs[0]:""}.csv`;a.click();
+    toast(`freee取込用のCSVを作りました（${chs.length===1?chs[0]:"全販路"}・${lines.length-1}行）`);
+  }
+  function refresh(){show(cur)}
+  function show(key){
+    cur=key;const m=MONTHS.find(x=>x.key===key);
+    g("repTitle").textContent=m.state==="draft"?`${m.label}のレポート（下書き）`:`${m.label}のレポート（第${m.ver}版）`;
+    g("repDoc").innerHTML=build(dataOf(m));drawRecon(m);drawList();
+  }
+  g("repPrint").onclick=()=>printDoc();
+  show("2026-10");
+  const only=decodeURIComponent(location.hash).match(/^#report:(.+)$/);if(only)g("repDoc").innerHTML=build(dataOf(MONTHS[1]),only[1]); // 例：#report:メルカリ で販路1つだけ
+  if(location.hash.startsWith("#report"))document.querySelector('nav.top [data-go="report"]').click(); // アドレスの最後が #report なら最初から開く
+})();
 </script>
 </body>
 </html>
