@@ -196,6 +196,12 @@ tr.clickable:hover td{background:#f7f9fc}
 .infogrid span{color:var(--sub)}.infogrid b{font-size:14px}
 .profitbig{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;background:var(--green-soft);border-radius:12px;padding:12px 14px;margin-bottom:10px}
 .profitbig.down{background:var(--red-soft)}
+.retbox{border:1px solid var(--line);border-radius:12px;padding:12px;margin-top:12px;display:flex;flex-direction:column;gap:10px}
+.retbox .f{display:flex;flex-direction:column;gap:4px;font-size:13px}
+.retbox input{padding:8px 10px;border:1px solid var(--line);border-radius:8px;font:inherit;text-align:right}
+.retbox .hint{color:var(--sub);font-size:12px}
+.retbox .sumline{background:var(--red-soft);border-radius:8px;padding:8px 10px;font-size:13px}
+.rethist{background:var(--orange-soft);border-radius:10px;padding:8px 12px;margin:0 0 10px;font-size:13px}
 .profitbig span{font-size:13px;font-weight:600;color:var(--text)}
 .profitbig b{font-size:26px}
 .profitbig small{color:var(--sub);margin-left:auto}
@@ -676,7 +682,8 @@ nav.bottom{display:none}
   <div id="st-ch" style="display:none">
     <p class="muted" style="margin:0 0 8px">販路ごとの計算方法です。ここを変えると、「1件ずつ」「まとめて入力」の計算もすぐ変わります。粗利の式はすべての販路で共通です：<b>売値（円）＋ 設定送料（円）− 実送料 − 手数料（円）− 原価</b></p>
     <div class="card tablewrap" style="padding:4px 8px"><table id="chTable"></table></div>
-    <p class="muted">「毎回入力」の販路は、過去の手数料率の平均を目安として表示し、平均から大きく外れたときに知らせます。</p>
+    <p class="muted">「毎回入力」の販路は、過去の手数料率の平均を目安として表示し、平均から大きく外れたときに知らせます。<br>
+    「実送料の払い方」「一部返金のふだんの返し方」は、月次レポートの振込予定額とfreeeの取込用CSVに使います。「法人口座から」にしたものは、freeeでは銀行の明細から登録するので、CSVには入れません（二重にならないように）。一部返金の返し方は、記録するときにその都度変えることもできます。</p>
   </div>
 </section>
 <!-- 月次レポート -->
@@ -1074,8 +1081,8 @@ const RATES={JPY:1,EUR:177.36,USD:152.40}; // 見本の数字（11月・仮）
 const CUR_SIGN={JPY:"円",EUR:"€",USD:"$"};
 const CH={
   "Catawiki":{cur:"EUR",fee:"manual",rate:null,avg:0.155,ship:true},
-  "メルカリ":{cur:"JPY",fee:"auto",rate:0.10,ship:false},
-  "ヤフオク":{cur:"JPY",fee:"manual",rate:null,avg:0.091,ship:true},
+  "メルカリ":{cur:"JPY",fee:"auto",rate:0.10,ship:false,shipDeduct:true},
+  "ヤフオク":{cur:"JPY",fee:"manual",rate:null,avg:0.091,ship:true,shipDeduct:true,refundVia:"bank"},
   "JOOM":{cur:"USD",fee:"auto",rate:0.15,ship:true},
   "Chrono24":{cur:"JPY",fee:"auto",rate:0.125,ship:true},
   "浜屋":{cur:"JPY",fee:"manual",rate:null,avg:0.10,ship:true},
@@ -1320,7 +1327,7 @@ drawMany();
 // ---- 販路の設定 ----
 function drawCh(){
   const t=document.getElementById("chTable");
-  t.innerHTML=`<thead><tr><th>販路</th><th>通貨</th><th>為替レート</th><th>手数料</th><th class="n">率</th><th>設定送料</th></tr></thead><tbody>`+
+  t.innerHTML=`<thead><tr><th>販路</th><th>通貨</th><th>為替レート</th><th>手数料</th><th class="n">率</th><th>設定送料</th><th>実送料の払い方</th><th>一部返金のふだんの返し方</th></tr></thead><tbody>`+
   Object.entries(CH).map(([k,c])=>`<tr>
     <td><b>${k}</b>${c.tbd?' <span class="tag t-temp">未定</span>':""}</td>
     <td><select data-k="${k}" data-f="cur">${["JPY","EUR","USD"].map(x=>`<option value="${x}"${x===c.cur?" selected":""}>${{JPY:"円",EUR:"ユーロ",USD:"ドル"}[x]}</option>`).join("")}</select></td>
@@ -1328,10 +1335,12 @@ function drawCh(){
     <td><select data-k="${k}" data-f="fee"><option value="auto"${c.fee==="auto"?" selected":""}>売値の○%で自動</option><option value="manual"${c.fee==="manual"?" selected":""}>毎回入力</option><option value="none"${c.fee==="none"?" selected":""}>なし</option></select></td>
     <td class="n">${c.fee==="auto"?`<input data-k="${k}" data-f="rate" value="${+(c.rate*100).toFixed(2)}" style="width:60px" class="n">%`:c.fee==="manual"&&c.avg?`<span class="muted">目安 ${(c.avg*100).toFixed(1)}%</span>`:'<span class="muted">—</span>'}</td>
     <td><select data-k="${k}" data-f="ship"><option value="1"${c.ship?" selected":""}>使う</option><option value="0"${!c.ship?" selected":""}>使わない</option></select></td>
+    <td><select data-k="${k}" data-f="shipDeduct"><option value="1"${c.shipDeduct?" selected":""}>販路の振込から引かれる</option><option value="0"${!c.shipDeduct?" selected":""}>法人口座から払う</option></select></td>
+    <td><select data-k="${k}" data-f="refundVia"><option value="mall"${c.refundVia!=="bank"?" selected":""}>販路の振込から引かれる</option><option value="bank"${c.refundVia==="bank"?" selected":""}>法人口座から振り込む</option></select></td>
   </tr>`).join("")+"</tbody>";
   t.querySelectorAll("select,input").forEach(el=>el.addEventListener("change",()=>{const c=CH[el.dataset.k],f=el.dataset.f;
-    if(f==="cur")c.cur=el.value;else if(f==="fee"){c.fee=el.value;if(el.value==="auto"&&!c.rate)c.rate=0.1}else if(f==="rate")c.rate=(num(el.value)||0)/100;else if(f==="ship")c.ship=el.value==="1";
-    drawCh();drawOne();drawMany()}));
+    if(f==="cur")c.cur=el.value;else if(f==="fee"){c.fee=el.value;if(el.value==="auto"&&!c.rate)c.rate=0.1}else if(f==="rate")c.rate=(num(el.value)||0)/100;else if(f==="ship")c.ship=el.value==="1";else if(f==="shipDeduct")c.shipDeduct=el.value==="1";else if(f==="refundVia")c.refundVia=el.value;
+    drawCh();drawOne();drawMany();if(window.repRefresh)repRefresh();toast(`${el.dataset.k} の設定を変えました`,null)}));
 }
 drawCh();
 document.querySelectorAll("#salesTabs .pill").forEach(p=>p.addEventListener("click",()=>{
@@ -1361,7 +1370,8 @@ function openItem(no){
   let body="";
   if(r[6]==="sold"){
     const c=saleCalcFor(r);
-    if(c){const cfg=CH[c.ch],sign=CUR_SIGN[cfg.cur],fx=cfg.cur!=="JPY";
+    if(c){if(REFUND[r[0]])c.profit-=REFUND[r[0]].amt;
+      const cfg=CH[c.ch],sign=CUR_SIGN[cfg.cur],fx=cfg.cur!=="JPY";
       const sub=(v)=>fx&&v!=null?`<br><small class="muted">${sign}${+(+v).toFixed(2)} × ${c.rate}円</small>`:"";
       body=`<div class="profitbig ${c.profit>=0?"up":"down"}"><span>粗利</span><b>${c.profit<0?"−":""}${yen(Math.abs(r0(c.profit)))}</b><small>粗利率 ${c.priceY?Math.round(c.profit/c.priceY*100):0}%</small></div>
         <p class="muted" style="margin:0 0 6px">${c.date} に <b>${c.ch}</b> で売れました${fx?'　<span class="tag t-temp">為替 11月・仮</span>':""}</p>
@@ -1371,8 +1381,10 @@ function openItem(no){
           <tr><td>− 実送料${c.tbd?' <span class="tag t-temp">仮</span>':""}</td><td class="n">${yen(r0(c.realY))}${c.tbd?'<br><button class="linkbtn" id="toTbd">本当の送料を入れる</button>':""}</td></tr>
           <tr><td>− 手数料（円）${sub(c.raw?c.raw.fee:null)}</td><td class="n">${yen(r0(c.feeY))}</td></tr>
           <tr><td>− 原価</td><td class="n">${yen(r[4])}</td></tr>
+          ${REFUND[r[0]]?`<tr><td>− 一部返金 <span class="tag t-warn">${REFUND[r[0]].date.slice(5)}</span><br><small class="muted">${REFUND[r[0]].via==="bank"?"法人口座から振込（freeeのCSVには入れない）":"販路の振込から引かれる"}</small></td><td class="n">${yen(REFUND[r[0]].amt)}</td></tr>`:""}
           <tr class="tot"><td>粗利</td><td class="n ${c.profit>=0?"up":"down"}">${c.profit<0?"−":""}${yen(Math.abs(r0(c.profit)))}</td></tr>
-        </table>`;
+        </table>
+        <div style="text-align:right;margin-top:10px"><button class="btn" id="toRet">返品・返金があった</button></div>`;
     } else body=`<p class="muted">売れた記録の詳しい内訳は、この見本にはありません。</p>`;
   } else if(r[6]==="disposed"){
     body=`<div class="profitbig down"><span>損失</span><b>−${yen(r[4])}</b><small>廃棄</small></div>`;
@@ -1401,12 +1413,63 @@ function openItem(no){
       <div><span>原価</span><b>${yen(r[4])}</b></div>
       <div><span>${inStock(r)?"滞留日数":"出品先"}</span><b>${inStock(r)?(r[8]!=null?r[8]+"日":"—"):chips(r[7])}</b></div>
     </div>
+    ${(RETURNS[r[0]]||[]).map(x=>`<div class="rethist">↩ ${x.date.slice(5)} に <b>${x.ch}</b> から返品で戻りました（同じ番号で売り直せます）。この返品の損：<b>${yen(r0(x.loss))}</b></div>`).join("")}
     ${inStock(r)&&r[7].length?`<p class="muted" style="margin:0 0 10px">出品中：${chips(r[7])}</p>`:""}
     ${body}${lotBox}`;
   dd.showModal();
   dd.querySelector("#idClose").onclick=()=>dd.close();
+  const tr=dd.querySelector("#toRet");if(tr)tr.onclick=()=>openReturn(r);
   const tt=dd.querySelector("#toTbd");if(tt)tt.onclick=()=>{dd.close();goTbd()};
   const tl=dd.querySelector("#toLot");if(tl)tl.onclick=()=>{dd.close();document.querySelector('nav.top [data-go="lot"]').click()};
+}
+// ---- 返品・返金（たまにある） ----
+const RETURNS={}; // 管理番号 → 返品の記録（売上は0円、かかった送料と戻らない手数料を損として残す）
+const REFUND={};  // 管理番号 → 一部返金
+const TODAY="2026/11/12";
+const REFUND_VIA=new Proxy({},{get:(_,ch)=>CH[ch]&&CH[ch].refundVia}); // 販路の設定「一部返金のふだんの返し方」から読む（記録のときに変えられる）
+function openReturn(r){
+  const c=saleCalcFor(r);let kind="ret",via=REFUND_VIA[c.ch]||"mall";
+  const box=document.createElement("div");box.className="retbox";
+  dd.querySelector("#toRet").parentElement.replaceWith(box);
+  const draw=()=>{
+    box.innerHTML=`<b>返品・返金の記録</b>
+      <div class="seg" id="rtKind"><button data-k="cancel">発送前のキャンセル</button><button data-k="ret">返品（商品が戻る）</button><button data-k="part">一部だけ返金</button></div>
+      ${kind==="cancel"?`<p class="hint" style="margin:0">お金も送料もまだ動いていないときです。販売の記録を消して、商品を元の状態に戻します。</p>`
+      :kind==="ret"?`<div class="f">返品の送料（返送用封筒など・円）<input id="rtShip" inputmode="numeric" placeholder="0"><span class="hint">お客様に送った返送用封筒の代金など、戻すためにかかった送料</span></div>
+        <div class="f">戻ってこない手数料（円）<input id="rtFee" inputmode="numeric" value="${r0(c.feeY)}"><span class="hint">販路が手数料を返してくれたときは 0 にします</span></div>
+        <div class="sumline" id="rtSum"></div>
+        <p class="hint" style="margin:0">売値は0円になり、商品は在庫に戻ります（同じ管理番号のまま）。確定済みの月のレポートは書き換えず、返品した月のレポートにマイナスの行として載せます。</p>`
+      :`<div class="f">返金した金額（円）<input id="rtAmt" inputmode="numeric" placeholder="例：1000"><span class="hint">傷があったので少し値引きした、などのとき。商品は売却済みのままです</span></div>
+        <div class="f">返金のしかた<div class="seg" id="rtVia"><button data-v="mall">販路の振込から引かれる</button><button data-v="bank">法人口座から振り込む</button></div>
+          <span class="hint">${via==="mall"?"freeeの取込用CSVに、返金としてマイナスで入れます":"freeeでは銀行の明細から登録するので、取込用CSVには入れません（二重にならないように）"}</span></div>
+        <div class="sumline" id="rtSum"></div>`}
+      <div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn" id="rtCancel">やめる</button><button class="btn primary" id="rtSave">記録する</button></div>`;
+    box.querySelectorAll("#rtVia button").forEach(b=>{b.classList.toggle("on",b.dataset.v===via);b.onclick=()=>{const a=box.querySelector("#rtAmt").value;via=b.dataset.v;draw();box.querySelector("#rtAmt").value=a;box.querySelector("#rtAmt").dispatchEvent(new Event("input"))}});
+    box.querySelectorAll("#rtKind button").forEach(b=>{b.classList.toggle("on",b.dataset.k===kind);b.onclick=()=>{kind=b.dataset.k;draw()}});
+    const v=id=>num((box.querySelector(id)||{}).value)||0;
+    const sum=()=>{const el=box.querySelector("#rtSum");if(!el)return;
+      if(kind==="ret"){const loss=c.realY+v("#rtShip")+v("#rtFee");el.innerHTML=`この返品の損：行きの送料 ${yen(r0(c.realY))} ＋ 返品の送料 ${yen(v("#rtShip"))} ＋ 手数料 ${yen(v("#rtFee"))} ＝ <b>${yen(r0(loss))}</b>`}
+      else el.innerHTML=`粗利 ${yen(r0(c.profit))} → <b>${yen(r0(c.profit-v("#rtAmt")))}</b>（−${yen(v("#rtAmt"))}）`};
+    box.querySelectorAll("input").forEach(i=>i.oninput=sum);sum();
+    box.querySelector("#rtCancel").onclick=()=>openItem(r[0]);
+    box.querySelector("#rtSave").onclick=()=>{
+      const prev={status:r[6],chips:[...r[7]]};
+      if(kind==="cancel"){
+        if(!confirm(`${r[0]} ${r[1]} の販売を取り消して、元の状態に戻しますか？`))return;
+        const log=saleLog.find(h=>h.no===r[0]&&!h.undone);if(log)undoSale(log);else{r[6]="list";r[7]=r[7].map(x=>x.replace("*",""))}
+        dd.close();afterChange();toast(`${r[0]} の販売を取り消しました（発送前のキャンセル）`,null);return}
+      if(kind==="ret"){
+        const loss=c.realY+v("#rtShip")+v("#rtFee");
+        (RETURNS[r[0]]=RETURNS[r[0]]||[]).push({date:TODAY,ch:c.ch,loss});
+        const log=saleLog.find(h=>h.no===r[0]&&!h.undone);if(log)log.undone=true;
+        const ref=REFUND[r[0]];delete REFUND[r[0]];r[6]="stock";r[7]=[];afterChange();openItem(r[0]);
+        toast(`${r[0]} を返品として記録しました。在庫に戻りました（損 ${yen(r0(loss))}）`,()=>{RETURNS[r[0]].pop();if(ref)REFUND[r[0]]=ref;if(log)log.undone=false;r[6]=prev.status;r[7]=prev.chips;afterChange();if(dd.open)openItem(r[0])},`取り消しました。${r[0]} は売却済みに戻りました`);return}
+      const amt=v("#rtAmt");if(!amt){box.querySelector("#rtAmt").focus();return}
+      REFUND[r[0]]={amt,date:TODAY,via};openItem(r[0]);
+      toast(`${r[0]} の一部返金 ${yen(amt)} を記録しました`,()=>{delete REFUND[r[0]];if(dd.open)openItem(r[0])},`取り消しました。${r[0]} の返金はなくなりました`);
+    };
+  };
+  draw();
 }
 dd.addEventListener("click",e=>{if(e.target===dd)dd.close()}); // 外側を押すと閉じる
 const onItemClick=e=>{if(e.target.closest("input"))return;const el=e.target.closest("[data-no]");if(el)openItem(el.dataset.no)};
@@ -1571,7 +1634,7 @@ document.querySelectorAll("#items .pill").forEach(p=>p.addEventListener("click",
   ];
   const OCT_RATE={EUR:176.80,USD:151.90}; // 見本：10月の平均TTM（確定）
   // 振込から送料が引かれる販路（販路の設定に「送料が振込から引かれる」を足すイメージ）
-  const SHIP_DEDUCT={"メルカリ":true,"ヤフオク":true};
+  const SHIP_DEDUCT=new Proxy({},{get:(_,ch)=>!!(CH[ch]&&CH[ch].shipDeduct)}); // 販路の設定「実送料の払い方」から読む
   // 外貨の販路（税区分・為替の差は税理士に確認中）
   const isFx=ch=>CH[ch].cur!=="JPY";
   const MONTHS=[
@@ -1624,7 +1687,7 @@ document.querySelectorAll("#items .pill").forEach(p=>p.addEventListener("click",
         <table><thead><tr><th>売却日</th><th>管理番号</th><th>商品名</th>${fx?`<th class="n">売値（${cur==="EUR"?"€":"$"}）</th>`:""}<th class="n">売値（円）</th><th class="n">設定送料</th><th class="n">実送料</th><th class="n">手数料</th><th class="n">原価</th><th class="n">粗利</th></tr></thead><tbody>
         ${list.map(x=>`<tr><td>${x.date.slice(5)}</td><td>${x.no}</td><td>${x.name}</td>${fx?`<td class="n">${fmtC(x.price,cur)}</td>`:""}<td class="n">${fmtY(x.priceY)}</td><td class="n">${x.ship==null?"—":fmtY(x.shipY)}</td><td class="n">${fmtY(x.real)}${x.tmp?' <span class="tmp">仮</span>':""}</td><td class="n">${fmtY(x.feeY)}</td><td class="n">${fmtY(x.cost)}</td><td class="n${x.profit<0?" neg":""}">${fmtY(x.profit)}</td></tr>`).join("")}
         <tr class="tot"><td colspan="${fx?4:3}">${ch} 合計</td><td class="n">${fmtY(t.priceY)}</td><td class="n">${fmtY(t.shipY)}</td><td class="n">${fmtY(t.real)}</td><td class="n">${fmtY(t.feeY)}</td><td class="n">${fmtY(t.cost)}</td><td class="n">${fmtY(t.profit)}</td></tr></tbody></table>`}).join("")}
-      <div class="rnote">売上高 ＝ 売値（円）＋ 設定送料（円）。振込予定額 ＝ 売上高 − 販売手数料 − 振込から引かれる送料（メルカリ・ヤフオク）。原価は仕入先の請求書で登録済みのため、振込の計算には入れません。<br>
+      <div class="rnote">売上高 ＝ 売値（円）＋ 設定送料（円）。振込予定額 ＝ 売上高 − 販売手数料 − 振込から引かれる送料（販路の設定で「販路の振込から引かれる」にした販路）。原価は仕入先の請求書で登録済みのため、振込の計算には入れません。<br>
       粗利 ＝ 売値（円）＋ 設定送料（円）− 実送料 − 手数料（円）− 原価。外貨の販路は${m.label.slice(5)}の平均TTMで円に換算しています。<br>
       ${tmpN?`<span class="tmp">仮</span> の印は、送料がまだ仮の金額の販売です（${tmpN}件）。確定する前に本当の送料を入れてください。<br>`:""}
       廃棄・備品にした商品は売上に入れていません。</div>`;
@@ -1701,6 +1764,7 @@ document.querySelectorAll("#items .pill").forEach(p=>p.addEventListener("click",
     toast(`freee取込用のCSVを作りました（${chs.length===1?chs[0]:"全販路"}・${lines.length-1}行）`);
   }
   function refresh(){show(cur)}
+  window.repRefresh=refresh;
   function show(key){
     cur=key;const m=MONTHS.find(x=>x.key===key);
     g("repTitle").textContent=m.state==="draft"?`${m.label}のレポート（下書き）`:`${m.label}のレポート（第${m.ver}版）`;
