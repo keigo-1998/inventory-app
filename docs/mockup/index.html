@@ -118,6 +118,15 @@ table.sheet{border-collapse:collapse;width:max-content;min-width:100%;font-size:
 .howto b{color:var(--text);background:var(--gray-soft);border-radius:4px;padding:1px 6px;font-weight:600;margin-right:4px}
 .t-yama{background:#fdeee5;color:#b45309}
 tr.lotleft td{background:var(--orange-soft);border-top:2px solid var(--line)}
+/* 商品一覧：山の行（-0）は色付き、その下の枝番は字下げ */
+#itemrows tr.lotrow td{background:var(--orange-soft);border-top:2px solid #f3c9a8}
+#itemrows tr.lotrow td:first-child{box-shadow:inset 4px 0 0 #e8894a}
+#itemrows tr.lotrow .nm{font-weight:700}
+#itemrows tr.brrow td{background:#fffaf6}
+#itemrows tr.brrow td:first-child{box-shadow:inset 4px 0 0 #f3c9a8}
+#itemrows tr.brrow .nm::before,#itemcards .brrow .nm::before{content:"└ ";color:var(--sub)}
+#itemcards .mc.lotrow{background:var(--orange-soft);border-left:4px solid #e8894a}
+#itemcards .mc.brrow{margin-left:14px;border-left:4px solid #f3c9a8}
 .sheet td.kind{cursor:pointer;text-align:center}
 .slipgrid{display:grid;grid-template-columns:1fr 1.4fr;gap:12px;margin-top:4px}
 .drop{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border:2px dashed #b8c2d6;border-radius:12px;background:#fafbfd;padding:18px;cursor:pointer;text-align:center}
@@ -1053,14 +1062,18 @@ function lotStats(l){
 function lotAlloc(l,extra){
   const rows=lotRows(l).filter(x=>!/-0$/.test(x.no));
   const pool=LOTS[l].cost-rows.filter(x=>x.status==="sold").reduce((a,x)=>a+x.cost,0);
-  const tgt=[...rows.filter(x=>x.status!=="sold").map(x=>({no:x.no,exp:x.exp||0})),...extra];
+  const tgt=[...rows.filter(x=>x.status!=="sold"&&!ZERO_BR.has(x.no)).map(x=>({no:x.no,exp:x.exp||0})),...extra];
   const tot=tgt.reduce((a,x)=>a+x.exp,0);if(!tgt.length)return {pool,map:{}};
   const map={};let left=pool;tgt.forEach(x=>{map[x.no]=tot?Math.floor(pool*x.exp/tot):Math.floor(pool/tgt.length);left-=map[x.no]});
   map[tgt.reduce((m,x)=>x.exp>m.exp?x:m,tgt[0]).no]+=left;return {pool,map};
 }
 let lotCur=null,lotNew=[];
+const ZERO_BR=new Set(); // 「0円で出す」で登録した枝番。あとで割り振り直すときも0円のまま
+// 枝番を足すときの原価の付け方：最初の仕分けは「割り振る」、枝番があとから増えるときは「0円で出す」がふつう
+const lotMode=l=>lotRows(l).some(x=>!/-0$/.test(x.no))?"zero":"alloc";
+const newLotRows=(l,n)=>Array.from({length:n},()=>["","",lotMode(l)]);
 function openLot(l){
-  lotCur=l;lotNew=[["",""],["",""],["",""]];
+  lotCur=l;lotNew=newLotRows(l,3);
   document.querySelectorAll(".screen").forEach(s=>s.classList.toggle("on",s.id==="lot"));
   document.querySelectorAll("[data-go]").forEach(x=>x.classList.toggle("on",x.dataset.go==="items"));
   window.scrollTo(0,0);drawLot();
@@ -1069,13 +1082,15 @@ function drawLot(){
   const l=lotCur,L=LOTS[l],S=lotStats(l),rows=S.rows,head=items.find(r=>r[0]===l+"-0");
   document.getElementById("lotNoTxt").textContent=l;
   const nextNo=Math.max(0,...rows.filter(x=>!/-0$/.test(x.no)).map(x=>+x.no.split("-")[1]))+1;
-  const filled=lotNew.map((b,i)=>({i,name:b[0].trim(),exp:num(b[1])||0})).filter(b=>b.name);
+  const filled=lotNew.map((b,i)=>({i,name:b[0].trim(),exp:num(b[1])||0,mode:b[2]})).filter(b=>b.name);
   filled.forEach((b,k)=>b.no=`${l}-${nextNo+k}`);
-  const A=lotAlloc(l,filled);
-  const changed=rows.filter(x=>x.status!=="sold"&&!/-0$/.test(x.no)&&filled.length&&A.map[x.no]!==x.cost);
+  const toAlloc=filled.filter(f=>f.mode==="alloc"),toZero=filled.filter(f=>f.mode==="zero");
+  const A=toAlloc.length?lotAlloc(l,toAlloc):{pool:0,map:{}};
+  filled.forEach(f=>f.cost=f.mode==="alloc"?A.map[f.no]:0);
+  const changed=rows.filter(x=>x.status!=="sold"&&!/-0$/.test(x.no)&&A.map[x.no]!=null&&A.map[x.no]!==x.cost);
   const pct=Math.min(100,Math.round(S.sales/L.cost*100));
   const tr=x=>`<tr class="${x.status==="sold"?"sold-row":""} ${x.item?"clickable":""} ${/-0$/.test(x.no)?"lotleft":""}" ${x.item?`data-lotno="${x.no}"`:""}>
-    <td>${x.no}</td><td>${esc(x.name)}${/-0$/.test(x.no)?' <span class="tag t-yama">山の残り</span>':""}</td>
+    <td>${x.no}</td><td>${esc(x.name)}${/-0$/.test(x.no)?' <span class="tag t-yama">山の残り</span>':ZERO_BR.has(x.no)?' <span class="tag t-yama">残りから0円</span>':""}</td>
     <td class="n">${/-0$/.test(x.no)?"—":yen(x.exp)}</td>
     <td class="n">${yen(x.cost)}${filled.length&&A.map[x.no]!=null&&A.map[x.no]!==x.cost?`<br><span class="auto-txt">→ ${yen(A.map[x.no])}</span>`:""}</td>
     <td><span class="tag ${st[x.status][1]}">${st[x.status][0]}</span></td><td>${chips(x.chips)}</td>
@@ -1098,28 +1113,36 @@ function drawLot(){
   <p class="muted" style="font-size:13px">${head?`${l}-0（山の残り）は、枝番にしなかった物です。${S.total?"原価は0円で、売れた金額はまるごと利益になります。":`まだ枝番がないので、仕入額 ${yen(L.cost)} はまるごとここに入っています。`}${inStock(head)?"ほかの山の残りと一緒に売るときは、商品一覧でチェックを入れて「まとめて売る」。":""}`:`${l}-0（山の残り）は売却済みです。`}</p>
   <div class="card" style="margin-top:12px">
     <h2>枝番を追加（単品で売れそうなもの）</h2>
-    <p class="muted" style="margin:-6px 0 10px">山を仕分けするときに、売れそうなものの商品名と予想売価を入れます。管理番号と原価は自動で入ります。<br>原価は、仕入額${S.sold?"（売れた枝番の原価を引いた残り）":""}を、まだ売れていない枝番に予想売価の比率で割り振ります。<b>なるべく一度にまとめて登録</b>するのがおすすめです。</p>
+    <p class="muted" style="margin:-6px 0 10px">商品名と予想売価を入れます。管理番号と原価は自動で入ります。原価の付け方は1行ずつ選べます。<br>
+      <b>割り振る</b>：仕入額${S.sold?"（売れた枝番の原価を引いた残り）":""}を、まだ売れていない枝番と一緒に予想売価の比率で分けます。<b>最初の仕分けで、ちゃんと売れそうな物</b>に使います。<br>
+      <b>0円で出す</b>：山の残りから原価0円で出します。ほかの枝番の原価は変わりません。<b>あとで気が向いて出す安い物</b>に使います。</p>
     <div class="tablewrap"><table class="brtable">
-      <thead><tr><th style="width:90px">管理番号</th><th>商品名</th><th class="n" style="width:120px">予想売価</th><th class="n" style="width:120px">原価（自動）</th></tr></thead>
+      <thead><tr><th style="width:90px">管理番号</th><th>商品名</th><th class="n" style="width:120px">予想売価</th><th style="width:130px">原価の付け方</th><th class="n" style="width:110px">原価（自動）</th></tr></thead>
       <tbody>${lotNew.map((b,i)=>{const f=filled.find(x=>x.i===i);return `<tr><td class="muted">${f?f.no:"—"}</td>
         <td><input data-i="${i}" data-k="0" value="${esc(b[0])}" placeholder="商品名"></td>
         <td><input data-i="${i}" data-k="1" value="${esc(b[1])}" placeholder="0" class="n" inputmode="numeric"></td>
-        <td class="n auto-txt">${f?yen(A.map[f.no]):"—"}</td></tr>`}).join("")}</tbody></table></div>
-    <p class="muted" style="font-size:13px">${filled.length?`${filled.length}点に割り振ります。${changed.length?`まだ売れていない枝番 ${changed.length}点の原価も割り振り直します（上の表の → の金額）。売れた商品の原価は変わりません。`:""}${head&&head[4]?`<br>${l}-0（山の残り）の原価 ${yen(head[4])} は 0円になります。`:""}${(()=>{const e=Object.keys(A.map).reduce((a,no)=>a+((filled.find(f=>f.no===no)||rows.find(x=>x.no===no)||{}).exp||0),0);return e<A.pool?`<br><span class="down">枝番の予想売価の合計 ${yen(e)} が、割り振る原価 ${yen(A.pool)} より少ないので、このままだと赤字の見込みです</span>`:""})()}`:"商品名と予想売価を入れると、原価が自動で入ります"}</p>
+        <td><select data-i="${i}" data-k="2"><option value="alloc"${b[2]==="alloc"?" selected":""}>割り振る</option><option value="zero"${b[2]==="zero"?" selected":""}>0円で出す</option></select></td>
+        <td class="n auto-txt">${f?yen(f.cost):"—"}</td></tr>`}).join("")}</tbody></table></div>
+    <p class="muted" style="font-size:13px">${filled.length?[
+      toAlloc.length?`${toAlloc.length}点に原価を割り振ります。${changed.length?`まだ売れていない枝番 ${changed.length}点の原価も割り振り直します（上の表の → の金額）。売れた商品の原価は変わりません。`:""}${head&&head[4]?`${l}-0（山の残り）の原価 ${yen(head[4])} は 0円になります。`:""}`:"",
+      toZero.length?`${toZero.length}点は原価0円で出します。ほかの枝番の原価は変わりません。${head&&head[4]&&!toAlloc.length?`（仕入額 ${yen(head[4])} は、まだ山の残りに入ったままです）`:""}`:"",
+      toAlloc.length?(()=>{const e=Object.keys(A.map).reduce((a,no)=>a+((filled.find(f=>f.no===no)||rows.find(x=>x.no===no)||{}).exp||0),0);return e<A.pool?`<span class="down">割り振る枝番の予想売価の合計 ${yen(e)} が、割り振る原価 ${yen(A.pool)} より少ないので、このままだと赤字の見込みです</span>`:""})():""
+    ].filter(Boolean).join("<br>"):"商品名と予想売価を入れると、原価が自動で入ります"}</p>
     <div style="display:flex;gap:8px;justify-content:space-between;flex-wrap:wrap"><button class="btn" id="lotAddRow">＋ 行を追加</button><button class="btn primary" id="lotReg"${filled.length?"":" disabled"}>枝番を登録する</button></div>
   </div>`;
   const B=document.getElementById("lotBody");
-  B.querySelectorAll(".brtable input").forEach(inp=>inp.addEventListener("change",()=>{lotNew[+inp.dataset.i][+inp.dataset.k]=inp.value;drawLot()}));
-  B.querySelector("#lotAddRow").onclick=()=>{lotNew.push(["",""],["",""]);drawLot()};
+  B.querySelectorAll(".brtable input,.brtable select").forEach(inp=>inp.addEventListener("change",()=>{lotNew[+inp.dataset.i][+inp.dataset.k]=inp.value;drawLot()}));
+  B.querySelector("#lotAddRow").onclick=()=>{lotNew.push(...newLotRows(l,2));drawLot()};
   B.querySelectorAll("[data-lotno]").forEach(t=>t.onclick=()=>openItem(t.dataset.lotno));
   B.querySelector("#lotReg").onclick=()=>{
-    // 枝番を在庫に足し、まだ売れていない枝番の原価を割り振り直す。-0 は原価0円にする
+    // 枝番を在庫に足す。「割り振る」があれば、まだ売れていない枝番の原価を割り振り直し、-0 は原価0円にする
     const prevCost=items.filter(r=>r[0].startsWith(l+"-")).map(r=>[r,r[4]]);
-    filled.forEach(f=>items.push([f.no,f.name,L.genre,L.date,A.map[f.no],f.exp,"stock",[],head?head[8]:0]));
+    filled.forEach(f=>items.push([f.no,f.name,L.genre,L.date,f.cost,f.exp,"stock",[],head?head[8]:0]));
     items.forEach(r=>{if(r[0].startsWith(l+"-")&&A.map[r[0]]!=null)r[4]=A.map[r[0]]});
-    if(head)head[4]=0;
-    const added=filled.map(f=>f.no);lotNew=[["",""],["",""],["",""]];renderItems();drawLot();
-    toast(`${added.join("・")} を登録しました（原価は自動で割り振り）`,()=>{added.forEach(no=>{const i=items.findIndex(r=>r[0]===no);if(i>=0)items.splice(i,1)});prevCost.forEach(([r,c])=>r[4]=c);renderItems();if(lotCur===l)drawLot()},"取り消しました。枝番を登録する前に戻りました");
+    toZero.forEach(f=>ZERO_BR.add(f.no));
+    if(head&&toAlloc.length)head[4]=0;
+    const added=filled.map(f=>f.no);lotNew=newLotRows(l,3);renderItems();drawLot();
+    toast(`${added.join("・")} を登録しました（${[toAlloc.length?`割り振り ${toAlloc.length}点`:"",toZero.length?`原価0円 ${toZero.length}点`:""].filter(Boolean).join("・")}）`,()=>{added.forEach(no=>{ZERO_BR.delete(no);const i=items.findIndex(r=>r[0]===no);if(i>=0)items.splice(i,1)});prevCost.forEach(([r,c])=>r[4]=c);renderItems();if(lotCur===l)drawLot()},"取り消しました。枝番を登録する前に戻りました");
   };
 }
 document.getElementById("lotBack").onclick=()=>document.querySelector('nav.top [data-go="items"]').click();
@@ -1229,14 +1252,28 @@ document.getElementById("rateEUR").textContent=RATES.EUR;document.getElementById
 // 絞り込み：「在庫」は今あるすべての在庫（未出品＋出品中）
 let invF="all",invQ="";
 const INV_F=[["all","すべて",()=>true],["now","在庫",r=>inStock(r)],["stock","未出品",r=>r[6]==="stock"],["list","出品中",r=>r[6]==="list"],["sold","売却済み",r=>!inStock(r)],["lot","山",r=>isLotLeft(r[0])],["old","90日以上",r=>inStock(r)&&r[8]>=90]];
+const grpCls=r=>{const p=lotOf(r[0]);return !p?"":/-0$/.test(r[0])?"lotrow":"brrow"};
 const qtyTag=r=>(isLotLeft(r[0])?` <span class="tag t-yama">山${lotBranches(r[0].split("-")[0]).length?"の残り":""} ▸</span>`:"")+(STOCKQ[r[0]]?` <span class="tag t-list">残り${qLeft(r[0])}／${STOCKQ[r[0]].total}個</span>`:"");
-function invList(){const f=INV_F.find(x=>x[0]===invF)[2],k=norm(invQ);return items.filter(r=>f(r)&&(!k||norm(r[0]+r[1]).includes(k)))}
+// 山（-0）の行のすぐ下に、その山の枝番を並べる。山の行は、枝番のどれかが当てはまれば出す
+const lotOf=no=>{const p=no.includes("-")?no.split("-")[0]:null;return p&&LOTS[p]&&items.some(r=>r[0]===p+"-0")?p:null};
+function invList(){
+  const f=INV_F.find(x=>x[0]===invF)[2],k=norm(invQ),kw=r=>!k||norm(r[0]+r[1]).includes(k);
+  const out=[],done=new Set(),bn=no=>/-0$/.test(no)?-1:+no.split("-")[1];
+  items.forEach(r=>{const p=lotOf(r[0]);
+    if(!p){if(invF!=="lot"&&f(r)&&kw(r))out.push(r);return}
+    if(done.has(p))return;done.add(p);
+    const grp=items.filter(x=>lotOf(x[0])===p).sort((a,b)=>bn(a[0])-bn(b[0])),head=grp[0],kids=grp.slice(1);
+    if(invF==="lot"){if(grp.some(kw))out.push(...grp);return}
+    const hk=kids.filter(x=>f(x)&&kw(x));if((f(head)&&kw(head))||hk.length)out.push(head,...hk);
+  });
+  return out;
+}
 function renderItems(){
   const list=invList();
   document.getElementById("invPills").innerHTML=INV_F.map(([k,l])=>`<button class="pill${k===invF?" on":""}" data-f="${k}">${l}</button>`).join("");
   document.querySelectorAll("#invPills .pill").forEach(b=>b.onclick=()=>{invF=b.dataset.f;renderItems()});
-  document.getElementById("itemrows").innerHTML=(list.length?"":`<tr><td colspan="10" class="muted" style="padding:16px">当てはまる商品はありません</td></tr>`)+list.map(r=>`<tr data-no="${r[0]}" class="clickable ${r._flash?"flash":""}"><td>${inStock(r)?`<input type="checkbox" class="pick" data-no="${r[0]}"${picked.has(r[0])?" checked":""}>`:""}</td><td>${r[0]}</td><td>${r[1]}${qtyTag(r)}</td><td>${r[2]}</td><td>${r[3]}</td><td class="n">${yen(r[4])}</td><td class="n">${yen(r[5])}</td><td><span class="tag ${st[r[6]][1]}">${st[r[6]][0]}</span></td><td>${chips(r[7])}</td><td class="n">${inStock(r)?days(r[8]):'<span class="muted">—</span>'}</td></tr>`).join("");
-  document.getElementById("itemcards").innerHTML=list.map(r=>`<div data-no="${r[0]}" class="mc clickable ${r._flash?"flash":""}"><div class="top"><span class="muted">${inStock(r)?`<input type="checkbox" class="pick" data-no="${r[0]}"${picked.has(r[0])?" checked":""}> `:""}${r[0]}・${r[2]}</span><span class="tag ${st[r[6]][1]}">${st[r[6]][0]}</span></div><div class="name">${r[1]}${qtyTag(r)}</div><div class="meta"><span>原価 ${yen(r[4])} / 予想 ${yen(r[5])}</span><span>${inStock(r)&&r[8]!=null?r[8]+"日":""}</span></div><div style="margin-top:6px">${chips(r[7])}</div></div>`).join("");
+  document.getElementById("itemrows").innerHTML=(list.length?"":`<tr><td colspan="10" class="muted" style="padding:16px">当てはまる商品はありません</td></tr>`)+list.map(r=>`<tr data-no="${r[0]}" class="clickable ${r._flash?"flash":""} ${grpCls(r)}"><td>${inStock(r)?`<input type="checkbox" class="pick" data-no="${r[0]}"${picked.has(r[0])?" checked":""}>`:""}</td><td>${r[0]}</td><td><span class="nm">${r[1]}</span>${qtyTag(r)}</td><td>${r[2]}</td><td>${r[3]}</td><td class="n">${yen(r[4])}</td><td class="n">${yen(r[5])}</td><td><span class="tag ${st[r[6]][1]}">${st[r[6]][0]}</span></td><td>${chips(r[7])}</td><td class="n">${inStock(r)?days(r[8]):'<span class="muted">—</span>'}</td></tr>`).join("");
+  document.getElementById("itemcards").innerHTML=list.map(r=>`<div data-no="${r[0]}" class="mc clickable ${r._flash?"flash":""} ${grpCls(r)}"><div class="top"><span class="muted">${inStock(r)?`<input type="checkbox" class="pick" data-no="${r[0]}"${picked.has(r[0])?" checked":""}> `:""}${r[0]}・${r[2]}</span><span class="tag ${st[r[6]][1]}">${st[r[6]][0]}</span></div><div class="name"><span class="nm">${r[1]}</span>${qtyTag(r)}</div><div class="meta"><span>原価 ${yen(r[4])} / 予想 ${yen(r[5])}</span><span>${inStock(r)&&r[8]!=null?r[8]+"日":""}</span></div><div style="margin-top:6px">${chips(r[7])}</div></div>`).join("");
   document.querySelectorAll(".pick").forEach(cb=>cb.addEventListener("change",()=>{cb.checked?picked.add(cb.dataset.no):picked.delete(cb.dataset.no);
     document.querySelectorAll(`.pick[data-no="${cb.dataset.no}"]`).forEach(x=>x.checked=cb.checked);drawPickBar()}));
   const n=items.filter(inStock).length;document.querySelector("#items .lead").firstChild.textContent=`全 1,284 点（在庫 ${400+n} 点）。`;
