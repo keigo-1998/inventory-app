@@ -14,7 +14,7 @@
 body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif;font-size:14px;line-height:1.5}
 .note{background:#fff8db;border-bottom:1px solid #f1e3a1;padding:8px 16px;font-size:12px;color:#6b5800}
 header{background:var(--card);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
-.hwrap{max-width:1200px;margin:0 auto;display:flex;align-items:center;gap:20px;padding:0 16px;height:60px}
+.hwrap{margin:0 auto;display:flex;align-items:center;gap:20px;padding:0 24px;height:60px}
 .logo{display:flex;align-items:center;gap:8px;white-space:nowrap;cursor:default;user-select:none;padding-right:20px;border-right:1px solid var(--line);height:32px}
 .logo img{height:22px;width:auto;display:block}
 .logo span{font-size:10px;font-weight:600;letter-spacing:.08em;color:var(--sub);background:var(--gray-soft);border-radius:4px;padding:2px 6px}
@@ -25,7 +25,7 @@ nav.top button.on{background:var(--accent);color:#fff;font-weight:700;box-shadow
 .hright{margin-left:auto;display:flex;gap:8px}
 .btn{border:1px solid var(--line);background:var(--card);border-radius:8px;padding:8px 14px;font:inherit;cursor:pointer;white-space:nowrap}
 .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
-main{max-width:1200px;margin:0 auto;padding:20px 16px 96px}
+main{margin:0 auto;padding:20px 24px 96px} /* 画面いっぱいに広げる */
 h1{font-size:20px;margin:0 0 4px}
 .lead{color:var(--sub);margin:0 0 16px;font-size:13px}
 .grid{display:grid;gap:12px}
@@ -145,7 +145,7 @@ dialog td input{width:110px}
 input.n{text-align:right}
 input.auto-in{color:var(--accent);font-weight:600;background:#eaf1ff}
 .auto-txt{color:var(--accent);font-weight:600}
-@media (max-width:760px){.slipgrid{grid-template-columns:1fr}.pickbar{bottom:72px}}
+@media (max-width:760px){.slipgrid{grid-template-columns:1fr}.pickbar{bottom:72px;flex-wrap:wrap}.pickbar b{flex-basis:100%;white-space:nowrap}.pickbar .btn{flex:1;padding-left:6px;padding-right:6px;white-space:nowrap}}
 .sheet td.cell .ddv{display:inline-block;max-width:calc(100% - 14px);overflow:hidden;text-overflow:ellipsis;vertical-align:bottom}
 .sheet td.cell .dd{position:absolute;right:4px;top:50%;transform:translateY(-50%);color:#8a93a3;font-size:11px;cursor:pointer;padding:2px 3px;border-radius:3px}
 .sheet td.cell .dd:hover{background:var(--gray-soft);color:var(--text)}
@@ -167,6 +167,8 @@ input.auto-in{color:var(--accent);font-weight:600;background:#eaf1ff}
 .chipbtn{border:1px solid var(--line);background:var(--card);border-radius:99px;padding:8px 12px;font:inherit;font-size:13px;cursor:pointer}
 .chipbtn.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
 .chipbtn.sp{border-style:dashed;color:var(--sub)}
+.listbox{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:0 0 12px}
+.listbox .chips{margin-top:6px}
 .chipbtn.sp.on{background:var(--text);border-color:var(--text);color:#fff}
 .chk.small{font-size:12px;font-weight:400;margin-top:4px}
 .btn.big{width:100%;padding:13px;font-size:15px;margin-top:4px}
@@ -336,6 +338,7 @@ table.calc.small td{padding:6px 4px;font-size:13px}
 }
 nav.bottom{display:none}
 .fab{display:none}
+body.picking .fab{display:none!important}
 
 @media (max-width:760px){
   .hwrap{height:52px}
@@ -470,7 +473,7 @@ nav.bottom{display:none}
     </table>
   </div>
   <div class="mcards" id="itemcards"></div>
-  <div class="pickbar" id="pickBar"><b id="pickCount"></b><button class="btn" id="pickClear">選択を外す</button><button class="btn primary" id="pickSell">まとめて売る</button></div>
+  <div class="pickbar" id="pickBar"><b id="pickCount"></b><button class="btn" id="pickClear">選択を外す</button><button class="btn" id="pickList">出品先を変える</button><button class="btn primary" id="pickSell">まとめて売る</button></div>
   <dialog id="bundleDlg">
     <h2 style="margin:0 0 4px">まとめて売る（山売り・合わせ売り）</h2>
     <p class="muted" style="margin:0 0 12px">販売の記録は<b>1件（1行）</b>になります。中身の商品はすべて売却済みになります。<br>売れた金額は、山ごとの成績が分かるように、予想売価の比率で中身に分けます（予想売価がなければ均等。金額のマスは手で直せます）。</p>
@@ -1152,6 +1155,7 @@ const picked=new Set();
 function drawPickBar(){
   const bar=document.getElementById("pickBar");
   bar.style.display=picked.size?"flex":"none";
+  document.body.classList.toggle("picking",picked.size>0); // 選んでいる間は「＋登録」ボタンを隠す（帯と重なるため）
   document.getElementById("pickCount").textContent=`${picked.size}点を選んでいます`;
 }
 document.querySelectorAll(".pick").forEach(cb=>cb.addEventListener("change",()=>{cb.checked?picked.add(cb.dataset.no):picked.delete(cb.dataset.no);
@@ -1192,6 +1196,7 @@ function drawBundle(){
 document.getElementById("bAmt").addEventListener("input",drawBundle);document.getElementById("bFee").addEventListener("input",drawBundle);
 document.getElementById("bReset").addEventListener("click",()=>{bundle.forEach(b=>b.amt=null);drawBundle()});
 document.getElementById("pickSell").addEventListener("click",openBundle);
+document.getElementById("pickList").addEventListener("click",()=>openListBulk());
 document.getElementById("pickClear").addEventListener("click",()=>{picked.clear();document.querySelectorAll(".pick").forEach(x=>x.checked=false);drawPickBar()});
 document.getElementById("bClose").addEventListener("click",()=>document.getElementById("bundleDlg").close());
 document.getElementById("bSave").addEventListener("click",()=>{
@@ -1598,13 +1603,46 @@ function openItem(no){
       <div><span>${inStock(r)?"滞留日数":"出品先"}</span><b>${inStock(r)?(r[8]!=null?r[8]+"日":"—"):chips(r[7])}</b></div>
     </div>
     ${(RETURNS[r[0]]||[]).map(x=>`<div class="rethist">↩ ${x.date.slice(5)} に <b>${x.ch}</b> から返品で戻りました（同じ番号で売り直せます）。この返品の損：<b>${yen(r0(x.loss))}</b></div>`).join("")}
-    ${inStock(r)&&r[7].length?`<p class="muted" style="margin:0 0 10px">出品中：${chips(r[7])}</p>`:""}
+    ${inStock(r)?listBox(r):""}
     ${body}${lotBox}`;
   dd.showModal();
   dd.querySelector("#idClose").onclick=()=>dd.close();
   const tr=dd.querySelector("#toRet");if(tr)tr.onclick=()=>openReturn(r);
   const tt=dd.querySelector("#toTbd");if(tt)tt.onclick=()=>{dd.close();goTbd()};
   const tl=dd.querySelector("#toLot");if(tl)tl.onclick=()=>{dd.close();openLot(lot)};
+  dd.querySelectorAll("#lbChips .chipbtn").forEach(b=>b.onclick=()=>{
+    const ch=b.dataset.ch,on=r[7].includes(ch),prev=snapList([r]);
+    setChannels(r,on?r[7].filter(c=>c!==ch):[...r[7],ch]);renderItems();openItem(r[0]);
+    toast(on?`${r[0]} の <b>${ch}</b> を取り下げにしました${r[6]==="stock"?"（出品先がなくなったので未出品）":""}`:`${r[0]} を <b>${ch}</b> に出品中にしました`,()=>{restoreList(prev);renderItems();if(dd.open)openItem(r[0])},"取り消しました。出品先は元に戻りました")});
+}
+// ---- 出品先を変える（状態は出品先から自動で決まる） ----
+// 出品先が1つ以上 → 出品中、ひとつもない → 未出品。売却済みは販売の記録でだけ変わる
+const LIST_CH=Object.keys(CH).filter(k=>!CH[k].tbd);
+function setChannels(r,arr){r[7]=LIST_CH.filter(c=>arr.includes(c)).concat(arr.filter(c=>!LIST_CH.includes(c)));if(inStock(r))r[6]=r[7].length?"list":"stock";r._flash=true;setTimeout(()=>{r._flash=false},2500)}
+const snapList=rs=>rs.map(r=>[r,r[6],[...r[7]]]);
+const restoreList=sn=>sn.forEach(([r,s,c])=>{r[6]=s;r[7]=c});
+const listBox=r=>`<div class="listbox"><b>出品先</b> <span class="muted">押すと出品中、もう一度押すと取り下げ。状態は自動で変わります</span>
+  <div class="chips" id="lbChips">${LIST_CH.map(c=>`<button class="chipbtn${r[7].includes(c)?" on":""}" data-ch="${c}">${r[7].includes(c)?"✓ ":""}${c}</button>`).join("")}</div></div>`;
+function openListBulk(){
+  const rs=items.filter(r=>picked.has(r[0])&&inStock(r));if(!rs.length)return;
+  let ch="メルカリ";
+  const dlg=document.getElementById("listDlg")||Object.assign(document.body.appendChild(document.createElement("dialog")),{id:"listDlg"});
+  const draw=()=>{
+    const has=rs.filter(r=>r[7].includes(ch)).length;
+    dlg.innerHTML=`<div class="dlghead"><div><div class="muted">${rs.length}点を選んでいます</div><h2 style="margin:2px 0 0">出品先をまとめて変える</h2></div><button class="x" id="ldClose" title="閉じる">×</button></div>
+      <div class="f"><span>販路</span><div class="chips" id="ldCh">${LIST_CH.map(c=>`<button class="chipbtn${c===ch?" on":""}" data-ch="${c}">${c}</button>`).join("")}</div></div>
+      <p class="muted" style="margin:10px 0">選んだ${rs.length}点のうち、<b>${ch}</b> に出品中は ${has}点、まだは ${rs.length-has}点です。</p>
+      <ul class="muted" style="margin:0 0 12px;padding-left:18px;max-height:160px;overflow:auto">${rs.map(r=>`<li>${r[0]} ${r[1]}（${r[7].length?r[7].join("・"):"未出品"}）</li>`).join("")}</ul>
+      <div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap"><button class="btn" id="ldOff"${has?"":" disabled"}>${ch} を取り下げる</button><button class="btn primary" id="ldOn"${has===rs.length?" disabled":""}>${ch} に出品した</button></div>`;
+    dlg.querySelector("#ldClose").onclick=()=>dlg.close();
+    dlg.querySelectorAll("#ldCh .chipbtn").forEach(b=>b.onclick=()=>{ch=b.dataset.ch;draw()});
+    const go=on=>{const tg=rs.filter(r=>r[7].includes(ch)!==on),prev=snapList(tg);
+      tg.forEach(r=>setChannels(r,on?[...r[7],ch]:r[7].filter(c=>c!==ch)));dlg.close();renderItems();
+      const toStock=!on?tg.filter(r=>r[6]==="stock").length:0;
+      toast(on?`${tg.length}点を <b>${ch}</b> に出品中にしました`:`${tg.length}点の <b>${ch}</b> を取り下げにしました${toStock?`（${toStock}点は出品先がなくなったので未出品）`:""}`,()=>{restoreList(prev);renderItems()},"取り消しました。出品先は元に戻りました")};
+    dlg.querySelector("#ldOn").onclick=()=>go(true);dlg.querySelector("#ldOff").onclick=()=>go(false);
+  };
+  draw();dlg.showModal();
 }
 // ---- 返品・返金（たまにある） ----
 const RETURNS={}; // 管理番号 → 返品の記録（売上は0円、かかった送料と戻らない手数料を損として残す）
