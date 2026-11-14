@@ -1,61 +1,238 @@
+// 物販管理のデータの入れ物（データベースの設計図）
+// くわしい決まりは docs/data-design.md と docs/profit-formulas.md
+//
+// お金の持ち方:
+// - 円は整数（Int）。1円未満は持たない
+// - 外貨はセント単位の整数（€370.50 → 37050）。小数の計算ずれを防ぐため
+// - 為替レートは Decimal（177.36 のような小数をずれなく持てる型）
+//
+// 消さない・戻せる（docs/data-design.md「データを消さない・戻せるようにする」）:
+// - 大事な表には deletedAt（消した日時）がある。「削除」は印を付けるだけで、行は残す
+// - だれが・いつ・何を変えたかは ChangeLog に残す
+
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "sqlite" // このMacで作る間は SQLite。公開するときに PostgreSQL に切り替える
   url      = env("DATABASE_URL")
 }
 
-model Category {
-  id        Int      @id @default(autoincrement())
-  name      String   @unique
+// ---------- 選択肢の一覧（マスタ） ----------
+
+/// ジャンル（カメラ・時計・茶道具 など）
+model Genre {
+  id        Int       @id @default(autoincrement())
+  name      String    @unique
+  sortOrder Int       @default(0)
   items     Item[]
-  createdAt DateTime @default(now())
+  lots      Lot[]
+  createdAt DateTime  @default(now())
+  deletedAt DateTime?
 }
 
-model Item {
-  id          Int             @id @default(autoincrement())
-  code        String          @unique // 品番・管理番号
+/// 仕入先（トレファクオークション など）
+model Supplier {
+  id        Int       @id @default(autoincrement())
+  name      String    @unique
+  items     Item[]
+  lots      Lot[]
+  createdAt DateTime  @default(now())
+  deletedAt DateTime?
+}
+
+/// 販路（売り先）と、その計算のルール（docs/profit-formulas.md）
+model Channel {
+  id               Int       @id @default(autoincrement())
+  name             String    @unique
+  currency         String    @default("JPY") // JPY / EUR / USD
+  /// 手数料の出し方: auto（売値×率で自動）/ manual（毎回入力）/ none（なし）
+  feeMode          String    @default("manual")
+  feeRate          Decimal? // auto のときの率（0.10 = 10%）
+  feeHintRate      Decimal? // manual のときの目安の率（打ち間違いの知らせに使う）
+  usesShippingFee  Boolean   @default(true) // 設定送料（お客様からもらう送料）を使うか
+  /// 実送料の払い方: payout（販路の振込から引かれる）/ bank（法人口座から払う）
+  shippingPaidBy   String    @default("bank")
+  /// 一部返金のふだんの返し方: payout / bank
+  refundVia        String    @default("payout")
+  undecided        Boolean   @default(false) // 計算のルールがまだ決まっていない（eBay など）
+  sortOrder        Int       @default(0)
+  listings         Listing[]
+  sales            Sale[]
+  createdAt        DateTime  @default(now())
+  deletedAt        DateTime?
+}
+
+// ---------- 商品（在庫） ----------
+
+/// 山（まとめて仕入れたもの）。仕入額はここに持ち、枝番に割り振る
+model Lot {
+  id          Int       @id @default(autoincrement())
+  code        String    @unique // 管理番号の親の部分（"0353"）
   name        String
-  categoryId  Int?
-  category    Category?       @relation(fields: [categoryId], references: [id], onDelete: SetNull)
-  unit        String          @default("個")
-  quantity    Int             @default(0) // 現在庫（貸出中を含まない手元在庫）
-  minQuantity Int             @default(0) // 発注点
-  location    String?
-  note        String?
-  movements   StockMovement[]
-  loans       Loan[]
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
+  totalCost   Int // 仕入額（円）
+  purchasedAt DateTime
+  supplierId  Int?
+  supplier    Supplier? @relation(fields: [supplierId], references: [id])
+  genreId     Int?
+  genre       Genre?    @relation(fields: [genreId], references: [id])
+  items       Item[] // -0（山の残り）と枝番
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
 }
 
-// type: IN(入庫) / OUT(出庫) / ADJUST(棚卸調整) / LOAN(貸出) / RETURN(返却)
-model StockMovement {
-  id        Int      @id @default(autoincrement())
+/// 商品。単品・山の残り（-0）・枝番（-1, -2…）・縦積在庫（個数が2以上）を、すべてこの1つで持つ
+model Item {
+  id            Int       @id @default(autoincrement())
+  code          String    @unique // 管理番号（"0352" / "0353-0" / "0353-1" / "L00004"）
+  name          String
+  genreId       Int?
+  genre         Genre?    @relation(fields: [genreId], references: [id])
+  supplierId    Int?
+  supplier      Supplier? @relation(fields: [supplierId], references: [id])
+  purchasedAt   DateTime
+  unitCost      Int // 原価（1個あたり・円・税込）。山の枝番は割り振った金額
+  quantity      Int       @default(1) // 仕入個数（縦積在庫は2以上）
+  expectedPrice Int? // 予想売価（円）
+  size          String?
+  weightGrams   Int?
+  note          String?
+
+  lotId         Int?
+  lot           Lot?      @relation(fields: [lotId], references: [id])
+  /// 山の枝番の原価の付け方: alloc（割り振る）/ zero（山の残りから0円で出す）。単品と -0 は空
+  lotCostMode   String?
+
+  /// 状態: stock（未出品）/ list（出品中）/ sold（売却済み）/ disposed（廃棄）/ fixture（備品にした）
+  /// 手では選ばない。出品先と販売の記録から自動で決まる（一覧で絞り込むために持っておく）
+  status        String    @default("stock")
+
+  listings      Listing[]
+  saleLines     SaleLine[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime?
+
+  @@index([status])
+  @@index([lotId])
+}
+
+/// 出品先。1つの商品を複数の販路に出せる（同時出品）
+model Listing {
+  id        Int       @id @default(autoincrement())
   itemId    Int
-  item      Item     @relation(fields: [itemId], references: [id], onDelete: Cascade)
-  type      String
-  quantity  Int // 在庫に対する増減（符号付き）
-  after     Int // 処理後の在庫数
-  operator  String?
-  note      String?
-  createdAt DateTime @default(now())
+  item      Item      @relation(fields: [itemId], references: [id])
+  channelId Int
+  channel   Channel   @relation(fields: [channelId], references: [id])
+  /// active（出品中）/ withdrawn（取り下げ）/ sold（ここで売れた）
+  state     String    @default("active")
+  startedAt DateTime  @default(now())
+  endedAt   DateTime?
 
-  @@index([itemId, createdAt])
+  @@index([itemId, state])
 }
 
-model Loan {
-  id         Int       @id @default(autoincrement())
-  itemId     Int
-  item       Item      @relation(fields: [itemId], references: [id], onDelete: Cascade)
-  borrower   String
-  quantity   Int
-  loanedAt   DateTime  @default(now())
-  dueDate    DateTime?
-  returnedAt DateTime?
-  note       String?
+// ---------- 販売（売上） ----------
 
-  @@index([returnedAt])
+/// 販売の記録。1件＝1行。まとめて売ったときも1件で、中身の商品は SaleLine に並ぶ
+model Sale {
+  id                Int       @id @default(autoincrement())
+  soldAt            DateTime
+  /// sale（販売）/ disposed（廃棄）/ fixture（備品にした）
+  kind              String    @default("sale")
+  channelId         Int?
+  channel           Channel?  @relation(fields: [channelId], references: [id])
+
+  currency          String    @default("JPY")
+  // 外貨の販路のときだけ入る（セント単位）
+  priceForeign      Int?
+  shippingForeign   Int?
+  feeForeign        Int?
+  // 円の金額（外貨のときは為替レートで換算した金額）
+  priceJpy          Int       @default(0) // 売値（まとめて売ったときは合計）
+  shippingFeeJpy    Int       @default(0) // 設定送料（お客様からもらう送料）
+  feeJpy            Int       @default(0) // 手数料
+  actualShippingJpy Int       @default(0) // 実送料
+  shippingTentative Boolean   @default(false) // 送料未定（仮の送料で計算中）
+  fxRate            Decimal? // 使った為替レート
+  fxRateFinal       Boolean   @default(false) // false の間は月初のTTMで仮の計算（月末に確定）
+
+  buyerName         String?
+  shipped           Boolean   @default(false)
+  note              String?
+
+  lines             SaleLine[]
+  adjustments       SaleAdjustment[]
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  /// 取り消した日時。取り消した記録も消さずに残す
+  cancelledAt       DateTime?
+
+  @@index([soldAt])
+}
+
+/// 販売の中身（どの商品を何個）。原価は記録したときの金額を写しておく（あとで山の割り振りが変わっても、売れた分は変えない）
+model SaleLine {
+  id          Int   @id @default(autoincrement())
+  saleId      Int
+  sale        Sale  @relation(fields: [saleId], references: [id])
+  itemId      Int
+  item        Item  @relation(fields: [itemId], references: [id])
+  quantity    Int   @default(1)
+  costJpy     Int // 原価の合計（1個あたり × 個数）
+  /// まとめて売ったとき、売れた金額のうちこの商品の分（山ごとの成績用）。1点だけの販売では売値と同じ
+  amountJpy   Int
+
+  @@index([itemId])
+}
+
+/// 返品と一部返金（docs/data-design.md「返品・キャンセル・一部返金」）
+model SaleAdjustment {
+  id                Int       @id @default(autoincrement())
+  saleId            Int
+  sale              Sale      @relation(fields: [saleId], references: [id])
+  /// return（返品・商品が戻る）/ refund（一部だけ返金）
+  kind              String
+  date              DateTime
+  refundJpy         Int       @default(0) // 一部返金の金額
+  returnShippingJpy Int       @default(0) // 返品の送料（返送用封筒など）
+  lostFeeJpy        Int       @default(0) // 戻ってこない手数料
+  via               String? // payout（販路の振込から引かれる）/ bank（法人口座から）
+  note              String?
+  createdAt         DateTime  @default(now())
+  cancelledAt       DateTime?
+}
+
+// ---------- 為替レート ----------
+
+/// 毎日のTTM（三菱UFJ銀行の発表を自動で取得する予定）
+model ExchangeRate {
+  id       Int      @id @default(autoincrement())
+  currency String // EUR / USD
+  date     DateTime
+  ttm      Decimal
+  source   String   @default("manual")
+
+  @@unique([currency, date])
+}
+
+// ---------- 変更の履歴 ----------
+
+/// だれが・いつ・どの表のどの行を・どう変えたか。間違いはこの記録を見て戻す
+model ChangeLog {
+  id       Int      @id @default(autoincrement())
+  at       DateTime @default(now())
+  user     String? // ログインを作るまでは空
+  table    String // "Item" / "Sale" など
+  recordId Int
+  /// create（作った）/ update（変えた）/ delete（消した印）/ restore（戻した）
+  action   String
+  before   String? // 変える前の中身（JSON の文字）
+  after    String? // 変えた後の中身（JSON の文字）
+  note     String? // 「販売を記録」「出品先をまとめて変える」など、何の操作だったか
+
+  @@index([table, recordId])
+  @@index([at])
 }

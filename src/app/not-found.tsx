@@ -4,7 +4,7 @@ export default function NotFound() {
   return (
     <section className="card">
       <h1>ページが見つかりません</h1>
-      <p><Link href="/">ダッシュボードへ戻る</Link></p>
+      <p><Link href="/">はじめの画面へ戻る</Link></p>
     </section>
   );
 }
