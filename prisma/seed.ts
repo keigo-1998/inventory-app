@@ -97,18 +97,18 @@ async function main() {
 
   // 売れた見本 1: ヤフオク（円）
   const hagi = await db.item.update({ where: { code: "0413" }, data: { status: "sold" } });
-  await db.sale.create({
+  const sale1 = await db.sale.create({
     data: {
       soldAt: d("2026-11-08"), channelId: ch["ヤフオク"], priceJpy: 15000, shippingFeeJpy: 1000, feeJpy: 1365, actualShippingJpy: 800, shipped: true,
       lines: { create: [{ itemId: hagi.id, costJpy: 4000, amountJpy: 15000 }] },
     },
   });
-  await db.listing.create({ data: { itemId: hagi.id, channelId: ch["ヤフオク"], state: "sold", startedAt: d("2026-06-03"), endedAt: d("2026-11-08") } });
+  await db.listing.create({ data: { itemId: hagi.id, channelId: ch["ヤフオク"], state: "sold", startedAt: d("2026-06-03"), endedAt: d("2026-11-08"), endedBySaleId: sale1.id } });
 
   // 売れた見本 2: Catawiki（ユーロ）。€60 × 177.36円。為替は月初のTTMで仮
   const seiko = await db.item.update({ where: { code: "0401" }, data: { status: "sold" } });
   const rate = 177.36, yen = (cents: number) => Math.round((cents / 100) * rate);
-  await db.sale.create({
+  const sale2 = await db.sale.create({
     data: {
       soldAt: d("2026-11-10"), channelId: ch["Catawiki"], currency: "EUR",
       priceForeign: 6000, shippingForeign: 2000, feeForeign: 930,
@@ -117,7 +117,7 @@ async function main() {
       lines: { create: [{ itemId: seiko.id, costJpy: 2000, amountJpy: yen(6000) }] },
     },
   });
-  await db.listing.create({ data: { itemId: seiko.id, channelId: ch["Catawiki"], state: "sold", startedAt: d("2026-09-21"), endedAt: d("2026-11-10") } });
+  await db.listing.create({ data: { itemId: seiko.id, channelId: ch["Catawiki"], state: "sold", startedAt: d("2026-09-21"), endedAt: d("2026-11-10"), endedBySaleId: sale2.id } });
 
   const n = await db.item.count();
   console.log(`見本データを入れました（商品 ${n} 件・販路 ${CHANNELS.length} 件・ジャンル ${GENRES.length} 件）`);

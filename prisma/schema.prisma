@@ -126,10 +126,14 @@ model Listing {
   item      Item      @relation(fields: [itemId], references: [id])
   channelId Int
   channel   Channel   @relation(fields: [channelId], references: [id])
-  /// active（出品中）/ withdrawn（取り下げ）/ sold（ここで売れた）
+  /// active（出品中）/ withdrawn（取り下げ）/ sold（ここで売れた）/ cancelled（販売の取り消しで消えた）
   state     String    @default("active")
   startedAt DateTime  @default(now())
   endedAt   DateTime?
+  /// この販売のせいで終わった（売れた・ほかの出品先を外した）。販売を取り消すと、これを見て元に戻す
+  endedBySaleId Int?
+  /// 出品先に入っていなかった販路で売れたときに、販売の記録が作った行
+  createdBySale Boolean @default(false)
 
   @@index([itemId, state])
 }

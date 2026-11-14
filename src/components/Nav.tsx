@@ -26,7 +26,7 @@ export function TopNav() {
 
 export function BottomNav() {
   const path = usePathname();
-  const items = [MENU[0], MENU[1], { href: "/sales", label: "販売", icon: "¥", ready: false }, MENU[2]];
+  const items = [MENU[0], MENU[1], { href: "/sales", label: "販売", icon: "¥", ready: true }, MENU[2]];
   return (
     <nav className="bottom">
       {items.map((m) =>
@@ -44,7 +44,7 @@ export function BottomNav() {
 export function HeaderButtons() {
   return (
     <div className="hright">
-      <button className="btn" disabled title="まだ作っていません">販売を記録</button>
+      <Link className="btn" href="/sales">販売を記録</Link>
       <Link className="btn primary" href="/items/new">＋ 商品を登録</Link>
     </div>
   );
