@@ -15,7 +15,7 @@ export function TopNav() {
     <nav className="top">
       {MENU.map((m) =>
         m.ready ? (
-          <Link key={m.href} href={m.href} className={path.startsWith(m.href) ? "on" : ""}>{m.label}</Link>
+          <Link key={m.href} href={m.href} className={path === m.href ? "on" : ""}>{m.label}</Link>
         ) : (
           <a key={m.href} className="soon" title="まだ作っていません">{m.label}</a>
         ),
@@ -31,11 +31,26 @@ export function BottomNav() {
     <nav className="bottom">
       {items.map((m) =>
         m.ready ? (
-          <Link key={m.href} href={m.href} className={path.startsWith(m.href) ? "on" : ""}><b>{m.icon}</b>{m.label}</Link>
+          <Link key={m.href} href={m.href} className={path === m.href ? "on" : ""}><b>{m.icon}</b>{m.label}</Link>
         ) : (
           <a key={m.href} className="soon" title="まだ作っていません"><b>{m.icon}</b>{m.label}</a>
         ),
       )}
     </nav>
   );
+}
+
+/** 右上のボタン（パソコン）と、右下の「＋ 登録」ボタン（スマホ） */
+export function HeaderButtons() {
+  return (
+    <div className="hright">
+      <button className="btn" disabled title="まだ作っていません">販売を記録</button>
+      <Link className="btn primary" href="/items/new">＋ 商品を登録</Link>
+    </div>
+  );
+}
+export function Fab() {
+  const path = usePathname();
+  if (path === "/items/new") return null; // 登録画面では隠す
+  return <Link className="fab" href="/items/new">＋ 登録</Link>;
 }

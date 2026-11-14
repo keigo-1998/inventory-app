@@ -366,3 +366,7 @@ nav.bottom a{flex:1;padding:8px 0 10px;font-size:11px;color:var(--sub);display:f
 nav.bottom a b{font-size:18px;font-weight:400;line-height:1}
 nav.bottom a.on{color:var(--accent);font-weight:600}
 .err{background:var(--red-soft);color:var(--red);border-radius:8px;padding:8px 12px;margin:0 0 12px}
+a.btn,a.fab{text-decoration:none;display:inline-block;color:inherit}a.btn.primary,a.fab{color:#fff}
+@media (min-width:761px){a.fab{display:none}}
+@media (max-width:760px){body:has(.mbar) #toast{bottom:136px}} /* スマホの登録ボタンの帯があるときは、お知らせをその上に出す */
+#toast:not(.show){opacity:0;pointer-events:none;transition:transform .25s,opacity .25s} /* 消えたお知らせが、下のボタンをふさがないように */

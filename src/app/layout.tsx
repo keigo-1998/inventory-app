@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { TopNav, BottomNav } from "@/components/Nav";
+import { TopNav, BottomNav, HeaderButtons, Fab } from "@/components/Nav";
 import "./globals.css";
 
 export const metadata: Metadata = { title: "物販管理 JOYNT" };
@@ -16,14 +16,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <span>物販管理</span>
             </div>
             <TopNav />
-            <div className="hright">
-              <button className="btn" disabled title="まだ作っていません">販売を記録</button>
-              <button className="btn primary" disabled title="まだ作っていません">＋ 商品を登録</button>
-            </div>
+            <HeaderButtons />
           </div>
         </header>
         <main>{children}</main>
         <BottomNav />
+        <Fab />
       </body>
     </html>
   );
