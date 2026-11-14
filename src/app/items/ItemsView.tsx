@@ -2,6 +2,7 @@
 // 商品一覧の画面（画面イメージ docs/mockup/index.html の「商品一覧」と同じ見た目・操作）
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { changeListings, undoListings, type ListingUndo } from "@/lib/listing-actions";
 import { yen } from "@/lib/format";
 
@@ -145,6 +146,8 @@ export function ItemsView({ rows, channels, lots, genres }: { rows: ItemRow[]; c
     });
   };
 
+  // 山（-0）の行は山の画面を開く。ほかは商品の画面
+  const openRowOf = (r: ItemRow) => { if (isLotHead(r)) router.push(`/lots/${r.lotCode}`); else setOpenCode(r.code); };
   const inStockCount = rows.filter(inStock).length;
   const openRow = rows.find((r) => r.code === openCode) ?? null;
   const pickedRows = rows.filter((r) => picked.has(r.code) && inStock(r));
@@ -164,7 +167,7 @@ export function ItemsView({ rows, channels, lots, genres }: { rows: ItemRow[]; c
       <p className="lead">
         全 {rows.length.toLocaleString()} 点（在庫 {inStockCount.toLocaleString()} 点）。出品先を変えたいときは、商品にチェックを入れて「出品先を変える」を押します。
         <br />
-        <span className="muted">商品を押すと、いくら利益が出ているかが見られます。山の画面・まとめて売るは、これから作ります。</span>
+        <span className="muted">商品を押すと、いくら利益が出ているかが見られます。<span className="tag t-yama">山 ▸</span> の行を押すと山の画面が開き、枝番を追加できます。まとめて売るは、これから作ります。</span>
       </p>
       {error && <p className="err">{error}</p>}
       <div className="filters">
@@ -202,7 +205,7 @@ export function ItemsView({ rows, channels, lots, genres }: { rows: ItemRow[]; c
           <tbody id="itemrows">
             {!list.length && <tr><td colSpan={10} className="muted" style={{ padding: 16 }}>当てはまる商品はありません</td></tr>}
             {list.map((r) => (
-              <tr key={r.id} className={`clickable ${rowCls(r)}`} onClick={() => setOpenCode(r.code)}>
+              <tr key={r.id} className={`clickable ${rowCls(r)}`} onClick={() => openRowOf(r)}>
                 <td onClick={(e) => e.stopPropagation()}>
                   {inStock(r) && <input type="checkbox" checked={picked.has(r.code)} onChange={(e) => togglePick(r.code, e.target.checked)} />}
                 </td>
@@ -223,7 +226,7 @@ export function ItemsView({ rows, channels, lots, genres }: { rows: ItemRow[]; c
 
       <div className="mcards" id="itemcards">
         {list.map((r) => (
-          <div key={r.id} className={`mc clickable ${rowCls(r)}`} onClick={() => setOpenCode(r.code)}>
+          <div key={r.id} className={`mc clickable ${rowCls(r)}`} onClick={() => openRowOf(r)}>
             <div className="top">
               <span className="muted">
                 {inStock(r) && <input type="checkbox" checked={picked.has(r.code)} onClick={(e) => e.stopPropagation()} onChange={(e) => togglePick(r.code, e.target.checked)} />} {r.code}・{r.genre}
@@ -394,9 +397,10 @@ function ItemDialog({ r, channels, listChannels, lot, pending, toast, onClose, o
         <div className="lotbox">
           <span className="muted">
             {isLotHead(r)
-              ? <>山{lot.code}（{lot.name}）の残りです。仕入額 {yen(lot.totalCost)}。山の画面（枝番の追加）はこれから作ります。</>
-              : <>この商品は山{lot.code}（{lot.name}・仕入額 {yen(lot.totalCost)}）の枝番です{r.lotCostMode === "zero" ? "（残りから0円で出した）" : ""}。山全体の利益は、山の画面（これから作ります）で見られます。</>}
+              ? <>山{lot.code}（{lot.name}）の残りです。仕入額 {yen(lot.totalCost)}。</>
+              : <>この商品は山{lot.code}（{lot.name}・仕入額 {yen(lot.totalCost)}）の枝番です{r.lotCostMode === "zero" ? "（残りから0円で出した）" : ""}。山全体の利益は山の画面で見られます。</>}
           </span>
+          <Link className="btn" href={`/lots/${lot.code}`}>山の画面へ</Link>
         </div>
       )}
       {toast}
