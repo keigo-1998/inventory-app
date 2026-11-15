@@ -8,6 +8,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import { db } from "@/lib/db";
+import { LIVE_SALE } from "@/lib/sale-live";
 import { logChange } from "@/lib/history";
 import { calcSale, type ChannelRule } from "@/lib/sale-calc";
 import { monthRate } from "@/lib/fx";
@@ -55,7 +56,7 @@ export async function recordSales(raw: SaleEntry[], note = "販売を記録"): P
       for (const e of p.data) {
         const soldAt = parseDate(e.date);
         if (!soldAt) throw new Error(`売却日「${e.date}」を 2026/11/12 の形で入れてください`);
-        const item = await tx.item.findFirst({ where: { id: e.itemId, deletedAt: null }, include: { saleLines: { where: { sale: { cancelledAt: null } } } } });
+        const item = await tx.item.findFirst({ where: { id: e.itemId, deletedAt: null }, include: { saleLines: { where: { sale: LIVE_SALE } } } });
         if (!item) throw new Error("商品が見つかりません");
         if (item.status !== "stock" && item.status !== "list") throw new Error(`${item.code} はもう在庫にありません（売却済みなど）`);
         const soldQty = item.saleLines.reduce((a, l) => a + l.quantity, 0);
@@ -127,10 +128,12 @@ export async function recordSales(raw: SaleEntry[], note = "販売を記録"): P
 export async function cancelSales(saleIds: number[], note = "販売の記録を取り消す"): Promise<{ ok: boolean; error?: string }> {
   const p = z.array(z.number().int().positive()).min(1).safeParse(saleIds);
   if (!p.success) return { ok: false, error: "入力の形が正しくありません" };
+  try {
   await db.$transaction(async (tx) => {
     for (const id of p.data) {
-      const sale = await tx.sale.findUnique({ where: { id }, include: { lines: true } });
+      const sale = await tx.sale.findUnique({ where: { id }, include: { lines: true, adjustments: { where: { cancelledAt: null, kind: "return" } } } });
       if (!sale || sale.cancelledAt) continue;
+      if (sale.adjustments.length) throw new Error("この販売は返品として記録されています。先に返品の記録を取り消してください");
       await tx.sale.update({ where: { id }, data: { cancelledAt: new Date() } });
       await logChange(tx, { table: "Sale", recordId: id, action: "delete", note });
       // この販売で終わった出品先を元に戻す。販売が作った行は「取り消し」にする
@@ -150,6 +153,9 @@ export async function cancelSales(saleIds: number[], note = "販売の記録を�
       }
     }
   });
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : "取り消せませんでした" };
+  }
   revalidatePath("/items");
   revalidatePath("/sales");
   return { ok: true };
@@ -210,7 +216,7 @@ export async function recordBundle(raw: BundleInput): Promise<BundleResult> {
     const res = await db.$transaction(async (tx) => {
       const ch = await tx.channel.findFirst({ where: { name: b.channel, deletedAt: null } });
       if (!ch) throw new Error(`販路「${b.channel}」が見つかりません`);
-      const items = await tx.item.findMany({ where: { id: { in: b.parts.map((x) => x.itemId) }, deletedAt: null }, include: { saleLines: { where: { sale: { cancelledAt: null } } } } });
+      const items = await tx.item.findMany({ where: { id: { in: b.parts.map((x) => x.itemId) }, deletedAt: null }, include: { saleLines: { where: { sale: LIVE_SALE } } } });
       if (items.length !== b.parts.length) throw new Error("見つからない商品があります");
       for (const it of items) if (it.status !== "stock" && it.status !== "list") throw new Error(`${it.code} はもう在庫にありません`);
       // 中身は「残り全部」を売る（縦積在庫なら残りの個数ぶん）

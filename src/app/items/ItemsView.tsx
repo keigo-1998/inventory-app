@@ -5,10 +5,13 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { changeListings, undoListings, type ListingUndo } from "@/lib/listing-actions";
 import { recordBundle, cancelSales } from "@/lib/sale-actions";
+import { recordReturn, recordRefund, cancelAdjustment } from "@/lib/adjust-actions";
 import { todayJst } from "@/lib/format";
 import { yen } from "@/lib/format";
 
+export type Refund = { id: number; date: string; amount: number; via: string };
 export type SaleInfo = {
+  saleId: number; refundVia: string; refunds: Refund[];
   date: string; channel: string; currency: string; fxRate: number | null; fxRateFinal: boolean;
   priceForeign: number | null; shippingForeign: number | null; feeForeign: number | null;
   priceJpy: number; shippingFeeJpy: number; actualShippingJpy: number; shippingTentative: boolean; feeJpy: number;
@@ -19,6 +22,7 @@ export type ItemRow = {
   unitCost: number; expectedPrice: number | null; quantity: number; left: number;
   status: string; channels: string[]; soldChannels: string[]; days: number | null;
   lotCode: string | null; lotCostMode: string | null; sale: SaleInfo | null;
+  returns: { adjId: number; date: string; channel: string; loss: number }[];
 };
 export type ChannelInfo = {
   id: number; name: string; currency: string; feeMode: string; feeRate: number | null; feeHintRate: number | null;
@@ -59,6 +63,11 @@ function Chips({ r }: { r: ItemRow }) {
 const Days = ({ d }: { d: number | null }) => (d == null ? <span className="muted">—</span> : d >= 90 ? <span className="tag t-warn">{d}日</span> : <>{d}日</>);
 
 type Toast = { msg: React.ReactNode; undo?: () => Promise<void> } | null;
+/** 返品・返金の記録の入力 */
+export type AdjInput =
+  | { kind: "cancel" }
+  | { kind: "return"; date: string; returnShipping: number; lostFee: number }
+  | { kind: "refund"; date: string; amount: number; via: string };
 
 export function ItemsView({ rows, channels, lots, genres }: { rows: ItemRow[]; channels: ChannelInfo[]; lots: LotInfo[]; genres: string[] }) {
   const router = useRouter();
@@ -146,6 +155,48 @@ export function ItemsView({ rows, channels, lots, genres }: { rows: ItemRow[]; c
           showToast({ msg: "取り消しました。出品先は元に戻りました" });
         },
       });
+    });
+  };
+
+  /** 返品・返金・発送前のキャンセルを記録する */
+  const runAdjust = (r: ItemRow, a: AdjInput) => {
+    if (!r.sale) return;
+    const saleId = r.sale.saleId;
+    setError("");
+    startTransition(async () => {
+      if (a.kind === "cancel") {
+        const res = await cancelSales([saleId], "発送前のキャンセル");
+        if (!res.ok) { showToast({ msg: res.error }); return; }
+        router.refresh();
+        flashCodes([r.code]);
+        showToast({ msg: <>{r.code} の販売を取り消しました（発送前のキャンセル）。商品は元の状態に戻りました</> });
+        return;
+      }
+      const res = a.kind === "return"
+        ? await recordReturn({ saleId, date: a.date, returnShipping: a.returnShipping, lostFee: a.lostFee })
+        : await recordRefund({ saleId, date: a.date, amount: a.amount, via: a.via });
+      if (!res.ok) { showToast({ msg: res.error }); return; }
+      router.refresh();
+      flashCodes(res.codes);
+      const who = res.codes.length > 1 ? `${res.codes.join("・")}（まとめて売った分）` : r.code;
+      showToast({
+        msg: a.kind === "return"
+          ? <>{who} を返品として記録しました。在庫に戻りました（損 {yen(res.loss ?? 0)}）。売り直すときは出品先を押します</>
+          : <>{r.code} の一部返金 {yen(a.amount)} を記録しました</>,
+        undo: async () => {
+          const u = await cancelAdjustment(res.adjId);
+          router.refresh();
+          showToast({ msg: u.ok ? (a.kind === "return" ? `取り消しました。${r.code} は売却済みに戻りました` : `取り消しました。${r.code} の返金はなくなりました`) : u.error });
+        },
+      });
+    });
+  };
+  const undoAdj = (r: ItemRow, adjId: number, what: string) => {
+    if (!confirm(`${r.code} の${what}の記録を取り消しますか？`)) return;
+    startTransition(async () => {
+      const u = await cancelAdjustment(adjId);
+      router.refresh();
+      showToast({ msg: u.ok ? `${r.code} の${what}の記録を取り消しました` : u.error });
     });
   };
 
@@ -265,6 +316,8 @@ export function ItemsView({ rows, channels, lots, genres }: { rows: ItemRow[]; c
           toast={toastNode}
           onClose={() => setOpenCode(null)}
           onToggle={(ch, on) => runChange([openRow], ch, on)}
+          onAdjust={(a) => runAdjust(openRow, a)}
+          onUndoAdj={(id, what) => undoAdj(openRow, id, what)}
         />
       )}
       {bulkOpen && pickedRows.length > 0 && (
@@ -315,15 +368,18 @@ function Modal({ className, onClose, children }: { className?: string; onClose: 
   );
 }
 
-function ItemDialog({ r, channels, listChannels, lot, pending, toast, onClose, onToggle }: {
+function ItemDialog({ r, channels, listChannels, lot, pending, toast, onClose, onToggle, onAdjust, onUndoAdj }: {
   r: ItemRow; channels: ChannelInfo[]; listChannels: ChannelInfo[]; lot: LotInfo | null; pending: boolean; toast: React.ReactNode;
-  onClose: () => void; onToggle: (ch: ChannelInfo, on: boolean) => void;
+  onClose: () => void; onToggle: (ch: ChannelInfo, on: boolean) => void; onAdjust: (a: AdjInput) => void; onUndoAdj: (adjId: number, what: string) => void;
 }) {
   const st = ST[r.status];
+  const [retOpen, setRetOpen] = useState(false);
+  useEffect(() => setRetOpen(false), [r.status, r.sale?.saleId, r.sale?.refunds.length]);
   let body: React.ReactNode;
   if (r.status === "sold" && r.sale) {
     const s = r.sale;
-    const profit = s.priceJpy + s.shippingFeeJpy - s.actualShippingJpy - s.feeJpy - s.costJpy; // docs/profit-formulas.md
+    const refund = s.refunds.reduce((a, x) => a + x.amount, 0);
+    const profit = s.priceJpy + s.shippingFeeJpy - s.actualShippingJpy - s.feeJpy - s.costJpy - refund; // docs/profit-formulas.md
     const fx = s.currency !== "JPY";
     const sign = s.currency === "EUR" ? "€" : "$";
     const sub = (v: number | null) => (fx && v != null ? <><br /><small className="muted">{sign}{(v / 100).toFixed(2)} × {s.fxRate}円</small></> : null);
@@ -343,9 +399,20 @@ function ItemDialog({ r, channels, listChannels, lot, pending, toast, onClose, o
             <tr><td>− 実送料{s.shippingTentative && <> <span className="tag t-temp">仮</span></>}</td><td className="n">{yen(s.actualShippingJpy)}</td></tr>
             <tr><td>− 手数料（円）{sub(s.feeForeign)}</td><td className="n">{yen(s.feeJpy)}</td></tr>
             <tr><td>− 原価</td><td className="n">{yen(s.costJpy)}</td></tr>
+            {s.refunds.map((x) => (
+              <tr key={x.id}>
+                <td>− 一部返金 <span className="tag t-warn">{x.date.slice(5)}</span>
+                  <br /><small className="muted">{x.via === "bank" ? "法人口座から振込（freeeのCSVには入れない）" : "販路の振込から引かれる"}</small>
+                  <button className="linkbtn" disabled={pending} onClick={() => onUndoAdj(x.id, "一部返金")}>取り消す</button></td>
+                <td className="n">{yen(x.amount)}</td>
+              </tr>
+            ))}
             <tr className="tot"><td>粗利</td><td className={`n ${profit >= 0 ? "up" : "down"}`}>{yen(profit)}</td></tr>
           </tbody>
         </table>
+        {retOpen
+          ? <ReturnBox s={s} profit={profit} pending={pending} onCancel={() => setRetOpen(false)} onSave={onAdjust} />
+          : <div style={{ textAlign: "right", marginTop: 10 }}><button className="btn" onClick={() => setRetOpen(true)}>返品・返金があった</button></div>}
       </>
     );
   } else if (r.status === "sold") {
@@ -402,6 +469,12 @@ function ItemDialog({ r, channels, listChannels, lot, pending, toast, onClose, o
         {r.quantity > 1 && <div><span>在庫</span><b>残り{r.left}個／{r.quantity}個</b></div>}
         <div><span>{inStock(r) ? "滞留日数" : "出品先"}</span><b>{inStock(r) ? (r.days != null ? r.days + "日" : "—") : <Chips r={r} />}</b></div>
       </div>
+      {r.returns.map((x) => (
+        <div key={x.adjId} className="rethist">
+          ↩ {x.date.slice(5)} に <b>{x.channel}</b> から返品で戻りました（同じ番号で売り直せます）。この返品の損：<b>{yen(x.loss)}</b>
+          {inStock(r) && <button className="linkbtn" disabled={pending} onClick={() => onUndoAdj(x.adjId, "返品")}>取り消す</button>}
+        </div>
+      ))}
       {inStock(r) && (
         <div className="listbox">
           <b>出品先</b> <span className="muted">押すと出品中、もう一度押すと取り下げ。状態は自動で変わります</span>
@@ -430,6 +503,75 @@ function ItemDialog({ r, channels, listChannels, lot, pending, toast, onClose, o
       )}
       {toast}
     </Modal>
+  );
+}
+
+/** 返品・返金の記録（売却済みの商品の画面の中に出す） */
+function ReturnBox({ s, profit, pending, onCancel, onSave }: { s: SaleInfo; profit: number; pending: boolean; onCancel: () => void; onSave: (a: AdjInput) => void }) {
+  const [kind, setKind] = useState<"cancel" | "return" | "refund">("return");
+  const [date, setDate] = useState(todayJst().replace(/-/g, "/"));
+  const [ship, setShip] = useState("");
+  const [fee, setFee] = useState(String(s.feeJpy));
+  const [amt, setAmt] = useState("");
+  const [via, setVia] = useState(s.refundVia === "bank" ? "bank" : "payout");
+  const [err, setErr] = useState("");
+  const num = (v: string) => { const n = Number(v.normalize("NFKC").replace(/[¥,円\s]/g, "")); return Number.isFinite(n) && n >= 0 ? Math.round(n) : NaN; };
+  const shipN = num(ship || "0"), feeN = num(fee || "0"), amtN = num(amt || "0");
+  const loss = s.actualShippingJpy + (shipN || 0) + (feeN || 0);
+  const save = () => {
+    setErr("");
+    if (kind === "cancel") {
+      if (confirm("この販売の記録を取り消して、商品を売れる前の状態に戻しますか？")) onSave({ kind: "cancel" });
+      return;
+    }
+    if (kind === "return") {
+      if (Number.isNaN(shipN) || Number.isNaN(feeN)) { setErr("金額は数字で入れてください"); return; }
+      onSave({ kind: "return", date, returnShipping: shipN, lostFee: feeN });
+      return;
+    }
+    if (Number.isNaN(amtN) || amtN <= 0) { setErr("返金した金額を入れてください"); return; }
+    onSave({ kind: "refund", date, amount: amtN, via });
+  };
+  return (
+    <div className="retbox">
+      <b>返品・返金の記録</b>
+      <div className="seg">
+        {([["cancel", "発送前のキャンセル"], ["return", "返品（商品が戻る）"], ["refund", "一部だけ返金"]] as const).map(([k, l]) => (
+          <button key={k} className={kind === k ? "on" : ""} onClick={() => setKind(k)}>{l}</button>
+        ))}
+      </div>
+      {s.lineCount > 1 && kind !== "refund" && <p className="hint" style={{ margin: 0 }}>この販売は{s.lineCount}点をまとめて売った記録です。中身の{s.lineCount}点すべてが対象になります。</p>}
+      {kind === "cancel" && <p className="hint" style={{ margin: 0 }}>お金も送料もまだ動いていないときです。販売の記録を取り消して、商品を元の状態（在庫・出品中）に戻します。</p>}
+      {kind !== "cancel" && (
+        <div className="f">{kind === "return" ? "返品の日" : "返金した日"}<input value={date} onChange={(e) => setDate(e.target.value)} style={{ textAlign: "left" }} /></div>
+      )}
+      {kind === "return" && (
+        <>
+          <div className="f">返品の送料（返送用封筒など・円）<input inputMode="numeric" placeholder="0" value={ship} onChange={(e) => setShip(e.target.value)} /><span className="hint">お客様に送った返送用封筒の代金など、戻すためにかかった送料</span></div>
+          <div className="f">戻ってこない手数料（円）<input inputMode="numeric" value={fee} onChange={(e) => setFee(e.target.value)} /><span className="hint">販路が手数料を返してくれたときは 0 にします</span></div>
+          <div className="sumline">この返品の損：行きの送料 {yen(s.actualShippingJpy)} ＋ 返品の送料 {yen(shipN || 0)} ＋ 手数料 {yen(feeN || 0)} ＝ <b>{yen(loss)}</b></div>
+          <p className="hint" style={{ margin: 0 }}>売値は0円になり、商品は在庫に戻ります（同じ管理番号のまま）。確定済みの月のレポートは書き換えず、返品した月のレポートにマイナスの行として載せます。</p>
+        </>
+      )}
+      {kind === "refund" && (
+        <>
+          <div className="f">返金した金額（円）<input inputMode="numeric" placeholder="例：1000" value={amt} onChange={(e) => setAmt(e.target.value)} /><span className="hint">傷があったので少し値引きした、などのとき。商品は売却済みのままです</span></div>
+          <div className="f">返金のしかた
+            <div className="seg">
+              <button className={via === "payout" ? "on" : ""} onClick={() => setVia("payout")}>販路の振込から引かれる</button>
+              <button className={via === "bank" ? "on" : ""} onClick={() => setVia("bank")}>法人口座から振り込む</button>
+            </div>
+            <span className="hint">{via === "payout" ? "freeeの取込用CSVに、返金としてマイナスで入れます" : "freeeでは銀行の明細から登録するので、取込用CSVには入れません（二重にならないように）"}</span>
+          </div>
+          <div className="sumline">粗利 {yen(profit)} → <b>{yen(profit - (amtN || 0))}</b>（−{yen(amtN || 0)}）</div>
+        </>
+      )}
+      {err && <p className="err" style={{ margin: 0 }}>{err}</p>}
+      <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+        <button className="btn" onClick={onCancel}>やめる</button>
+        <button className="btn primary" disabled={pending} onClick={save}>記録する</button>
+      </div>
+    </div>
   );
 }
 

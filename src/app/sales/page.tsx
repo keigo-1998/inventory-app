@@ -1,9 +1,10 @@
 // 販売を記録（データベースから在庫の商品・販路・為替・今日の記録・送料未定を読んで、画面に渡す）
 import { db } from "@/lib/db";
+import { LIVE_SALE } from "@/lib/sale-live";
 import { fmtDate, todayJst } from "@/lib/format";
 import { monthRate } from "@/lib/fx";
 import { SalesView, type StockItem, type TodaySale, type TbdSale } from "./SalesView";
-import type { ChannelRule } from "@/lib/sale-calc";
+import { saleProfit, type ChannelRule } from "@/lib/sale-calc";
 
 export const dynamic = "force-dynamic";
 
@@ -13,16 +14,16 @@ export default async function SalesPage() {
   const [items, channels, todays, tbd] = await Promise.all([
     db.item.findMany({
       where: { deletedAt: null, status: { in: ["stock", "list"] } },
-      include: { listings: { where: { state: "active" }, include: { channel: true } }, saleLines: { where: { sale: { cancelledAt: null } } } },
+      include: { listings: { where: { state: "active" }, include: { channel: true } }, saleLines: { where: { sale: LIVE_SALE } } },
       orderBy: { code: "asc" },
     }),
     db.channel.findMany({ where: { deletedAt: null }, orderBy: { sortOrder: "asc" } }),
     db.sale.findMany({
       where: { cancelledAt: null, createdAt: { gte: startOfToday } },
-      include: { channel: true, lines: { include: { item: { include: { listings: { where: { state: "withdrawn" }, include: { channel: true } } } } } } },
+      include: { channel: true, adjustments: true, lines: { include: { item: { include: { listings: { where: { state: "withdrawn" }, include: { channel: true } } } } } } },
       orderBy: { createdAt: "desc" },
     }),
-    db.sale.findMany({ where: { cancelledAt: null, shippingTentative: true }, include: { channel: true, lines: { include: { item: true } } }, orderBy: { soldAt: "asc" } }),
+    db.sale.findMany({ where: { cancelledAt: null, shippingTentative: true }, include: { channel: true, adjustments: true, lines: { include: { item: true } } }, orderBy: { soldAt: "asc" } }),
   ]);
 
   const now = new Date();
@@ -37,10 +38,7 @@ export default async function SalesPage() {
     name: c.name, currency: c.currency, feeMode: c.feeMode, feeRate: c.feeRate == null ? null : Number(c.feeRate),
     feeHintRate: c.feeHintRate == null ? null : Number(c.feeHintRate), usesShippingFee: c.usesShippingFee, undecided: c.undecided,
   }));
-  const profitOf = (s: { kind: string; priceJpy: number; shippingFeeJpy: number; actualShippingJpy: number; feeJpy: number; lines: { costJpy: number }[] }) => {
-    const cost = s.lines.reduce((a, l) => a + l.costJpy, 0);
-    return s.kind === "sale" ? s.priceJpy + s.shippingFeeJpy - s.actualShippingJpy - s.feeJpy - cost : s.kind === "disposed" ? -cost : null;
-  };
+  const profitOf = saleProfit;
   const todayList: TodaySale[] = todays.map((s) => ({
     id: s.id,
     label: s.lines.map((l) => `${l.item.code} ${l.item.name}`).join("、"),
@@ -55,7 +53,7 @@ export default async function SalesPage() {
   const tbdList: TbdSale[] = tbd.map((s) => ({
     id: s.id, date: fmtDate(s.soldAt), channel: s.channel?.name ?? "", label: s.lines.map((l) => `${l.item.code} ${l.item.name}`).join("、"),
     real: s.actualShippingJpy, profit: profitOf(s) ?? 0,
-    base: s.priceJpy + s.shippingFeeJpy - s.feeJpy - s.lines.reduce((a, l) => a + l.costJpy, 0),
+    base: (profitOf(s) ?? 0) + s.actualShippingJpy,
   }));
 
   return <SalesView items={stock} channels={rules} rates={rates} today={today.replace(/-/g, "/")} todayList={todayList} tbdList={tbdList} />;

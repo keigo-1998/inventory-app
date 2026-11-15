@@ -1,6 +1,7 @@
 // 商品一覧（データベースから読んで、画面の部品に渡す）
 import { db } from "@/lib/db";
 import { fmtDate, todayJst } from "@/lib/format";
+import { returnLoss } from "@/lib/sale-calc";
 import { ItemsView, type ItemRow, type ChannelInfo, type LotInfo } from "./ItemsView";
 
 export const dynamic = "force-dynamic";
@@ -12,7 +13,7 @@ export default async function ItemsPage() {
       include: {
         genre: true,
         listings: { where: { state: { in: ["active", "sold"] } }, include: { channel: true }, orderBy: { startedAt: "asc" } },
-        saleLines: { where: { sale: { cancelledAt: null } }, include: { sale: { include: { channel: true, lines: true } } } },
+        saleLines: { where: { sale: { cancelledAt: null } }, include: { sale: { include: { channel: true, lines: true, adjustments: { where: { cancelledAt: null } } } } } },
       },
       orderBy: { code: "asc" },
     }),
@@ -25,10 +26,13 @@ export default async function ItemsPage() {
   const lotById = new Map(lots.map((l) => [l.id, l]));
 
   const rows: ItemRow[] = items.map((it) => {
-    const soldQty = it.saleLines.reduce((a, l) => a + l.quantity, 0);
+    // 返品された販売は「売れた」に数えない（商品は在庫に戻っている）
+    const isReturned = (s: (typeof it.saleLines)[number]["sale"]) => s.adjustments.some((a) => a.kind === "return");
+    const liveLines = it.saleLines.filter((l) => !isReturned(l.sale));
+    const soldQty = liveLines.reduce((a, l) => a + l.quantity, 0);
     const inStock = it.status === "stock" || it.status === "list";
     // いちばん新しい販売（売却済みの商品の利益の内訳に使う）
-    const last = it.saleLines.map((l) => ({ line: l, sale: l.sale })).sort((a, b) => b.sale.soldAt.getTime() - a.sale.soldAt.getTime())[0];
+    const last = liveLines.map((l) => ({ line: l, sale: l.sale })).sort((a, b) => b.sale.soldAt.getTime() - a.sale.soldAt.getTime())[0];
     return {
       id: it.id,
       code: it.code,
@@ -47,6 +51,9 @@ export default async function ItemsPage() {
       lotCostMode: it.lotCostMode,
       sale: last
         ? {
+            saleId: last.sale.id,
+            refundVia: last.sale.channel?.refundVia ?? "payout",
+            refunds: last.sale.adjustments.filter((a) => a.kind === "refund").map((a) => ({ id: a.id, date: fmtDate(a.date), amount: a.refundJpy, via: a.via ?? "payout" })),
             date: fmtDate(last.sale.soldAt),
             channel: last.sale.channel?.name ?? "",
             currency: last.sale.currency,
@@ -64,6 +71,12 @@ export default async function ItemsPage() {
             lineCount: last.sale.lines.length,
           }
         : null,
+      returns: it.saleLines
+        .filter((l) => isReturned(l.sale))
+        .map((l) => {
+          const a = l.sale.adjustments.find((x) => x.kind === "return")!;
+          return { adjId: a.id, date: fmtDate(a.date), channel: l.sale.channel?.name ?? "", loss: returnLoss(l.sale, a) };
+        }),
     };
   });
 

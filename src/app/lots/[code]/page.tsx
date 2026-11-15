@@ -1,6 +1,7 @@
 // 山の画面（商品一覧で山の行を押すと開く）。データベースから山と枝番を読んで、画面の部品に渡す
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
+import { LIVE_SALE } from "@/lib/sale-live";
 import { fmtDate } from "@/lib/format";
 import { LotView, type LotRow } from "./LotView";
 
@@ -16,7 +17,7 @@ export default async function LotPage({ params }: { params: Promise<{ code: stri
         where: { deletedAt: null },
         include: {
           listings: { where: { state: { in: ["active", "sold"] } }, include: { channel: true } },
-          saleLines: { where: { sale: { cancelledAt: null } }, include: { sale: { include: { channel: true, lines: true } } } },
+          saleLines: { where: { sale: LIVE_SALE }, include: { sale: { include: { channel: true, lines: true, adjustments: { where: { cancelledAt: null, kind: "refund" } } } } } },
         },
       },
     },
@@ -30,12 +31,14 @@ export default async function LotPage({ params }: { params: Promise<{ code: stri
       let price: number | null = null, profit: number | null = null;
       for (const l of it.saleLines) {
         const s = l.sale;
+        const refund = s.adjustments.reduce((a, x) => a + x.refundJpy, 0); // 一部返金（まとめて売ったときは金額の比率で分ける）
+        const refundHere = s.lines.length === 1 || !s.priceJpy ? refund : Math.round((refund * l.amountJpy) / s.priceJpy);
         if (s.lines.length === 1) {
           price = (price ?? 0) + s.priceJpy;
-          profit = (profit ?? 0) + s.priceJpy + s.shippingFeeJpy - s.actualShippingJpy - s.feeJpy - l.costJpy;
+          profit = (profit ?? 0) + s.priceJpy + s.shippingFeeJpy - s.actualShippingJpy - s.feeJpy - l.costJpy - refundHere;
         } else {
           price = (price ?? 0) + l.amountJpy;
-          profit = (profit ?? 0) + l.amountJpy - l.costJpy;
+          profit = (profit ?? 0) + l.amountJpy - l.costJpy - refundHere;
         }
       }
       return {

@@ -101,7 +101,7 @@ export function SalesView({ items, channels, rates, today, todayList, tbdList }:
 
   const cancelOne = (h: TodaySale) => {
     if (!confirm(`${h.label} の「${h.channel}」の記録を取り消しますか？\n商品は元の状態に戻ります。`)) return;
-    start(async () => { await cancelSales([h.id]); router.refresh(); toast(`${esc(h.label.split(" ")[0])} の記録を取り消しました`); });
+    start(async () => { const res = await cancelSales([h.id]); router.refresh(); toast(res.ok ? `${esc(h.label.split(" ")[0])} の記録を取り消しました` : esc(res.error ?? "取り消せませんでした")); });
   };
 
   const fix = (s: TbdSale) => {

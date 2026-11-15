@@ -126,7 +126,7 @@ model Listing {
   item      Item      @relation(fields: [itemId], references: [id])
   channelId Int
   channel   Channel   @relation(fields: [channelId], references: [id])
-  /// active（出品中）/ withdrawn（取り下げ）/ sold（ここで売れた）/ cancelled（販売の取り消しで消えた）
+  /// active（出品中）/ withdrawn（取り下げ）/ sold（ここで売れた）/ returned（ここで売れたが返品された）/ cancelled（販売の取り消しで消えた）
   state     String    @default("active")
   startedAt DateTime  @default(now())
   endedAt   DateTime?

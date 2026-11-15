@@ -42,3 +42,24 @@ export function calcSale(c: ChannelRule, rate: number, x: SaleInput) {
   }
   return { rate, price, shipIn, feeIn: feeIn ?? 0, priceY, shipY, feeY, realY, profit, feeAuto, warn };
 }
+
+// ---- 記録した販売の粗利（返品・一部返金も入れる。docs/data-design.md「返品・キャンセル・一部返金」） ----
+export type Adj = { kind: string; refundJpy: number; returnShippingJpy: number; lostFeeJpy: number; cancelledAt: Date | null };
+export type ProfitSale = {
+  kind: string; priceJpy: number; shippingFeeJpy: number; actualShippingJpy: number; feeJpy: number;
+  lines: { costJpy: number }[]; adjustments?: Adj[];
+};
+/** 返品の損 = 行きの送料 ＋ 返品の送料 ＋ 戻らない手数料（商品は戻るので原価は入れない） */
+export const returnLoss = (s: { actualShippingJpy: number }, a: { returnShippingJpy: number; lostFeeJpy: number }) =>
+  s.actualShippingJpy + a.returnShippingJpy + a.lostFeeJpy;
+/** 粗利。廃棄は原価がそのまま損、備品は null（売上・粗利に入れない） */
+export function saleProfit(s: ProfitSale): number | null {
+  const cost = s.lines.reduce((a, l) => a + l.costJpy, 0);
+  if (s.kind === "disposed") return -cost;
+  if (s.kind !== "sale") return null;
+  const adj = (s.adjustments ?? []).filter((a) => !a.cancelledAt);
+  const ret = adj.find((a) => a.kind === "return");
+  if (ret) return -returnLoss(s, ret);
+  const refunds = adj.filter((a) => a.kind === "refund").reduce((a, x) => a + x.refundJpy, 0);
+  return s.priceJpy + s.shippingFeeJpy - s.actualShippingJpy - s.feeJpy - cost - refunds;
+}
