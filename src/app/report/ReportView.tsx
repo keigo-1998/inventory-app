@@ -287,6 +287,24 @@ function ReportDoc({ data, paid, only, month, version, fixedAt, state }: {
         </table>
       )}
 
+      <h3>為替レート（{mon(month)}の月中平均TTM・三菱UFJ銀行）</h3>
+      {data.monthRates?.length ? (
+        <table>
+          <thead><tr><th>通貨</th><th className="n">月中平均TTM</th><th>使い方</th></tr></thead>
+          <tbody>
+            {data.monthRates.map((r) => (
+              <tr key={r.currency}>
+                <td>{CUR_NAME[r.currency] ?? r.currency}（1{SIGN[r.currency] ?? ""}）{r.source === "manual" && <> <span className="tmp">手入力</span></>}</td>
+                <td className="n"><b>{r.ttm.toFixed(2)}円</b></td>
+                <td>{data.channels.filter((c) => c.currency === r.currency).map((c) => c.name).join("・") || "この月はこの通貨の販売なし"}{data.channels.some((c) => c.currency === r.currency) ? " の売値・設定送料・手数料を円に換算" : ""}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      ) : (
+        <p>{state === "open" ? "月中平均は月末に決まります（今は月初のTTMで仮に計算しています）。" : "まだ取り込んでいません。「販売を記録」→「為替レート」の「最新のレートを取り込む」を押してください。"}</p>
+      )}
+
       <div className="kp">
         <div><span>売上（売値＋設定送料）</span><b>{fmtY(all.price + all.ship)}</b></div>
         <div><span>粗利</span><b>{fmtY(all.profit)}</b></div>

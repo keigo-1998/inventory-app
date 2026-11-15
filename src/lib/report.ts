@@ -36,6 +36,8 @@ export type ReportData = {
   month: string;
   made: string; // 作った日時
   rates: { currency: string; rate: number; final: boolean }[];
+  /** その月の月中平均TTM（三菱UFJ銀行）。外貨の販売の円の金額は、これで換算する。月が終わるまでは空 */
+  monthRates?: { currency: string; ttm: number; source: string }[];
   lines: ReportLine[];
   channels: ReportChannel[];
   fxPending: number; // 為替がまだ仮の販売の件数
@@ -48,10 +50,11 @@ const nowText = () => { const j = new Date(Date.now() + 9 * 3600 * 1000); return
 export async function buildReport(db: Db, month: string): Promise<ReportData> {
   const { start, end } = monthRange(month);
   const inc = { channel: true, lines: { include: { item: true } } } as const;
-  const [sales, adjs, channels] = await Promise.all([
+  const [sales, adjs, channels, mrates] = await Promise.all([
     db.sale.findMany({ where: { cancelledAt: null, kind: "sale", soldAt: { gte: start, lt: end } }, include: inc, orderBy: [{ soldAt: "asc" }, { id: "asc" }] }),
     db.saleAdjustment.findMany({ where: { cancelledAt: null, date: { gte: start, lt: end }, sale: { cancelledAt: null } }, include: { sale: { include: inc } }, orderBy: [{ date: "asc" }, { id: "asc" }] }),
     db.channel.findMany({ orderBy: { sortOrder: "asc" } }),
+    db.monthRate.findMany({ where: { month }, orderBy: { currency: "asc" } }),
   ]);
   const chOrder = new Map(channels.map((c, i) => [c.name, i]));
   const chInfo = new Map(channels.map((c) => [c.name, c]));
@@ -118,7 +121,8 @@ export async function buildReport(db: Db, month: string): Promise<ReportData> {
     const r = Number(fx[0].fxRate);
     rates.push({ currency: cur, rate: r, final: fx.every((s) => s.fxRateFinal && Number(s.fxRate) === r) });
   }
-  return { month, made: nowText(), rates, lines, channels: chs, fxPending: sales.filter((s) => s.currency !== "JPY" && !s.fxRateFinal).length };
+  const monthRates = mrates.map((r) => ({ currency: r.currency, ttm: Number(r.ttm), source: r.source }));
+  return { month, made: nowText(), rates, monthRates, lines, channels: chs, fxPending: sales.filter((s) => s.currency !== "JPY" && !s.fxRateFinal).length };
 }
 
 /** 中身が変わったかを見るための目印（確定した版と、今の販売の記録を比べる） */

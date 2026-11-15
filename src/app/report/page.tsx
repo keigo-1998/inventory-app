@@ -19,7 +19,8 @@ export default async function ReportPage({ searchParams }: { searchParams: Promi
   // 今月から、いちばん古い販売の月まで（最大24か月）
   const months: string[] = [];
   const oldest = first ? monthOf(first.soldAt) : now;
-  for (let m = now; months.length < 24; m = prevMonth(m)) { months.push(m); if (m <= oldest) break; }
+  // 前の月（下書きを作る月）は、販売がなくても必ず出す
+  for (let m = now; months.length < 24; m = prevMonth(m)) { months.push(m); if (m <= oldest && months.length >= 2) break; }
 
   const list: MonthRow[] = [];
   for (const m of months) {
@@ -34,7 +35,7 @@ export default async function ReportPage({ searchParams }: { searchParams: Promi
     });
   }
   // 開く月：指定がなければ、まだ確定していない前の月から
-  const sel = sp.m && months.includes(sp.m) ? sp.m : list.find((x) => x.state === "draft")?.month ?? prevMonth(now);
+  const sel = sp.m && months.includes(sp.m) ? sp.m : list.find((x) => x.state === "draft")?.month ?? list[1]?.month ?? now;
   const row = list.find((x) => x.month === sel) ?? list[0];
   const live = await buildReport(db, sel);
   const wantV = sp.v === "draft" ? 0 : sp.v ? Number(sp.v) : row?.version ?? 0;
