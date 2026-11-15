@@ -8,15 +8,12 @@ import { toast, esc } from "@/lib/toast";
 import { initSheet } from "./sheet";
 import { MobileForm } from "./MobileForm";
 import { SlipMapDialog } from "./SlipMapDialog";
-import { recordExpense, removeExpense } from "@/lib/expense-actions";
 import { forgetSlipFormat } from "@/lib/slip-actions";
 import type { SlipFormat } from "@/lib/slip";
-import { yen } from "@/lib/format";
 import { ask } from "@/lib/ask";
 
 export function RegisterView({ codes, genres, formats }: { codes: string[]; genres: string[]; formats: SlipFormat[] }) {
   const [unknown, setUnknown] = useState<{ rows: string[][]; fileName: string } | null>(null);
-  const [fee, setFee] = useState<{ amount: number; date: string; supplier: string; saved?: boolean } | null>(null);
   const router = useRouter();
   const rootRef = useRef<HTMLDivElement>(null);
   const sheetRef = useRef<ReturnType<typeof initSheet> | null>(null);
@@ -48,25 +45,13 @@ export function RegisterView({ codes, genres, formats }: { codes: string[]; genr
   useEffect(() => {
     const s = initSheet(rootRef.current!, {
       existing: new Set(codesRef.current), nextNo: nextNumber(codesRef.current), genres, onRegister: (r) => onRegisterRef.current(r),
-      formats, onUnknownSlip: (rows, fileName) => setUnknown({ rows, fileName }), onSlipFee: setFee,
+      formats, onUnknownSlip: (rows, fileName) => setUnknown({ rows, fileName }),
     });
     sheetRef.current = s;
     return () => s.destroy();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   useEffect(() => { sheetRef.current?.setFormats(formats); }, [formats]);
-
-  const saveFee = async () => {
-    if (!fee) return;
-    const res = await recordExpense({ date: fee.date, category: "入場料", amount: fee.amount, supplier: fee.supplier });
-    if (!res.ok) { toast(esc(res.error)); return; }
-    setFee({ ...fee, saved: true });
-    toast(`入場料 ${yen(fee.amount)} を経費として記録しました。<a href="/expenses" style="color:#93c5fd">経費の一覧で見る</a>`, async () => {
-      await removeExpense(res.id);
-      setFee({ ...fee, saved: false });
-      return "経費の記録を取り消しました";
-    });
-  };
 
   return (
     <section ref={rootRef}>
@@ -99,12 +84,6 @@ export function RegisterView({ codes, genres, formats }: { codes: string[]; genr
         </div>
       </div>
       <p id="slipInfo" className="muted pconly" style={{ margin: "8px 0 0" }}></p>
-      {fee && (
-        <div className="card pconly" style={{ marginTop: 8, display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-          <span>この伝票の<b>入場料 {yen(fee.amount)}</b>（{fee.date}・{fee.supplier || "仕入先なし"}）は、商品の原価に入れず経費として記録します。</span>
-          {fee.saved ? <span className="tag t-sold">経費に記録しました</span> : <button className="btn primary" onClick={saveFee}>経費として記録する</button>}
-        </div>
-      )}
       {formats.length > 0 && (
         <details className="pconly" style={{ marginTop: 6 }}>
           <summary className="muted" style={{ cursor: "pointer" }}>覚えている伝票の形式（{formats.length}）</summary>
@@ -122,7 +101,7 @@ export function RegisterView({ codes, genres, formats }: { codes: string[]; genr
           rows={unknown.rows}
           fileName={unknown.fileName}
           onClose={() => setUnknown(null)}
-          onDone={(r, name) => { setUnknown(null); sheetRef.current?.loadResult(r, unknown.fileName, name); setFee(null); router.refresh(); }}
+          onDone={(r, name) => { setUnknown(null); sheetRef.current?.loadResult(r, unknown.fileName, name); router.refresh(); }}
         />
       )}
       <div className="sheet-wrap pconly">

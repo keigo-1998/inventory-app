@@ -4,7 +4,7 @@ import { guessGenre } from "@/lib/genre-guess";
 import { padNo } from "@/lib/lot";
 import { esc } from "@/lib/toast";
 import type { RegisterRow } from "@/lib/register-actions";
-import { parseCSV, readSlip, entranceFee, type SlipFormat, type SlipResult } from "@/lib/slip";
+import { parseCSV, readSlip, type SlipFormat, type SlipResult } from "@/lib/slip";
 
 export type SheetOpts = {
   existing: Set<string>;
@@ -16,8 +16,6 @@ export type SheetOpts = {
   formats: SlipFormat[];
   /** 読めない形の伝票を入れたとき（列を選んでもらう） */
   onUnknownSlip: (rows: string[][], fileName: string) => void;
-  /** 伝票に入場料などがあったとき（経費として記録できるようにする） */
-  onSlipFee: (fee: { amount: number; date: string; supplier: string } | null) => void;
 };
 
 const COLS: [string, number][] = [["種類", 64], ["管理番号", 96], ["商品名", 300], ["ジャンル", 90], ["仕入先", 150], ["仕入日", 100], ["原価", 90], ["個数", 54], ["予想売価", 90]];
@@ -278,8 +276,6 @@ export function initSheet(root: HTMLElement, opts: SheetOpts) {
     const r = readSlip(rows, opts.formats);
     if (!r) { opts.onUnknownSlip(rows, fileName); return; }
     loadResult(r, fileName, r.format);
-    const fee = entranceFee(rows);
-    opts.onSlipFee(fee ? { amount: fee, date: r.date, supplier: r.supplier } : null);
   }
   /** 読んだ伝票を表に入れる */
   function loadResult(r: SlipResult, fileName: string, format: string | null) {
@@ -343,7 +339,7 @@ export function initSheet(root: HTMLElement, opts: SheetOpts) {
     $<HTMLButtonElement>("doReg").disabled = busy || !count || errs.length > 0;
   }
 
-  const clearAll = () => { grid = []; autoCells.clear(); ensureRows(12); sel = { r1: 0, c1: 2, r2: 0, c2: 2 }; $("slipInfo").textContent = ""; opts.onSlipFee(null); draw(); };
+  const clearAll = () => { grid = []; autoCells.clear(); ensureRows(12); sel = { r1: 0, c1: 2, r2: 0, c2: 2 }; $("slipInfo").textContent = ""; draw(); };
   $("addRows").addEventListener("click", () => { ensureRows(grid.length + 10); draw(); });
   $("clear").addEventListener("click", clearAll);
   $("doReg").addEventListener("click", async () => {

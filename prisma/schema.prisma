@@ -209,7 +209,7 @@ model SaleAdjustment {
   cancelledAt       DateTime?
 }
 
-/// 経費（オークションの入場料など、商品の原価に入れない費用）。月次レポートで販路とは別に載せる
+/// 経費（入場料など）。※いまは使っていない（2026/11/15：経費・固定費はすべてfreeeで管理すると決めたため。表だけ残している）
 model Expense {
   id        Int       @id @default(autoincrement())
   date      DateTime

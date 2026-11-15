@@ -46,10 +46,9 @@ function builtIn(rows: string[][]): SlipResult | null {
   const extra = rows.find((r) => r[0] === "入場料");
   return {
     lines, supplier: hall ? `オークション（${hall}）` : "", date: get("開催日"),
-    note: extra ? `入場料 ¥${(+extra[3]).toLocaleString()} は商品の原価に入れず、経費として記録します（下の「経費として記録する」）` : "",
+    note: extra ? `入場料 ¥${(+extra[3]).toLocaleString()} は商品の原価に入れません（経費はfreeeで管理）` : "",
   };
 }
-export const entranceFee = (rows: string[][]) => { const e = rows.find((r) => r[0] === "入場料"); return e ? num(e[3]) : null; };
 
 /** 覚えた形式で読む */
 export function applyFormat(rows: string[][], f: SlipFormat, hi?: number): SlipResult | null {
