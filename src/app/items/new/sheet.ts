@@ -41,6 +41,9 @@ export const num = (s: unknown) => {
 const norm = (s: string) => s.normalize("NFKC").toLowerCase().replace(/[ァ-ヶ]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0x60)).replace(/\s+/g, "");
 
 export function initSheet(root: HTMLElement, opts: SheetOpts) {
+  // 片付けのとき、このなかで付けた見張り（イベント）を全部外す。開発中は表の準備が2回行われるため、残ると選択がずれる
+  const ac = new AbortController();
+  const sig = { signal: ac.signal };
   const $ = <T extends HTMLElement = HTMLElement>(id: string) => root.querySelector<T>("#" + id)!;
   const sheet = $<HTMLTableElement>("sheet");
   const GENRES = opts.genres;
@@ -110,7 +113,7 @@ export function initSheet(root: HTMLElement, opts: SheetOpts) {
       h.className = "handle";
       h.title = "下にドラッグしてコピー";
       br.appendChild(h);
-      h.addEventListener("mousedown", (e) => { e.preventDefault(); e.stopPropagation(); filling = { to: box().bot }; });
+      h.addEventListener("mousedown", (e) => { e.preventDefault(); e.stopPropagation(); filling = { to: box().bot }; }, sig);
     }
   }
   function setCell(r: number, c: number, v: unknown) { ensureRows(r + 1); grid[r][c] = String(v ?? "").trim(); autoCells.delete(r + ":" + c); }
@@ -133,13 +136,13 @@ export function initSheet(root: HTMLElement, opts: SheetOpts) {
     }
     if (e.shiftKey) { sel.r2 = r; sel.c2 = c; } else sel = { r1: r, c1: c, r2: r, c2: c };
     dragging = true; paintSel(); sheet.focus(); e.preventDefault();
-  });
+  }, sig);
   sheet.addEventListener("mouseover", (e) => {
     const td = (e.target as HTMLElement).closest<HTMLTableCellElement>("td.cell");
     if (!td) return;
     if (dragging) { sel.r2 = +td.dataset.r!; sel.c2 = +td.dataset.c!; paintSel(); }
     if (filling) { filling.to = Math.max(box().bot, +td.dataset.r!); paintSel(); }
-  });
+  }, sig);
   const onMouseUp = () => {
     dragging = false;
     if (filling) {
@@ -153,7 +156,7 @@ export function initSheet(root: HTMLElement, opts: SheetOpts) {
       draw();
     }
   };
-  sheet.addEventListener("dblclick", (e) => { const td = (e.target as HTMLElement).closest<HTMLTableCellElement>("td.cell"); if (td && +td.dataset.c! !== 0) startEdit(+td.dataset.r!, +td.dataset.c!, false); });
+  sheet.addEventListener("dblclick", (e) => { const td = (e.target as HTMLElement).closest<HTMLTableCellElement>("td.cell"); if (td && +td.dataset.c! !== 0) startEdit(+td.dataset.r!, +td.dataset.c!, false); }, sig);
 
   // ---- 編集 ----
   function startEdit(r: number, c: number, clear: boolean, initial = "") {
@@ -186,15 +189,15 @@ export function initSheet(root: HTMLElement, opts: SheetOpts) {
         if (!typed && hi < 0) hi = list.indexOf(cur);
         dd.innerHTML = list.map((g, i) => `<div class="opt${i === hi ? " on" : ""}${g === cur ? " cur" : ""}" data-v="${esc(g)}">${g === cur ? "✓ " : ""}${esc(g)}</div>`).join("") ||
           `<div class="none">「${esc(q)}」は一覧にありません（Enterでそのまま入れる）</div>`;
-        dd.querySelectorAll<HTMLDivElement>(".opt").forEach((o) => o.addEventListener("mousedown", (ev) => { ev.preventDefault(); inp.value = o.dataset.v!; commitEdit(); sheet.focus(); }));
+        dd.querySelectorAll<HTMLDivElement>(".opt").forEach((o) => o.addEventListener("mousedown", (ev) => { ev.preventDefault(); inp.value = o.dataset.v!; commitEdit(); sheet.focus(); }, sig));
       };
-      inp.addEventListener("input", () => { typed = true; hi = -1; show(); });
+      inp.addEventListener("input", () => { typed = true; hi = -1; show(); }, sig);
       inp.addEventListener("keydown", (ev) => {
         const n = dd.querySelectorAll(".opt").length;
         if (ev.key === "ArrowDown") { ev.preventDefault(); hi = Math.min(n - 1, hi + 1); show(); }
         else if (ev.key === "ArrowUp") { ev.preventDefault(); hi = Math.max(-1, hi - 1); show(); }
         else if (ev.key === "Enter" && hi >= 0) { const o = dd.querySelectorAll<HTMLDivElement>(".opt")[hi]; if (o) inp.value = o.dataset.v!; }
-      });
+      }, sig);
       show();
     }
     inp.addEventListener("keydown", (ev) => {
@@ -202,8 +205,8 @@ export function initSheet(root: HTMLElement, opts: SheetOpts) {
       if (ev.key === "Enter") { ev.preventDefault(); commitEdit(); move(1, 0); }
       else if (ev.key === "Tab") { ev.preventDefault(); commitEdit(); move(0, ev.shiftKey ? -1 : 1); }
       else if (ev.key === "Escape") { editing?.dd?.remove(); editing = null; draw(); sheet.focus(); }
-    });
-    inp.addEventListener("blur", () => setTimeout(commitEdit, 0));
+    }, sig);
+    inp.addEventListener("blur", () => setTimeout(commitEdit, 0), sig);
   }
   function commitEdit() {
     if (!editing) return;
@@ -233,9 +236,9 @@ export function initSheet(root: HTMLElement, opts: SheetOpts) {
     if (mod && k.toLowerCase() === "d") { e.preventDefault(); const b = box(); for (let r = b.top + 1; r <= b.bot; r++) for (let c = b.left; c <= b.right; c++) { if (c === 1) continue; setCell(r, c, grid[b.top][c]); } draw(); return; }
     if (mod && k.toLowerCase() === "a") { e.preventDefault(); sel = { r1: 0, c1: 0, r2: grid.length - 1, c2: NC - 1 }; paintSel(); return; }
     if (!mod && k.length === 1) { e.preventDefault(); startEdit(sel.r1, sel.c1, true, k); }
-  });
+  }, sig);
   // 日本語入力は keydown では文字が取れないので、マスを選んだまま変換を始めたら編集にする
-  sheet.addEventListener("compositionstart", () => { if (!editing) startEdit(sel.r1, sel.c1, true, ""); });
+  sheet.addEventListener("compositionstart", () => { if (!editing) startEdit(sel.r1, sel.c1, true, ""); }, sig);
 
   // ---- コピー・貼り付け ----
   const selText = () => { const b = box(), rows: string[] = []; for (let r = b.top; r <= b.bot; r++) rows.push(grid[r].slice(b.left, b.right + 1).join("\t")); return rows.join("\n"); };
@@ -292,12 +295,12 @@ export function initSheet(root: HTMLElement, opts: SheetOpts) {
     loadSlip(text, f.name);
   }
   const drop = $("drop");
-  $<HTMLInputElement>("slipFile").addEventListener("change", (e) => { const f = (e.target as HTMLInputElement).files?.[0]; if (f) readFile(f); });
-  drop.addEventListener("dragover", (e) => { e.preventDefault(); drop.classList.add("over"); });
-  drop.addEventListener("dragleave", () => drop.classList.remove("over"));
-  drop.addEventListener("drop", (e) => { e.preventDefault(); drop.classList.remove("over"); const f = e.dataTransfer?.files[0]; if (f) readFile(f); });
-  $("sampleSlip").addEventListener("click", () => loadSlip(SAMPLE_SLIP, "見本の伝票.csv"));
-  ["slipSupplier", "slipDate"].forEach((id) => $(id).addEventListener("input", draw));
+  $<HTMLInputElement>("slipFile").addEventListener("change", (e) => { const f = (e.target as HTMLInputElement).files?.[0]; if (f) readFile(f); }, sig);
+  drop.addEventListener("dragover", (e) => { e.preventDefault(); drop.classList.add("over"); }, sig);
+  drop.addEventListener("dragleave", () => drop.classList.remove("over"), sig);
+  drop.addEventListener("drop", (e) => { e.preventDefault(); drop.classList.remove("over"); const f = e.dataTransfer?.files[0]; if (f) readFile(f); }, sig);
+  $("sampleSlip").addEventListener("click", () => loadSlip(SAMPLE_SLIP, "見本の伝票.csv"), sig);
+  ["slipSupplier", "slipDate"].forEach((id) => $(id).addEventListener("input", draw, sig));
 
   // ---- 確認（直すところは赤、自動で入れたマスは青、一覧にないジャンルはオレンジ） ----
   function recalc() {
@@ -340,8 +343,8 @@ export function initSheet(root: HTMLElement, opts: SheetOpts) {
   }
 
   const clearAll = () => { grid = []; autoCells.clear(); ensureRows(12); sel = { r1: 0, c1: 2, r2: 0, c2: 2 }; $("slipInfo").textContent = ""; draw(); };
-  $("addRows").addEventListener("click", () => { ensureRows(grid.length + 10); draw(); });
-  $("clear").addEventListener("click", clearAll);
+  $("addRows").addEventListener("click", () => { ensureRows(grid.length + 10); draw(); }, sig);
+  $("clear").addEventListener("click", clearAll, sig);
   $("doReg").addEventListener("click", async () => {
     const rows: RegisterRow[] = grid.filter((r) => r[0]).map((r) => ({
       kind: r[0] === "山" ? "山" : "単品", code: r[1], name: r[2], genre: r[3], supplier: r[4], date: r[5],
@@ -351,16 +354,16 @@ export function initSheet(root: HTMLElement, opts: SheetOpts) {
     const ok = await opts.onRegister(rows);
     busy = false;
     if (ok) clearAll(); else recalc();
-  });
+  }, sig);
 
   /** 登録できたあとに、番号の続きと登録済みの番号を新しくする */
   function update(next: { existing: Set<string>; nextNo: number }) { opts.existing = next.existing; opts.nextNo = next.nextNo; draw(); }
   function setFormats(f: SlipFormat[]) { opts.formats = f; }
 
-  document.addEventListener("mouseup", onMouseUp);
-  document.addEventListener("copy", onCopy);
-  document.addEventListener("cut", onCut);
-  document.addEventListener("paste", onPaste);
+  document.addEventListener("mouseup", onMouseUp, sig);
+  document.addEventListener("copy", onCopy, sig);
+  document.addEventListener("cut", onCut, sig);
+  document.addEventListener("paste", onPaste, sig);
   ensureRows(12);
   draw();
   return {
@@ -368,10 +371,7 @@ export function initSheet(root: HTMLElement, opts: SheetOpts) {
     setFormats,
     loadResult,
     destroy() {
-      document.removeEventListener("mouseup", onMouseUp);
-      document.removeEventListener("copy", onCopy);
-      document.removeEventListener("cut", onCut);
-      document.removeEventListener("paste", onPaste);
+      ac.abort();
       editing?.dd?.remove();
     },
   };
