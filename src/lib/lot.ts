@@ -35,8 +35,8 @@ export function allocateCost(cost: number, exps: number[]): number[] {
   return shareCost(cost, exps);
 }
 
-/** 管理番号の数字の部分を4けたにそろえる（352 → "0352"） */
-export const padNo = (n: number) => String(n).padStart(4, "0");
+/** 管理番号の数字の部分を5けたにそろえる（352 → "00352"。スプレッドシートと同じ） */
+export const padNo = (n: number) => String(n).padStart(5, "0");
 
 /** 今ある管理番号の続きの番号（数字で始まる番号のいちばん大きいもの ＋ 1） */
 export function nextNumber(codes: string[]): number {

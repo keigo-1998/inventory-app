@@ -104,10 +104,10 @@ model Item {
 
   lotId         Int?
   lot           Lot?      @relation(fields: [lotId], references: [id])
-  /// 山の枝番の原価の付け方: alloc（割り振る）/ zero（山の残りから0円で出す）。単品と -0 は空
+  /// 山の枝番の原価の付け方: alloc（割り振る）/ zero（山の残りから0円で出す）/ manual（手で入れた原価。スプレッドシートから移した分。割り振り直しで変えない）。単品と -0 は空
   lotCostMode   String?
 
-  /// 状態: stock（未出品）/ list（出品中）/ sold（売却済み）/ disposed（廃棄）/ fixture（備品にした）
+  /// 状態: stock（未出品）/ list（出品中）/ sold（売却済み）/ disposed（廃棄）/ fixture（備品にした）/ closed（売り切り）
   /// 手では選ばない。出品先と販売の記録から自動で決まる（一覧で絞り込むために持っておく）
   status        String    @default("stock")
 
@@ -146,7 +146,7 @@ model Listing {
 model Sale {
   id                Int       @id @default(autoincrement())
   soldAt            DateTime
-  /// sale（販売）/ disposed（廃棄）/ fixture（備品にした）
+  /// sale（販売）/ disposed（廃棄）/ fixture（備品にした）/ closed（売り切り：スプレッドシートで売却済みだが売上がない。山を締めた・合わせ売りなど）
   kind              String    @default("sale")
   channelId         Int?
   channel           Channel?  @relation(fields: [channelId], references: [id])

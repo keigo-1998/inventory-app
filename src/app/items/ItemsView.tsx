@@ -36,7 +36,7 @@ export type LotInfo = { code: string; name: string; totalCost: number };
 export type RemovedItem = { id: number; code: string; name: string; deletedAt: string; withBranches: number };
 
 const ST: Record<string, [string, string]> = {
-  stock: ["未出品", "t-stock"], list: ["出品中", "t-list"], sold: ["売却済み", "t-sold"], disposed: ["廃棄", "t-warn"], fixture: ["備品", "t-stock"],
+  stock: ["未出品", "t-stock"], list: ["出品中", "t-list"], sold: ["売却済み", "t-sold"], disposed: ["廃棄", "t-warn"], fixture: ["備品", "t-stock"], closed: ["売り切り", "t-stock"],
 };
 const inStock = (r: ItemRow) => r.status === "stock" || r.status === "list";
 const isLotHead = (r: ItemRow) => !!r.lotCode && r.code.endsWith("-0");
@@ -515,6 +515,12 @@ function ItemDialog({ r, channels, listChannels, lot, pending, toast, onClose, o
     );
   } else if (r.status === "sold") {
     body = <p className="muted">売れた記録の詳しい内訳はありません。</p>;
+  } else if (r.status === "closed") {
+    body = <div className="profitbig"><span>売り切り</span><b>—</b><small>スプレッドシートで売却済みだったが、売上の記録がない商品です（山を締めた・合わせ売りなど）。原価 {yen(r.unitCost)} は損として数えます</small></div>;
+  } else if (r.status === "disposed") {
+    body = <div className="profitbig down"><span>損失</span><b>−{yen(r.unitCost * r.quantity)}</b><small>廃棄</small></div>;
+  } else if (r.status === "fixture") {
+    body = <div className="profitbig"><span>備品にした</span><b>—</b><small>売上・粗利に入れません</small></div>;
   } else {
     // まだ売れていない：予想の利益（出品先ごと。送料は含まない）
     const exp = r.expectedPrice ?? 0;

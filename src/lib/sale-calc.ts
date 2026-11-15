@@ -55,7 +55,7 @@ export const returnLoss = (s: { actualShippingJpy: number }, a: { returnShipping
 /** 粗利。廃棄は原価がそのまま損、備品は null（売上・粗利に入れない） */
 export function saleProfit(s: ProfitSale): number | null {
   const cost = s.lines.reduce((a, l) => a + l.costJpy, 0);
-  if (s.kind === "disposed") return -cost;
+  if (s.kind === "disposed" || s.kind === "closed") return -cost; // 廃棄・売り切り（売上なしで終わった）は原価が損
   if (s.kind !== "sale") return null;
   const adj = (s.adjustments ?? []).filter((a) => !a.cancelledAt);
   const ret = adj.find((a) => a.kind === "return");

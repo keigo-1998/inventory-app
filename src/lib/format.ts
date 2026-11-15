@@ -23,5 +23,6 @@ export const STATUS_LABEL: Record<string, string> = {
   list: "出品中",
   sold: "売却済み",
   disposed: "廃棄",
+  closed: "売り切り",
   fixture: "備品",
 };

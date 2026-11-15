@@ -57,7 +57,7 @@ export async function addBranches(raw: z.input<typeof input>): Promise<BranchRes
         const sold = branches.filter((b) => isFixed(b.status));
         const pool = lot.totalCost - sold.reduce((a, b) => a + b.unitCost * b.quantity, 0);
         const targets = [
-          ...branches.filter((b) => !isFixed(b.status) && b.lotCostMode !== "zero").map((b) => ({ key: String(b.id), exp: b.expectedPrice ?? 0 })),
+          ...branches.filter((b) => !isFixed(b.status) && b.lotCostMode === "alloc").map((b) => ({ key: String(b.id), exp: b.expectedPrice ?? 0 })),
           ...newItems.filter((n) => n.r.mode === "alloc").map((n) => ({ key: String(n.it.id), exp: n.r.exp })),
         ];
         const map = reallocate(Math.max(0, pool), targets);

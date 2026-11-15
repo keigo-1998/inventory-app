@@ -31,7 +31,7 @@ async function refreshItem(tx: Tx, itemId: number, note: string) {
   const left = item.quantity - item.saleLines.reduce((a, l) => a + l.quantity, 0);
   const active = await tx.listing.count({ where: { itemId, state: "active" } });
   const lastKind = item.saleLines.map((l) => l.sale).sort((a, b) => b.soldAt.getTime() - a.soldAt.getTime())[0]?.kind;
-  const next = left > 0 ? (active > 0 ? "list" : "stock") : lastKind === "disposed" ? "disposed" : lastKind === "fixture" ? "fixture" : "sold";
+  const next = left > 0 ? (active > 0 ? "list" : "stock") : lastKind === "disposed" ? "disposed" : lastKind === "fixture" ? "fixture" : lastKind === "closed" ? "closed" : "sold";
   if (item.status !== next) {
     await tx.item.update({ where: { id: itemId }, data: { status: next } });
     await logChange(tx, { table: "Item", recordId: itemId, action: "update", before: { status: item.status }, after: { status: next }, note });

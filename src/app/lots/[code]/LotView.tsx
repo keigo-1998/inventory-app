@@ -19,7 +19,7 @@ type LotInfo = { code: string; name: string; totalCost: number; supplier: string
 type NewRow = { name: string; exp: string; mode: "alloc" | "zero" };
 
 const ST: Record<string, [string, string]> = {
-  stock: ["未出品", "t-stock"], list: ["出品中", "t-list"], sold: ["売却済み", "t-sold"], disposed: ["廃棄", "t-warn"], fixture: ["備品", "t-stock"],
+  stock: ["未出品", "t-stock"], list: ["出品中", "t-list"], sold: ["売却済み", "t-sold"], disposed: ["廃棄", "t-warn"], fixture: ["備品", "t-stock"], closed: ["売り切り", "t-stock"],
 };
 const num = (s: string) => { const v = s.normalize("NFKC").replace(/[¥,円\s]/g, ""); return v === "" || Number.isNaN(+v) ? 0 : Math.max(0, Math.floor(+v)); };
 const isHead = (code: string) => code.endsWith("-0");

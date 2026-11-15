@@ -8,7 +8,9 @@
     "start": "next start",
     "db:push": "prisma db push",
     "db:seed": "tsx prisma/seed.ts",
-    "setup": "prisma db push && tsx prisma/seed.ts"
+    "setup": "prisma db push && tsx prisma/seed.ts",
+    "import:sheet": "DATABASE_URL=file:./real.db prisma db push --skip-generate && DATABASE_URL=file:./real.db tsx scripts/import-sheet.ts import/sheet.json --reset",
+    "dev:real": "DATABASE_URL=file:./real.db next dev"
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",

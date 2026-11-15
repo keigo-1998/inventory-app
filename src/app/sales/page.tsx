@@ -49,7 +49,7 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
   const todayList: TodaySale[] = todays.map((s) => ({
     id: s.id,
     label: s.lines.map((l) => `${l.item.code} ${l.item.name}`).join("、"),
-    channel: s.channel?.name ?? (s.kind === "disposed" ? "廃棄" : "備品にした"),
+    channel: s.channel?.name ?? (s.kind === "disposed" ? "廃棄" : s.kind === "closed" ? "売り切り" : "備品にした"),
     qty: s.lines.reduce((a, l) => a + l.quantity, 0),
     priceJpy: s.priceJpy,
     profit: profitOf(s),
