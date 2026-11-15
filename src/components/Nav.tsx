@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const MENU = [
-  { href: "/dashboard", label: "ダッシュボード", icon: "▦", ready: false },
+  { href: "/dashboard", label: "ダッシュボード", icon: "▦", ready: true },
   { href: "/items", label: "商品一覧", icon: "≡", ready: true },
   { href: "/report", label: "月次レポート", icon: "▤", ready: true },
 ];

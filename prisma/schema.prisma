@@ -243,6 +243,16 @@ model SlipFormat {
   deletedAt DateTime?
 }
 
+// ---------- ダッシュボード ----------
+
+/// ECの売上目標（月ごとに1つ。売上 ＝ 売値＋設定送料）
+model SalesTarget {
+  id        Int      @id @default(autoincrement())
+  month     String   @unique // "2026-11"
+  amountJpy Int
+  updatedAt DateTime @updatedAt
+}
+
 // ---------- 月次レポート ----------
 
 /// 月次販売レポート（docs/data-design.md「月次レポート（PDF）とfreee会計」）

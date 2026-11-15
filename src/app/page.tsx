@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 
-// はじめの画面。ダッシュボードができるまでは商品一覧を開く
+// はじめの画面はダッシュボード
 export default function Home() {
-  redirect("/items");
+  redirect("/dashboard");
 }
