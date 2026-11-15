@@ -390,3 +390,7 @@ tr.changed td:first-child{box-shadow:inset 3px 0 0 #f2b705}
 .mc.changed{background:#fff8d6;box-shadow:inset 3px 0 0 #f2b705}
 .recentnote{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:13px;color:var(--sub);margin:6px 0}
 .sw.changed{display:inline-block;width:14px;height:14px;border-radius:3px;background:#fff8d6;box-shadow:inset 3px 0 0 #f2b705;border:1px solid #f2d36b}
+/* 月次レポート：返品・返金の行 */
+.repdoc tr.adj td{background:#fff5f5}
+.repdoc .lnote{font-size:10px;color:#666;white-space:normal}
+.recon .tmp{background:#fff4cc;color:#8a6d00;border-radius:4px;padding:0 4px;font-size:10px}

@@ -240,6 +240,23 @@ model SlipFormat {
   deletedAt DateTime?
 }
 
+// ---------- 月次レポート ----------
+
+/// 月次販売レポート（docs/data-design.md「月次レポート（PDF）とfreee会計」）
+/// - 下書きの間は version 0 の行に「実際の振込額」だけを持ち、中身はそのときの販売の記録から計算する
+/// - 「確定して保存」で、その時点の中身（data）をまるごと写して第1版・第2版…として残す（前の版も消さない）
+model MonthlyReport {
+  id        Int       @id @default(autoincrement())
+  month     String // "2026-10"
+  version   Int // 0 = 下書き、1 以上 = 確定した版
+  data      String? // 確定した版の中身（JSON）
+  paid      String    @default("{}") // 販路ごとの実際の振込額（JSON。{"メルカリ": 25625}）
+  createdAt DateTime  @default(now())
+  fixedAt   DateTime?
+
+  @@unique([month, version])
+}
+
 // ---------- 為替レート ----------
 
 /// 毎日のTTM（三菱UFJ銀行の発表を自動で取得する予定）
