@@ -371,3 +371,4 @@ a.btn,a.fab{text-decoration:none;display:inline-block;color:inherit}a.btn.primar
 @media (max-width:760px){body:has(.mbar) #toast{bottom:136px}} /* スマホの登録ボタンの帯があるときは、お知らせをその上に出す */
 #toast:not(.show){opacity:0;pointer-events:none;transition:transform .25s,opacity .25s} /* 消えたお知らせが、下のボタンをふさがないように */
 .pill.soon{opacity:.45;cursor:default}
+.inp{padding:8px 10px;border:1px solid var(--line);border-radius:8px;font:inherit;background:var(--card,#fff);color:inherit}

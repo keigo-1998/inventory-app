@@ -2,9 +2,10 @@
 import { db } from "@/lib/db";
 import { LIVE_SALE } from "@/lib/sale-live";
 import { fmtDate, todayJst } from "@/lib/format";
-import { monthRate } from "@/lib/fx";
+import { monthRate, monthOf, thisMonth } from "@/lib/fx";
 import { SalesView, type StockItem, type TodaySale, type TbdSale } from "./SalesView";
 import type { ChannelSetting } from "./ChannelSettings";
+import type { FxMonth } from "./FxPanel";
 import { saleProfit, type ChannelRule } from "@/lib/sale-calc";
 
 export const dynamic = "force-dynamic";
@@ -13,7 +14,7 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
   const { tab } = await searchParams;
   const today = todayJst();
   const startOfToday = new Date(`${today}T00:00:00+09:00`);
-  const [items, channels, todays, tbd, allChannels] = await Promise.all([
+  const [items, channels, todays, tbd, allChannels, fxSales, dayRates, avgRates] = await Promise.all([
     db.item.findMany({
       where: { deletedAt: null, status: { in: ["stock", "list"] } },
       include: { listings: { where: { state: "active" }, include: { channel: true } }, saleLines: { where: { sale: LIVE_SALE } } },
@@ -27,6 +28,9 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
     }),
     db.sale.findMany({ where: { cancelledAt: null, shippingTentative: true }, include: { channel: true, adjustments: true, lines: { include: { item: true } } }, orderBy: { soldAt: "asc" } }),
     db.channel.findMany({ orderBy: { sortOrder: "asc" }, include: { _count: { select: { sales: { where: { cancelledAt: null } } } } } }),
+    db.sale.findMany({ where: { cancelledAt: null, currency: { not: "JPY" } }, select: { soldAt: true, fxRateFinal: true } }),
+    db.exchangeRate.findMany({ orderBy: { date: "asc" } }),
+    db.monthRate.findMany(),
   ]);
 
   const now = new Date();
@@ -65,5 +69,22 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
     refundVia: c.refundVia, undecided: c.undecided, hidden: !!c.deletedAt, used: c._count.sales,
   }));
 
-  return <SalesView settings={settings} initialTab={tab} items={stock} channels={rules} rates={rates} today={today.replace(/-/g, "/")} todayList={todayList} tbdList={tbdList} />;
+  // 為替レート：今月から3か月前までと、外貨の販売がある月
+  const nowM = thisMonth();
+  const monthSet = new Set<string>([nowM]);
+  for (let i = 1; i <= 3; i++) { const [y, m] = nowM.split("-").map(Number); const d = new Date(Date.UTC(y, m - 1 - i, 15)); monthSet.add(d.toISOString().slice(0, 7)); }
+  fxSales.forEach((s) => monthSet.add(monthOf(s.soldAt)));
+  const fxMonths: FxMonth[] = [...monthSet].sort().reverse().map((m) => {
+    const first: FxMonth["first"] = {}, avg: FxMonth["avg"] = {};
+    for (const c of ["EUR", "USD"] as const) {
+      const d = dayRates.find((r) => r.currency === c && monthOf(r.date) === m);
+      if (d) first[c] = { date: fmtDate(d.date).replace(/\//g, "-"), ttm: Number(d.ttm), source: d.source };
+      const a = avgRates.find((r) => r.currency === c && r.month === m);
+      if (a) avg[c] = { ttm: Number(a.ttm), source: a.source };
+    }
+    const ss = fxSales.filter((s) => monthOf(s.soldAt) === m);
+    return { month: m, ended: m < nowM, first, avg, sales: ss.length, finalCount: ss.filter((s) => s.fxRateFinal).length };
+  });
+
+  return <SalesView fxMonths={fxMonths} settings={settings} initialTab={tab} items={stock} channels={rules} rates={rates} today={today.replace(/-/g, "/")} todayList={todayList} tbdList={tbdList} />;
 }

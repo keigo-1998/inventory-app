@@ -11,7 +11,7 @@ import { db } from "@/lib/db";
 import { LIVE_SALE } from "@/lib/sale-live";
 import { logChange } from "@/lib/history";
 import { calcSale, type ChannelRule } from "@/lib/sale-calc";
-import { monthRate } from "@/lib/fx";
+import { saleRate } from "@/lib/fx";
 
 const SPECIAL = { 廃棄: "disposed", 備品にした: "fixture" } as const;
 
@@ -74,8 +74,9 @@ export async function recordSales(raw: SaleEntry[], note = "販売を記録"): P
           const ch = await tx.channel.findFirst({ where: { name: e.channel, deletedAt: null } });
           if (!ch) throw new Error(`販路「${e.channel}」が見つかりません`);
           channelName = ch.name;
-          const rate = await monthRate(tx, ch.currency, soldAt);
-          if (rate == null) throw new Error(`${ch.currency} の為替レートがまだありません`);
+          const fxr = await saleRate(tx, ch.currency, soldAt);
+          if (fxr == null) throw new Error(`${ch.currency} の為替レートがまだありません。販売を記録 →「為替レート」で取り込んでください`);
+          const rate = fxr.rate;
           const r = calcSale(rule(ch), rate, { price: e.price, ship: e.ship, fee: e.fee, feeTouched: e.feeTouched, real: e.real, cost });
           const fx = ch.currency !== "JPY";
           const cents = (v: number) => Math.round(v * 100);
@@ -84,7 +85,7 @@ export async function recordSales(raw: SaleEntry[], note = "販売を記録"): P
               soldAt, kind: "sale", channelId: ch.id, currency: ch.currency,
               priceForeign: fx ? cents(r.price) : null, shippingForeign: fx ? cents(r.shipIn) : null, feeForeign: fx ? cents(r.feeIn) : null,
               priceJpy: Math.round(r.priceY), shippingFeeJpy: Math.round(r.shipY), feeJpy: Math.round(r.feeY), actualShippingJpy: Math.round(r.realY),
-              shippingTentative: e.tentative, fxRate: fx ? rate : null, fxRateFinal: !fx, shipped: e.shipped,
+              shippingTentative: e.tentative, fxRate: fx ? rate : null, fxRateFinal: fxr.final, shipped: e.shipped,
               lines: { create: [{ itemId: item.id, quantity: e.qty, costJpy: cost, amountJpy: Math.round(r.priceY) }] },
             },
           });

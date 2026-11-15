@@ -13,3 +13,24 @@ export async function monthRate(tx: Prisma.TransactionClient | PrismaClient, cur
     (await tx.exchangeRate.findFirst({ where: { currency, date: { lt: start } }, orderBy: { date: "desc" } }));
   return r ? Number(r.ttm) : null;
 }
+
+/** "2026-10" の形の月（日本時間） */
+export const monthOf = (d: Date) => new Date(d.getTime() + 9 * 3600 * 1000).toISOString().slice(0, 7);
+export const thisMonth = () => monthOf(new Date());
+/** "2026-10" の月の、はじめと次の月のはじめ（日本時間） */
+export function monthRange(month: string) {
+  const [y, m] = month.split("-").map(Number);
+  return { start: new Date(Date.UTC(y, m - 1, 1) - 9 * 3600 * 1000), end: new Date(Date.UTC(y, m, 1) - 9 * 3600 * 1000) };
+}
+
+/** 販売を記録するときのレート。もう終わった月で月中平均があれば、それで確定。なければ月初のTTMで仮 */
+export async function saleRate(tx: Prisma.TransactionClient | PrismaClient, currency: string, soldAt: Date): Promise<{ rate: number; final: boolean } | null> {
+  if (currency === "JPY") return { rate: 1, final: true };
+  const month = monthOf(soldAt);
+  if (month < thisMonth()) {
+    const avg = await tx.monthRate.findUnique({ where: { currency_month: { currency, month } } });
+    if (avg) return { rate: Number(avg.ttm), final: true };
+  }
+  const r = await monthRate(tx, currency, soldAt);
+  return r == null ? null : { rate: r, final: false };
+}

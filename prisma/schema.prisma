@@ -222,6 +222,18 @@ model ExchangeRate {
   @@unique([currency, date])
 }
 
+/// 月の平均TTM（三菱UFJ銀行の「月中平均」。TTSとTTBの真ん中）。月が終わったら、この値でその月の外貨の販売を確定する
+model MonthRate {
+  id        Int      @id @default(autoincrement())
+  currency  String // EUR / USD
+  month     String // "2026-10"
+  ttm       Decimal
+  source    String   @default("mufg") // mufg（自動で取得）/ manual（手で入れた）
+  createdAt DateTime @default(now())
+
+  @@unique([currency, month])
+}
+
 // ---------- 変更の履歴 ----------
 
 /// だれが・いつ・どの表のどの行を・どう変えたか。間違いはこの記録を見て戻す
