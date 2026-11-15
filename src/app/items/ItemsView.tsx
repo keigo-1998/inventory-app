@@ -511,7 +511,7 @@ function ReturnBox({ s, profit, pending, onCancel, onSave }: { s: SaleInfo; prof
   const [kind, setKind] = useState<"cancel" | "return" | "refund">("return");
   const [date, setDate] = useState(todayJst().replace(/-/g, "/"));
   const [ship, setShip] = useState("");
-  const [fee, setFee] = useState(String(s.feeJpy));
+  const [fee, setFee] = useState("0"); // 売買が成立しないので、手数料はふつう運営から返される
   const [amt, setAmt] = useState("");
   const [via, setVia] = useState(s.refundVia === "bank" ? "bank" : "payout");
   const [err, setErr] = useState("");
@@ -548,7 +548,7 @@ function ReturnBox({ s, profit, pending, onCancel, onSave }: { s: SaleInfo; prof
       {kind === "return" && (
         <>
           <div className="f">返品の送料（返送用封筒など・円）<input inputMode="numeric" placeholder="0" value={ship} onChange={(e) => setShip(e.target.value)} /><span className="hint">お客様に送った返送用封筒の代金など、戻すためにかかった送料</span></div>
-          <div className="f">戻ってこない手数料（円）<input inputMode="numeric" value={fee} onChange={(e) => setFee(e.target.value)} /><span className="hint">販路が手数料を返してくれたときは 0 にします</span></div>
+          <div className="f">戻ってこない手数料（円）<input inputMode="numeric" value={fee} onChange={(e) => setFee(e.target.value)} /><span className="hint">ふつうは 0 円です（売買が成立しないので、手数料は運営から返されます）。返されなかったときだけ入れます</span></div>
           <div className="sumline">この返品の損：行きの送料 {yen(s.actualShippingJpy)} ＋ 返品の送料 {yen(shipN || 0)} ＋ 手数料 {yen(feeN || 0)} ＝ <b>{yen(loss)}</b></div>
           <p className="hint" style={{ margin: 0 }}>売値は0円になり、商品は在庫に戻ります（同じ管理番号のまま）。確定済みの月のレポートは書き換えず、返品した月のレポートにマイナスの行として載せます。</p>
         </>
