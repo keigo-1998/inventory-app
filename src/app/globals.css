@@ -196,7 +196,7 @@ table.calc tr.tot td{border-top:2px solid var(--text);font-weight:700;font-size:
 #toast.show .bar{animation:shrink 10s linear forwards}
 @keyframes shrink{to{width:0}}
 tr.flash td,.mc.flash{animation:flash 2.5s ease}
-@keyframes flash{0%{background:#fff3b0}100%{background:transparent}}
+@keyframes flash{0%{background:#ffe680}100%{background:#fff8d6}}
 @media (max-width:760px){#toast{bottom:76px}}
 .clickable{cursor:pointer}
 tr.clickable:hover td{background:#f7f9fc}
@@ -384,3 +384,9 @@ a.btn,a.fab{text-decoration:none;display:inline-block;color:inherit}a.btn.primar
 .btn.danger{color:var(--red);border-color:var(--red)}
 .editbox .inp{text-align:left}.editbox .inp.n{text-align:right}
 .editgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+/* さっき変えた商品（10分間） */
+tr.changed td{background:#fff8d6}
+tr.changed td:first-child{box-shadow:inset 3px 0 0 #f2b705}
+.mc.changed{background:#fff8d6;box-shadow:inset 3px 0 0 #f2b705}
+.recentnote{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:13px;color:var(--sub);margin:6px 0}
+.sw.changed{display:inline-block;width:14px;height:14px;border-radius:3px;background:#fff8d6;box-shadow:inset 3px 0 0 #f2b705;border:1px solid #f2d36b}

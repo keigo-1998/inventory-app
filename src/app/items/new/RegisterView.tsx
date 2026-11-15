@@ -11,6 +11,7 @@ import { SlipMapDialog } from "./SlipMapDialog";
 import { forgetSlipFormat } from "@/lib/slip-actions";
 import type { SlipFormat } from "@/lib/slip";
 import { ask } from "@/lib/ask";
+import { markChanged } from "@/lib/recent";
 
 export function RegisterView({ codes, genres, formats }: { codes: string[]; genres: string[]; formats: SlipFormat[] }) {
   const [unknown, setUnknown] = useState<{ rows: string[][]; fileName: string } | null>(null);
@@ -28,6 +29,7 @@ export function RegisterView({ codes, genres, formats }: { codes: string[]; genr
       toast(`<span style="color:#fca5a5">登録できませんでした</span>：${res.errors.map(esc).join("／")}`);
       return false;
     }
+    markChanged(res.codes);
     const all = [...codesRef.current, ...res.codes];
     sheetRef.current?.update({ existing: new Set(all), nextNo: nextNumber(all) });
     router.refresh();

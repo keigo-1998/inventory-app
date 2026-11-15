@@ -10,6 +10,7 @@ import { toast, esc } from "@/lib/toast";
 import { ChannelSettings, type ChannelSetting } from "./ChannelSettings";
 import { FxPanel, type FxMonth } from "./FxPanel";
 import { ask } from "@/lib/ask";
+import { markChanged } from "@/lib/recent";
 
 export type StockItem = { id: number; code: string; name: string; unitCost: number; quantity: number; left: number; channels: string[] };
 export type TodaySale = { id: number; label: string; channel: string; qty: number; priceJpy: number; profit: number | null; tentative: boolean; others: string[] };
@@ -93,6 +94,7 @@ export function SalesView({ items, channels, rates, today, todayList, tbdList, s
       }]);
       if (!res.ok) { toast(`<span style="color:#fca5a5">記録できませんでした</span>：${esc(res.error)}`); return; }
       const d = res.done[0];
+      markChanged(res.done.map((x) => x.code));
       resetForm();
       router.refresh();
       const msg = d.left != null && d.left > 0
@@ -333,6 +335,7 @@ function BatchEntry({ items, channels, rates, today }: { items: StockItem[]; cha
       setRows((rs) => { const left = rs.filter((r) => !keys.has(r.key)); while (left.length < 6) left.push(newRow(today)); return left; });
       router.refresh();
       const ids = res.done.map((d) => d.saleId);
+      markChanged(res.done.map((x) => x.code));
       toast(`${res.done.length}件を記録しました。商品一覧で「売却済み」になりました${delistText(res.done)}`, async () => { await cancelSales(ids, "まとめて入力を元に戻す"); router.refresh(); return "取り消しました。商品は元の状態（在庫・出品中）に戻りました"; });
     });
   };

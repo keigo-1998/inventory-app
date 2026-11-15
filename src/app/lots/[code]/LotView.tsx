@@ -9,6 +9,7 @@ import { yen } from "@/lib/format";
 import { toast, esc } from "@/lib/toast";
 import { ask } from "@/lib/ask";
 import { removeItem, undoRemove } from "@/lib/item-actions";
+import { markChanged } from "@/lib/recent";
 
 export type LotRow = {
   id: number; code: string; name: string; exp: number | null; cost: number; status: string;
@@ -70,6 +71,7 @@ export function LotView({ lot, rows }: { lot: LotInfo; rows: LotRow[] }) {
       setNews(blankRows(3, "zero")); // 枝番ができたので、次からは「0円で出す」がふつう
       router.refresh();
       const kinds = [res.alloc ? `割り振り ${res.alloc}点` : "", res.zero ? `原価0円 ${res.zero}点` : ""].filter(Boolean).join("・");
+      markChanged([...res.codes, ...res.undo.costs.map((c) => rows.find((x) => x.id === c.id)?.code).filter((c): c is string => !!c)]);
       toast(`${res.codes.join("・")} を登録しました（${kinds}）`, async () => {
         const u = await undoBranches(lot.code, res.undo);
         router.refresh();

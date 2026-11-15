@@ -10,6 +10,7 @@ import { removeItem, undoRemove, restoreItem, updateItem, type ItemPatch } from 
 import { todayJst } from "@/lib/format";
 import { yen } from "@/lib/format";
 import { ask } from "@/lib/ask";
+import { markChanged, recentChanged, clearChanged, RECENT_MIN } from "@/lib/recent";
 
 export type Refund = { id: number; date: string; amount: number; via: string };
 export type SaleInfo = {
@@ -88,6 +89,15 @@ export function ItemsView({ rows, channels, lots, genres, suppliers, removed }: 
   const [toast, setToast] = useState<Toast>(null);
   const [toastKey, setToastKey] = useState(0);
   const [flash, setFlash] = useState<Set<string>>(new Set());
+  // さっき変えた商品（10分間は色を付けたまま。ほかの画面で変えた分も）
+  const [recent, setRecent] = useState<Record<string, number>>({});
+  useEffect(() => {
+    const read = () => setRecent(recentChanged());
+    read();
+    window.addEventListener("recent-changed", read);
+    const id = setInterval(read, 30000); // 10分たったものを外す
+    return () => { window.removeEventListener("recent-changed", read); clearInterval(id); };
+  }, []);
   const [error, setError] = useState("");
   const [showRemoved, setShowRemoved] = useState(false);
 
@@ -120,7 +130,7 @@ export function ItemsView({ rows, channels, lots, genres, suppliers, removed }: 
 
   const rowCls = (r: ItemRow) => {
     const p = lotOf(r);
-    return [p ? (r.code.endsWith("-0") ? "lotrow" : "brrow") : "", flash.has(r.code) ? "flash" : ""].join(" ");
+    return [p ? (r.code.endsWith("-0") ? "lotrow" : "brrow") : "", flash.has(r.code) ? "flash" : "", recent[r.code] ? "changed" : ""].join(" ");
   };
   const QtyTag = ({ r }: { r: ItemRow }) => (
     <>
@@ -136,7 +146,8 @@ export function ItemsView({ rows, channels, lots, genres, suppliers, removed }: 
 
   const showToast = (t: Toast) => { setToast(t); setToastKey((k) => k + 1); };
   useEffect(() => { if (!toast) return; const id = setTimeout(() => setToast(null), 10000); return () => clearTimeout(id); }, [toast, toastKey]);
-  const flashCodes = (codes: string[]) => { setFlash(new Set(codes)); setTimeout(() => setFlash(new Set()), 2500); };
+  const flashCodes = (codes: string[]) => { markChanged(codes); setFlash(new Set(codes)); setTimeout(() => setFlash(new Set()), 2500); };
+  const recentCount = rows.filter((r) => recent[r.code]).length;
 
   /** 出品先を変える（1点でも、まとめてでも同じ処理） */
   const runChange = (targets: ItemRow[], channel: ChannelInfo, on: boolean) => {
@@ -293,6 +304,12 @@ export function ItemsView({ rows, channels, lots, genres, suppliers, removed }: 
           {channels.map((c) => <option key={c.id}>{c.name}</option>)}
         </select>
       </div>
+      {recentCount > 0 && (
+        <p className="recentnote">
+          <i className="sw changed" /> 色の付いた行は、さっき変えた商品です（{recentCount}点・{RECENT_MIN}分たつと消えます）
+          <button className="linkbtn" onClick={clearChanged}>色を消す</button>
+        </p>
+      )}
       <div className="pills">
         {FILTERS.map(([k, l]) => (
           <button key={k} className={`pill${k === invF ? " on" : ""}`} onClick={() => setInvF(k)}>{l}</button>
