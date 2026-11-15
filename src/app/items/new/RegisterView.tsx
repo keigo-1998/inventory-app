@@ -59,7 +59,7 @@ export function RegisterView({ codes, genres, formats }: { codes: string[]; genr
       <MobileForm genres={genres} nextNo={nextNo} onRegister={onRegister} />
 
       <p className="lead pconly">
-        伝票のCSVを入れるか、スプレッドシートからコピーして貼り付けます。山と単品が混ざっていて大丈夫です。山の行は「種類」のマスを押して切り替えます。
+        伝票のCSV（またはPDF）を入れるか、スプレッドシートからコピーして貼り付けます。山と単品が混ざっていて大丈夫です。山の行は「種類」のマスを押して切り替えます。
         <br />
         <b style={{ color: "var(--text)" }}>管理番号は空けておけば、今ある番号の続き（次は {padNo(nextNo)}）から自動で付きます。</b>
       </p>
@@ -73,8 +73,8 @@ export function RegisterView({ codes, genres, formats }: { codes: string[]; genr
       </div>
       <div className="slipgrid pconly">
         <label className="drop" id="drop">
-          <input type="file" id="slipFile" accept=".csv,text/csv" hidden />
-          <b>伝票のCSVをここにドラッグ</b><span className="muted">またはクリックしてファイルを選ぶ</span>
+          <input type="file" id="slipFile" accept=".csv,text/csv,.pdf,application/pdf" hidden />
+          <b>伝票のCSV・PDFをここにドラッグ</b><span className="muted">またはクリックしてファイルを選ぶ</span>
         </label>
         <div className="card slipbar">
           <div className="muted" style={{ fontSize: 12 }}>伝票の共通の情報（全部の行に自動で入ります）</div>

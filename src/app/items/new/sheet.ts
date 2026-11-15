@@ -5,6 +5,7 @@ import { padNo } from "@/lib/lot";
 import { esc } from "@/lib/toast";
 import type { RegisterRow } from "@/lib/register-actions";
 import { parseCSV, readSlip, type SlipFormat, type SlipResult } from "@/lib/slip";
+import { readPdfItems, pdfTextItems } from "@/lib/slip-pdf";
 
 export type SheetOpts = {
   existing: Set<string>;
@@ -280,6 +281,17 @@ export function initSheet(root: HTMLElement, opts: SheetOpts) {
     if (!r) { opts.onUnknownSlip(rows, fileName); return; }
     loadResult(r, fileName, r.format);
   }
+  /** 伝票のPDF（文字が入っているもの）を読む */
+  async function loadPdf(buf: ArrayBuffer, fileName: string) {
+    $("slipInfo").textContent = `${fileName} を読んでいます…`;
+    let r: SlipResult | null = null;
+    try { r = readPdfItems(await pdfTextItems(buf)); } catch { r = null; }
+    if (!r) {
+      $("slipInfo").innerHTML = `<span style="color:var(--red)"><b>${esc(fileName)}</b> は読み取れませんでした。いまはトレファクの精算一覧書の形のPDFだけ読めます（スキャンや写真のPDFは読めません）。CSVがあればCSVを入れてください。</span>`;
+      return;
+    }
+    loadResult(r, fileName, null);
+  }
   /** 読んだ伝票を表に入れる */
   function loadResult(r: SlipResult, fileName: string, format: string | null) {
     $<HTMLInputElement>("slipSupplier").value = r.supplier;
@@ -290,6 +302,7 @@ export function initSheet(root: HTMLElement, opts: SheetOpts) {
   }
   async function readFile(f: File) {
     const buf = await f.arrayBuffer();
+    if (/\.pdf$/i.test(f.name) || f.type === "application/pdf") { await loadPdf(buf, f.name); return; }
     let text: string;
     try { text = new TextDecoder("utf-8", { fatal: true }).decode(buf); } catch { text = new TextDecoder("shift_jis").decode(buf); } // 文字コードを自動で判定
     loadSlip(text, f.name);
