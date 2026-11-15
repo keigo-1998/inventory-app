@@ -8,6 +8,7 @@ import { recordBundle, cancelSales } from "@/lib/sale-actions";
 import { recordReturn, recordRefund, cancelAdjustment } from "@/lib/adjust-actions";
 import { todayJst } from "@/lib/format";
 import { yen } from "@/lib/format";
+import { ask } from "@/lib/ask";
 
 export type Refund = { id: number; date: string; amount: number; via: string };
 export type SaleInfo = {
@@ -192,8 +193,8 @@ export function ItemsView({ rows, channels, lots, genres }: { rows: ItemRow[]; c
     });
   };
   const undoAdj = (r: ItemRow, adjId: number, what: string) => {
-    if (!confirm(`${r.code} の${what}の記録を取り消しますか？`)) return;
     startTransition(async () => {
+      if (!(await ask(`${r.code} の${what}の記録を取り消しますか？`, "取り消す"))) return;
       const u = await cancelAdjustment(adjId);
       router.refresh();
       showToast({ msg: u.ok ? `${r.code} の${what}の記録を取り消しました` : u.error });
@@ -521,7 +522,7 @@ function ReturnBox({ s, profit, pending, onCancel, onSave }: { s: SaleInfo; prof
   const save = () => {
     setErr("");
     if (kind === "cancel") {
-      if (confirm("この販売の記録を取り消して、商品を売れる前の状態に戻しますか？")) onSave({ kind: "cancel" });
+      void ask("この販売の記録を取り消して、商品を売れる前の状態（在庫・出品中）に戻しますか？", "販売を取り消す").then((y) => { if (y) onSave({ kind: "cancel" }); });
       return;
     }
     if (kind === "return") {

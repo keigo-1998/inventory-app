@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { syncRates, finalizeMonth, unfinalizeMonth, saveRateByHand } from "@/lib/fx-actions";
 import { toast, esc } from "@/lib/toast";
+import { ask } from "@/lib/ask";
 
 type Cur = "EUR" | "USD";
 export type FxMonth = {
@@ -42,8 +43,8 @@ export function FxPanel({ months }: { months: FxMonth[] }) {
       });
     });
   const unfix = (m: FxMonth) => {
-    if (!confirm(`${label(m.month)}の確定を取り消して、月初のTTMの仮の計算に戻しますか？`)) return;
     start(async () => {
+      if (!(await ask(`${label(m.month)}の確定を取り消して、月初のTTMの仮の計算に戻しますか？`, "確定を取り消す"))) return;
       const u = await unfinalizeMonth(m.month);
       router.refresh();
       toast(u.ok ? `${label(m.month)}の確定を取り消しました` : esc(u.error ?? ""));

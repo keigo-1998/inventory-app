@@ -9,6 +9,7 @@ import { yen } from "@/lib/format";
 import { toast, esc } from "@/lib/toast";
 import { ChannelSettings, type ChannelSetting } from "./ChannelSettings";
 import { FxPanel, type FxMonth } from "./FxPanel";
+import { ask } from "@/lib/ask";
 
 export type StockItem = { id: number; code: string; name: string; unitCost: number; quantity: number; left: number; channels: string[] };
 export type TodaySale = { id: number; label: string; channel: string; qty: number; priceJpy: number; profit: number | null; tentative: boolean; others: string[] };
@@ -102,8 +103,9 @@ export function SalesView({ items, channels, rates, today, todayList, tbdList, s
   };
 
   const cancelOne = (h: TodaySale) => {
-    if (!confirm(`${h.label} の「${h.channel}」の記録を取り消しますか？\n商品は元の状態に戻ります。`)) return;
-    start(async () => { const res = await cancelSales([h.id]); router.refresh(); toast(res.ok ? `${esc(h.label.split(" ")[0])} の記録を取り消しました` : esc(res.error ?? "取り消せませんでした")); });
+    start(async () => {
+      if (!(await ask(`${h.label} の「${h.channel}」の記録を取り消しますか？\n商品は元の状態に戻ります。`, "取り消す"))) return;
+      const res = await cancelSales([h.id]); router.refresh(); toast(res.ok ? `${esc(h.label.split(" ")[0])} の記録を取り消しました` : esc(res.error ?? "取り消せませんでした")); });
   };
 
   const fix = (s: TbdSale) => {

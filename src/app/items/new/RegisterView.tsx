@@ -12,6 +12,7 @@ import { recordExpense, removeExpense } from "@/lib/expense-actions";
 import { forgetSlipFormat } from "@/lib/slip-actions";
 import type { SlipFormat } from "@/lib/slip";
 import { yen } from "@/lib/format";
+import { ask } from "@/lib/ask";
 
 export function RegisterView({ codes, genres, formats }: { codes: string[]; genres: string[]; formats: SlipFormat[] }) {
   const [unknown, setUnknown] = useState<{ rows: string[][]; fileName: string } | null>(null);
@@ -110,7 +111,7 @@ export function RegisterView({ codes, genres, formats }: { codes: string[]; genr
           <ul className="muted" style={{ margin: "4px 0", paddingLeft: 18 }}>
             {formats.map((f) => (
               <li key={f.id}>{f.name}{f.supplier ? `（仕入先：${f.supplier}）` : ""}{" "}
-                <button className="linkbtn" onClick={async () => { if (!confirm(`伝票の形式「${f.name}」を忘れますか？次にこの形の伝票を入れたときに、もう一度列を選びます。`)) return; await forgetSlipFormat(f.id!); router.refresh(); toast(`「${esc(f.name)}」を忘れました`); }}>忘れる</button>
+                <button className="linkbtn" onClick={async () => { if (!(await ask(`伝票の形式「${f.name}」を忘れますか？\n次にこの形の伝票を入れたときに、もう一度列を選びます。`, "忘れる"))) return; await forgetSlipFormat(f.id!); router.refresh(); toast(`「${esc(f.name)}」を忘れました`); }}>忘れる</button>
               </li>
             ))}
           </ul>

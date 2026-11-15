@@ -7,6 +7,7 @@ import { recordExpense, removeExpense } from "@/lib/expense-actions";
 import { EXPENSE_CATEGORIES } from "@/lib/expense";
 import { yen } from "@/lib/format";
 import { toast, esc } from "@/lib/toast";
+import { ask } from "@/lib/ask";
 
 export type ExpenseRow = { id: number; date: string; category: string; amount: number; supplier: string; note: string };
 
@@ -40,8 +41,8 @@ export function ExpensesView({ rows, today }: { rows: ExpenseRow[]; today: strin
     });
   };
   const remove = (r: ExpenseRow) => {
-    if (!confirm(`${r.date} の${r.category} ${yen(r.amount)} を消しますか？（消した印を付けるだけで、元に戻せます）`)) return;
     start(async () => {
+      if (!(await ask(`${r.date} の${r.category} ${yen(r.amount)} を消しますか？\n（消した印を付けるだけで、元に戻せます）`, "消す"))) return;
       await removeExpense(r.id);
       router.refresh();
       toast(`${esc(r.category)} ${yen(r.amount)} を消しました`, async () => { await removeExpense(r.id, false); router.refresh(); return "元に戻しました"; });
