@@ -209,6 +209,37 @@ model SaleAdjustment {
   cancelledAt       DateTime?
 }
 
+/// 経費（オークションの入場料など、商品の原価に入れない費用）。月次レポートで販路とは別に載せる
+model Expense {
+  id        Int       @id @default(autoincrement())
+  date      DateTime
+  category  String // 入場料 / 交通費 / 梱包材 / その他 など
+  amountJpy Int // 税込の金額（円）
+  supplier  String? // どこの（オークション会場など）
+  note      String?
+  createdAt DateTime  @default(now())
+  deletedAt DateTime?
+
+  @@index([date])
+}
+
+/// 伝票CSVの形式（初めての形式の伝票で選んだ列を覚えておく。次からは自動で読む）
+model SlipFormat {
+  id        Int       @id @default(autoincrement())
+  name      String // 形式の名前（例：〇〇オークション）
+  signature String    @unique // 見出しの行（列名を | でつないだもの）。これが同じなら同じ形式
+  /// 列の番号（0から）。costCols は足し算する（単価＋税＋手数料 など）
+  nameCol   Int
+  costCols  String // JSON の配列 "[4,5,6,7]"
+  qtyCol    Int?
+  expCol    Int?
+  dateCol   Int?
+  supplier  String? // ふだんの仕入先の名前
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+}
+
 // ---------- 為替レート ----------
 
 /// 毎日のTTM（三菱UFJ銀行の発表を自動で取得する予定）

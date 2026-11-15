@@ -4,6 +4,7 @@ import { guessGenre } from "@/lib/genre-guess";
 import { padNo } from "@/lib/lot";
 import { esc } from "@/lib/toast";
 import type { RegisterRow } from "@/lib/register-actions";
+import { parseCSV, readSlip, entranceFee, type SlipFormat, type SlipResult } from "@/lib/slip";
 
 export type SheetOpts = {
   existing: Set<string>;
@@ -11,6 +12,12 @@ export type SheetOpts = {
   genres: string[];
   /** 登録ボタンを押したとき。成功したら true を返す（表を空にする） */
   onRegister: (rows: RegisterRow[]) => Promise<boolean>;
+  /** 覚えている伝票の形式 */
+  formats: SlipFormat[];
+  /** 読めない形の伝票を入れたとき（列を選んでもらう） */
+  onUnknownSlip: (rows: string[][], fileName: string) => void;
+  /** 伝票に入場料などがあったとき（経費として記録できるようにする） */
+  onSlipFee: (fee: { amount: number; date: string; supplier: string } | null) => void;
 };
 
 const COLS: [string, number][] = [["種類", 64], ["管理番号", 96], ["商品名", 300], ["ジャンル", 90], ["仕入先", 150], ["仕入日", 100], ["原価", 90], ["個数", 54], ["予想売価", 90]];
@@ -265,37 +272,21 @@ export function initSheet(root: HTMLElement, opts: SheetOpts) {
     draw(); sheet.focus();
   };
 
-  // ---- 伝票CSVの読み込み ----
-  function parseCSV(text: string) {
-    return text.replace(/\r/g, "").split("\n").map((line) => {
-      const out: string[] = [];
-      let cur = "", q = false;
-      for (let i = 0; i < line.length; i++) {
-        const ch = line[i];
-        if (q) { if (ch === '"' && line[i + 1] === '"') { cur += '"'; i++; } else if (ch === '"') q = false; else cur += ch; }
-        else if (ch === '"') q = true; else if (ch === ",") { out.push(cur); cur = ""; } else cur += ch;
-      }
-      out.push(cur);
-      return out;
-    });
-  }
+  // ---- 伝票CSVの読み込み（読み方は lib/slip.ts） ----
   function loadSlip(text: string, fileName: string) {
     const rows = parseCSV(text);
-    const get = (k: string) => (rows.find((r) => r[0] === k) || [])[1] || "";
-    const date = get("開催日"), hall = get("会場");
-    const hi = rows.findIndex((r, i) => r.includes("商品名") && r.includes("小計") && (rows[i - 1] || [])[0] === "請求明細");
-    if (hi < 0) {
-      $("slipInfo").innerHTML = `<span style="color:var(--red)"><b>${esc(fileName)}</b> の形式はまだ読み取れません。スプレッドシートに開いて、表に貼り付けてください（初めての形式の伝票は、列を選べるようにする予定です）。</span>`;
-      return;
-    }
-    const H = rows[hi], ix = (k: string) => H.indexOf(k), lines: string[][] = [];
-    // 原価は「小計」（単価＋税＋落札手数料＋税）。オークションの商品IDは取り込まない
-    for (let i = hi + 1; i < rows.length && rows[i].length > 1; i++) { const r = rows[i]; lines.push(["", "", r[ix("商品名")], "", "", "", r[ix("小計")], r[ix("数量")], ""]); }
-    $<HTMLInputElement>("slipSupplier").value = hall ? `オークション（${hall}）` : "";
-    $<HTMLInputElement>("slipDate").value = date;
-    const extra = rows.find((r) => r[0] === "入場料");
-    $("slipInfo").innerHTML = `<b>${esc(fileName)}</b> を読み込みました：商品 ${lines.length}件` + (extra ? `／入場料 ¥${(+extra[3]).toLocaleString()} は商品の原価に入れず、経費として別に記録します（経費の記録はこれから作ります）` : "");
-    grid = []; autoCells.clear(); lines.forEach((l, i) => (grid[i] = l)); ensureRows(Math.max(12, lines.length + 4));
+    const r = readSlip(rows, opts.formats);
+    if (!r) { opts.onUnknownSlip(rows, fileName); return; }
+    loadResult(r, fileName, r.format);
+    const fee = entranceFee(rows);
+    opts.onSlipFee(fee ? { amount: fee, date: r.date, supplier: r.supplier } : null);
+  }
+  /** 読んだ伝票を表に入れる */
+  function loadResult(r: SlipResult, fileName: string, format: string | null) {
+    $<HTMLInputElement>("slipSupplier").value = r.supplier;
+    $<HTMLInputElement>("slipDate").value = r.date;
+    $("slipInfo").innerHTML = `<b>${esc(fileName)}</b> を読み込みました${format ? `（覚えている形式「${esc(format)}」）` : ""}：商品 ${r.lines.length}件` + (r.note ? `／${esc(r.note)}` : "");
+    grid = []; autoCells.clear(); r.lines.forEach((l, i) => (grid[i] = l)); ensureRows(Math.max(12, r.lines.length + 4));
     sel = { r1: 0, c1: 0, r2: 0, c2: 0 }; draw();
   }
   async function readFile(f: File) {
@@ -352,7 +343,7 @@ export function initSheet(root: HTMLElement, opts: SheetOpts) {
     $<HTMLButtonElement>("doReg").disabled = busy || !count || errs.length > 0;
   }
 
-  const clearAll = () => { grid = []; autoCells.clear(); ensureRows(12); sel = { r1: 0, c1: 2, r2: 0, c2: 2 }; $("slipInfo").textContent = ""; draw(); };
+  const clearAll = () => { grid = []; autoCells.clear(); ensureRows(12); sel = { r1: 0, c1: 2, r2: 0, c2: 2 }; $("slipInfo").textContent = ""; opts.onSlipFee(null); draw(); };
   $("addRows").addEventListener("click", () => { ensureRows(grid.length + 10); draw(); });
   $("clear").addEventListener("click", clearAll);
   $("doReg").addEventListener("click", async () => {
@@ -368,6 +359,7 @@ export function initSheet(root: HTMLElement, opts: SheetOpts) {
 
   /** 登録できたあとに、番号の続きと登録済みの番号を新しくする */
   function update(next: { existing: Set<string>; nextNo: number }) { opts.existing = next.existing; opts.nextNo = next.nextNo; draw(); }
+  function setFormats(f: SlipFormat[]) { opts.formats = f; }
 
   document.addEventListener("mouseup", onMouseUp);
   document.addEventListener("copy", onCopy);
@@ -377,6 +369,8 @@ export function initSheet(root: HTMLElement, opts: SheetOpts) {
   draw();
   return {
     update,
+    setFormats,
+    loadResult,
     destroy() {
       document.removeEventListener("mouseup", onMouseUp);
       document.removeEventListener("copy", onCopy);
