@@ -165,14 +165,14 @@ async function main() {
     if (!g.head) {
       // -0 がない山は、残りのない -0 を作る（アプリでは山の行が必要なため）
       const all = g.branches.every((b) => b.sold);
-      const head: Row = { ...top, code: `${code}-0`, name: `${top.name}（山の残り）`, cost: 0, sold: all, channel: null, listed: false, price: 0, priceF: null, ship: 0, shipF: null, real: 0, fee: 0, feeF: null, profit: null, soldAt: null, tentative: false, exp: null, note: ["シートに -0 の行がなかったので作った"] };
+      const head: Row = { ...top, sheet: "②", code: `${code}-0`, name: `${top.name}（山の残り）`, cost: 0, sold: all, channel: null, listed: false, price: 0, priceF: null, ship: 0, shipF: null, real: 0, fee: 0, feeF: null, profit: null, soldAt: null, tentative: false, exp: null, note: ["シートに -0 の行がなかったので作った"] };
       rows.push(head);
       g.head = head;
     }
   }
 
   // ---- 商品と販売 ----
-  const soldGuess: string[] = [], closed: string[] = [], unknownCh = new Set<string>();
+  const soldGuess: string[] = [], closed: string[] = [], unknownCh = new Set<string>(), headSale: string[] = [];
   const diffs: string[] = [];
   let appProfit = 0, sheetProfit = 0;
   const noteOf = (r: Row) => (r.note.length ? r.note.join(" / ") : null);
@@ -194,11 +194,19 @@ async function main() {
       }
       continue;
     }
+    // 山の -0 は、山かどうかを分かるための行で、売り買いはしない（2026/11/16 決定）
+    // → 販売の記録は作らない。シートで売却済みなら「売り切り（山の残りなし）」、売却日もなし
+    if (m && m[2] === "0") {
+      await db.item.update({ where: { id: item.id }, data: { status: "closed", note: [noteOf(r), "山の残りなし（シートで売却済み）"].filter(Boolean).join(" / ") } });
+      if (r.sheet === "①" && (r.price || r.real || r.fee || (r.profit ?? 0) !== 0)) headSale.push(`${r.code} ${r.name}：シートの売値 ${r.price}円・実送料 ${r.real}円・粗利 ${Math.round(r.profit ?? 0)}円 → 取り込まない（-0は売り買いしない）`);
+      if (r.sheet === "①") sheetProfit += r.profit ?? 0;
+      continue;
+    }
     // 売却済み
     let soldAt = r.soldAt;
-    if (!soldAt) { soldAt = r.date; if (r.sheet === "①") soldGuess.push(`${r.code} ${r.name}（${r.channel ?? "売り先なし"}）→ 仮に仕入日 ${ymd(r.date)}`); }
+    if (!soldAt) { soldAt = r.date; if (r.sheet === "①") soldGuess.push(`${r.code} ${r.name}（${r.channel ?? "売り先なし"}・売値 ${r.price.toLocaleString()}円・シートの粗利 ${Math.round(r.profit ?? 0).toLocaleString()}円）→ 仮に仕入日 ${ymd(r.date)}`); }
     const kind = r.channel === "廃棄" ? "disposed" : r.channel === "備品" ? "fixture" : ch && (r.price || r.priceF || r.fee || r.real) ? "sale" : "closed";
-    if (kind === "closed" && r.sheet === "①") closed.push(`${r.code} ${r.name}（${r.channel ?? "売り先なし"}）`);
+    if (kind === "closed" && r.sheet === "①") closed.push(`${r.code} ${r.name}（${r.channel ?? "売り先なし"}・シートの粗利 ${Math.round(r.profit ?? 0)}円）`);
     const fx = ch && ch.currency !== "JPY";
     const sale = await db.sale.create({
       data: {
@@ -234,7 +242,8 @@ async function main() {
   sec("管理番号を変えた行", renamed);
   sec("売却日がないので、仕入日を仮の売却日にした", soldGuess);
   sec("仕入日がないので、すぐ上の行の仕入日を仮に使った", guessed);
-  sec("売り切り（売却済みだが売上がない）", closed);
+  sec("売り切り（売却済みだが売上がない・山の -0 以外）", closed);
+  sec("山の -0 で、シートに売値・送料・粗利が入っていた行（取り込まない）", headSale);
   sec("一覧に追加したジャンル", [...new Set(addedGenres)]);
   sec("一覧に追加した仕入先", [...new Set(addedSuppliers)]);
   sec("知らない売り先（販売として取り込めなかった）", [...unknownCh]);

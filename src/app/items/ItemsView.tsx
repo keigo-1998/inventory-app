@@ -516,7 +516,7 @@ function ItemDialog({ r, channels, listChannels, lot, pending, toast, onClose, o
   } else if (r.status === "sold") {
     body = <p className="muted">売れた記録の詳しい内訳はありません。</p>;
   } else if (r.status === "closed") {
-    body = <div className="profitbig"><span>売り切り</span><b>—</b><small>スプレッドシートで売却済みだったが、売上の記録がない商品です（山を締めた・合わせ売りなど）。原価 {yen(r.unitCost)} は損として数えます</small></div>;
+    body = <div className="profitbig"><span>売り切り</span><b>—</b><small>{isLotHead(r) ? "山の残りはありません（-0 は山かどうかを分かるための行で、売り買いはしません）" : `スプレッドシートで売却済みだったが、売上の記録がない商品です（合わせ売りなど）。原価 ${yen(r.unitCost)} は損として数えます`}</small></div>;
   } else if (r.status === "disposed") {
     body = <div className="profitbig down"><span>損失</span><b>−{yen(r.unitCost * r.quantity)}</b><small>廃棄</small></div>;
   } else if (r.status === "fixture") {
