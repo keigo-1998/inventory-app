@@ -6,7 +6,9 @@ import { useRouter } from "next/navigation";
 import { addBranches, undoBranches } from "@/lib/lot-actions";
 import { isFixed, reallocate } from "@/lib/lot";
 import { yen } from "@/lib/format";
-import { toast } from "@/lib/toast";
+import { toast, esc } from "@/lib/toast";
+import { ask } from "@/lib/ask";
+import { removeItem, undoRemove } from "@/lib/item-actions";
 
 export type LotRow = {
   id: number; code: string; name: string; exp: number | null; cost: number; status: string;
@@ -84,6 +86,17 @@ export function LotView({ lot, rows }: { lot: LotInfo; rows: LotRow[] }) {
     if (alloc.length && expSum < pool) msgs.push(<span className="down">割り振る枝番の予想売価の合計 {yen(expSum)} が、割り振る原価 {yen(pool)} より少ないので、このままだと赤字の見込みです</span>);
   }
 
+  /** 間違えて登録した山を、枝番ごと取り消す（消した印を付けるだけ。商品一覧の「消した商品」から戻せる） */
+  const removeLot = () => start(async () => {
+    const head = rows.find((r) => r.code === `${lot.code}-0`);
+    if (!head) return;
+    if (!(await ask(`山${lot.code}（${lot.name}）を、枝番 ${branches.length}点ごと取り消しますか？\n商品一覧の「消した商品」から戻せます。`, "取り消す"))) return;
+    const res = await removeItem(head.id);
+    if (!res.ok) { toast(esc(res.error)); return; }
+    router.push("/items");
+    toast(`山${esc(lot.code)}を取り消しました（${res.codes.length}点）`, async () => { const u = await undoRemove(res.undo); router.refresh(); return u.ok ? "元に戻しました" : esc(u.error ?? ""); });
+  });
+
   return (
     <section>
       <p className="muted" style={{ margin: "0 0 6px" }}><Link className="linkbtn" href="/items">← 商品一覧</Link> ＞ 山 {lot.code}</p>
@@ -91,7 +104,9 @@ export function LotView({ lot, rows }: { lot: LotInfo; rows: LotRow[] }) {
         <div className="lotnum">{lot.code}-0（山）</div>
         <h1>{lot.name}</h1>
         <p className="lead" style={{ margin: 0 }}>仕入先：{lot.supplier} ／ 仕入日：{lot.purchasedAt}</p>
-      </div></div>
+      </div>
+        <button className="btn danger" disabled={pending} onClick={removeLot} style={{ marginLeft: "auto", alignSelf: "flex-start" }}>山ごと取り消す</button>
+      </div>
 
       <div className="grid three" style={{ marginTop: 16 }}>
         <div className="kpi"><div className="l">仕入額</div><div className="v">{yen(lot.totalCost)}</div><div className="d muted">全部を枝番に割り振り</div></div>

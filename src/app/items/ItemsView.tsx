@@ -6,6 +6,7 @@ import Link from "next/link";
 import { changeListings, undoListings, type ListingUndo } from "@/lib/listing-actions";
 import { recordBundle, cancelSales } from "@/lib/sale-actions";
 import { recordReturn, recordRefund, cancelAdjustment } from "@/lib/adjust-actions";
+import { removeItem, undoRemove, restoreItem, updateItem, type ItemPatch } from "@/lib/item-actions";
 import { todayJst } from "@/lib/format";
 import { yen } from "@/lib/format";
 import { ask } from "@/lib/ask";
@@ -19,7 +20,7 @@ export type SaleInfo = {
   costJpy: number; lineCount: number;
 };
 export type ItemRow = {
-  id: number; code: string; name: string; genre: string; purchasedAt: string;
+  id: number; code: string; name: string; genre: string; supplier: string; purchasedAt: string;
   unitCost: number; expectedPrice: number | null; quantity: number; left: number;
   status: string; channels: string[]; soldChannels: string[]; days: number | null;
   lotCode: string | null; lotCostMode: string | null; sale: SaleInfo | null;
@@ -30,6 +31,8 @@ export type ChannelInfo = {
   usesShippingFee: boolean; undecided: boolean;
 };
 export type LotInfo = { code: string; name: string; totalCost: number };
+/** 消した商品（山ごと消したときは -0 だけ。withBranches は一緒に消した枝番の数） */
+export type RemovedItem = { id: number; code: string; name: string; deletedAt: string; withBranches: number };
 
 const ST: Record<string, [string, string]> = {
   stock: ["未出品", "t-stock"], list: ["出品中", "t-list"], sold: ["売却済み", "t-sold"], disposed: ["廃棄", "t-warn"], fixture: ["備品", "t-stock"],
@@ -70,7 +73,7 @@ export type AdjInput =
   | { kind: "return"; date: string; returnShipping: number; lostFee: number }
   | { kind: "refund"; date: string; amount: number; via: string };
 
-export function ItemsView({ rows, channels, lots, genres }: { rows: ItemRow[]; channels: ChannelInfo[]; lots: LotInfo[]; genres: string[] }) {
+export function ItemsView({ rows, channels, lots, genres, suppliers, removed }: { rows: ItemRow[]; channels: ChannelInfo[]; lots: LotInfo[]; genres: string[]; suppliers: string[]; removed: RemovedItem[] }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [invF, setInvF] = useState("all");
@@ -86,6 +89,7 @@ export function ItemsView({ rows, channels, lots, genres }: { rows: ItemRow[]; c
   const [toastKey, setToastKey] = useState(0);
   const [flash, setFlash] = useState<Set<string>>(new Set());
   const [error, setError] = useState("");
+  const [showRemoved, setShowRemoved] = useState(false);
 
   const lotOf = (r: ItemRow) => (r.lotCode && rows.some((x) => x.code === `${r.lotCode}-0`) ? r.lotCode : null);
   const lotHasBranches = (code: string) => rows.some((x) => x.lotCode === code && !x.code.endsWith("-0"));
@@ -201,6 +205,52 @@ export function ItemsView({ rows, channels, lots, genres }: { rows: ItemRow[]; c
     });
   };
 
+  /** 商品を取り消す（消した印を付けるだけ） */
+  const runRemove = (r: ItemRow) => {
+    const head = isLotHead(r);
+    const msg = head
+      ? `山${r.lotCode}（${r.name}）を取り消しますか？\n枝番もまとめて取り消します。消した商品の一覧から戻せます。`
+      : `${r.code} ${r.name} を取り消しますか？\n消した商品の一覧から戻せます。${r.lotCostMode === "alloc" ? "\nこの枝番の原価は、残りの枝番で分け直します。" : ""}`;
+    startTransition(async () => {
+      if (!(await ask(msg, "取り消す"))) return;
+      const res = await removeItem(r.id);
+      if (!res.ok) { showToast({ msg: res.error }); return; }
+      setOpenCode(null);
+      router.refresh();
+      const undo = res.undo;
+      showToast({
+        msg: <>{res.codes.length > 1 ? `${res.codes[0]} ほか${res.codes.length - 1}点` : res.codes[0]} を取り消しました{undo.costs.length > 0 && "（山の原価を分け直しました）"}</>,
+        undo: async () => { const u = await undoRemove(undo); router.refresh(); flashCodes(res.codes); showToast({ msg: u.ok ? "元に戻しました" : u.error ?? "" }); },
+      });
+    });
+  };
+  /** 商品を直す */
+  const runEdit = (r: ItemRow, patch: ItemPatch, done: () => void) => {
+    startTransition(async () => {
+      const res = await updateItem(r.id, patch);
+      if (!res.ok) { showToast({ msg: res.error }); return; }
+      done();
+      if (!res.changed.length) { showToast({ msg: "変わったところはありませんでした" }); return; }
+      router.refresh();
+      flashCodes([r.code]);
+      const before = res.before;
+      const LABEL: Record<string, string> = { name: "商品名", genre: "ジャンル", supplier: "仕入先", date: "仕入日", unitCost: "原価", quantity: "個数", expectedPrice: "予想売価" };
+      showToast({
+        msg: <>{r.code} の{res.changed.map((k) => LABEL[k]).join("・")}を直しました</>,
+        undo: async () => { const u = await updateItem(r.id, before); router.refresh(); showToast({ msg: u.ok ? "元に戻しました" : u.error }); },
+      });
+    });
+  };
+  const runRestore = (x: RemovedItem) => {
+    startTransition(async () => {
+      const res = await restoreItem(x.id);
+      if (!res.ok) { showToast({ msg: res.error }); return; }
+      router.refresh();
+      flashCodes(res.codes);
+      showToast({ msg: <>{res.codes.length > 1 ? `${res.codes[0]} ほか${res.codes.length - 1}点` : res.codes[0]} を戻しました</> });
+    });
+  };
+
   // 山（-0）の行は山の画面を開く。ほかは商品の画面
   const openRowOf = (r: ItemRow) => { if (isLotHead(r)) router.push(`/lots/${r.lotCode}`); else setOpenCode(r.code); };
   const inStockCount = rows.filter(inStock).length;
@@ -298,6 +348,29 @@ export function ItemsView({ rows, channels, lots, genres }: { rows: ItemRow[]; c
         ))}
       </div>
 
+      {removed.length > 0 && (
+        <div style={{ marginTop: 12 }}>
+          <button className="linkbtn" onClick={() => setShowRemoved(!showRemoved)}>{showRemoved ? "▾" : "▸"} 消した商品（{removed.length}件）</button>
+          {showRemoved && (
+            <div className="card tablewrap" style={{ padding: "4px 8px", marginTop: 6 }}>
+              <table>
+                <thead><tr><th>管理番号</th><th>商品名</th><th>消した日</th><th></th></tr></thead>
+                <tbody>
+                  {removed.map((x) => (
+                    <tr key={x.id}>
+                      <td>{x.code}</td>
+                      <td>{x.name}{x.withBranches > 0 && <span className="muted">（枝番 {x.withBranches}点も一緒に）</span>}</td>
+                      <td>{x.deletedAt}</td>
+                      <td><button className="btn" disabled={pending} onClick={() => runRestore(x)}>戻す</button></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+
       {picked.size > 0 && (
         <div className="pickbar" style={{ display: "flex" }}>
           <b>{picked.size}点を選んでいます</b>
@@ -318,6 +391,10 @@ export function ItemsView({ rows, channels, lots, genres }: { rows: ItemRow[]; c
           onClose={() => setOpenCode(null)}
           onToggle={(ch, on) => runChange([openRow], ch, on)}
           onAdjust={(a) => runAdjust(openRow, a)}
+          genres={genres}
+          suppliers={suppliers}
+          onEdit={(patch, done) => runEdit(openRow, patch, done)}
+          onRemove={() => runRemove(openRow)}
           onUndoAdj={(id, what) => undoAdj(openRow, id, what)}
         />
       )}
@@ -369,10 +446,13 @@ function Modal({ className, onClose, children }: { className?: string; onClose: 
   );
 }
 
-function ItemDialog({ r, channels, listChannels, lot, pending, toast, onClose, onToggle, onAdjust, onUndoAdj }: {
+function ItemDialog({ r, channels, listChannels, lot, pending, toast, onClose, onToggle, onAdjust, onUndoAdj, genres, suppliers, onEdit, onRemove }: {
   r: ItemRow; channels: ChannelInfo[]; listChannels: ChannelInfo[]; lot: LotInfo | null; pending: boolean; toast: React.ReactNode;
   onClose: () => void; onToggle: (ch: ChannelInfo, on: boolean) => void; onAdjust: (a: AdjInput) => void; onUndoAdj: (adjId: number, what: string) => void;
+  genres: string[]; suppliers: string[]; onEdit: (p: ItemPatch, done: () => void) => void; onRemove: () => void;
 }) {
+  const [editOpen, setEditOpen] = useState(false);
+  useEffect(() => setEditOpen(false), [r.id]);
   const st = ST[r.status];
   const [retOpen, setRetOpen] = useState(false);
   useEffect(() => setRetOpen(false), [r.status, r.sale?.saleId, r.sale?.refunds.length]);
@@ -491,7 +571,9 @@ function ItemDialog({ r, channels, listChannels, lot, pending, toast, onClose, o
           </div>
         </div>
       )}
-      {body}
+      {editOpen
+        ? <EditBox r={r} genres={genres} suppliers={suppliers} pending={pending} onCancel={() => setEditOpen(false)} onSave={(p) => onEdit(p, () => setEditOpen(false))} />
+        : body}
       {lot && (
         <div className="lotbox">
           <span className="muted">
@@ -502,8 +584,62 @@ function ItemDialog({ r, channels, listChannels, lot, pending, toast, onClose, o
           <Link className="btn" href={`/lots/${lot.code}`}>山の画面へ</Link>
         </div>
       )}
+      {!editOpen && (
+        <div className="itemfoot">
+          <button className="btn" disabled={pending} onClick={() => setEditOpen(true)}>✎ 直す</button>
+          {inStock(r) && <button className="btn danger" disabled={pending} onClick={onRemove}>{isLotHead(r) ? "山ごと取り消す" : "この商品を取り消す"}</button>}
+        </div>
+      )}
       {toast}
     </Modal>
+  );
+}
+
+/** 商品を直す（商品名・ジャンル・仕入先・仕入日・原価・個数・予想売価） */
+function EditBox({ r, genres, suppliers, pending, onCancel, onSave }: {
+  r: ItemRow; genres: string[]; suppliers: string[]; pending: boolean; onCancel: () => void; onSave: (p: ItemPatch) => void;
+}) {
+  const inLot = !!r.lotCode;
+  const [f, setF] = useState({
+    name: r.name, genre: r.genre, supplier: r.supplier, date: r.purchasedAt,
+    unitCost: String(r.unitCost), quantity: String(r.quantity), exp: r.expectedPrice == null ? "" : String(r.expectedPrice),
+  });
+  const [err, setErr] = useState("");
+  const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement>) => setF({ ...f, [k]: e.target.value });
+  const n = (v: string) => { const t = v.normalize("NFKC").replace(/[¥,円\s]/g, ""); return t === "" ? null : Number.isInteger(+t) && +t >= 0 ? +t : NaN; };
+  const save = () => {
+    setErr("");
+    const cost = n(f.unitCost), qty = n(f.quantity), exp = n(f.exp);
+    if (!f.name.trim()) { setErr("商品名を入れてください"); return; }
+    if (!inLot && (cost == null || Number.isNaN(cost))) { setErr("原価は0以上の整数で入れてください"); return; }
+    if (!inLot && (qty == null || Number.isNaN(qty) || qty < 1)) { setErr("個数は1以上の整数で入れてください"); return; }
+    if (exp != null && Number.isNaN(exp)) { setErr("予想売価は0以上の整数で入れてください"); return; }
+    onSave({ name: f.name, genre: f.genre, supplier: f.supplier, date: f.date, unitCost: inLot ? null : cost, quantity: inLot ? null : qty, expectedPrice: exp });
+  };
+  return (
+    <div className="retbox editbox">
+      <b>商品を直す</b>
+      <label className="f">商品名<input className="inp" value={f.name} onChange={set("name")} /></label>
+      <div className="editgrid">
+        <label className="f">ジャンル<input className="inp" list="eGenres" value={f.genre} onChange={set("genre")} />
+          <datalist id="eGenres">{genres.map((g) => <option key={g} value={g} />)}</datalist></label>
+        <label className="f">仕入先<input className="inp" list="eSuppliers" value={f.supplier} onChange={set("supplier")} />
+          <datalist id="eSuppliers">{suppliers.map((g) => <option key={g} value={g} />)}</datalist></label>
+        <label className="f">仕入日<input className="inp" value={f.date} onChange={set("date")} /></label>
+        <label className="f">原価{r.quantity > 1 ? "（1個）" : ""}<input className="inp n" inputMode="numeric" value={f.unitCost} onChange={set("unitCost")} disabled={inLot} /></label>
+        <label className="f">個数<input className="inp n" inputMode="numeric" value={f.quantity} onChange={set("quantity")} disabled={inLot} /></label>
+        <label className="f">予想売価<input className="inp n" inputMode="numeric" value={f.exp} onChange={set("exp")} /></label>
+      </div>
+      <p className="hint" style={{ margin: 0 }}>
+        {inLot ? "山の商品の原価は、山の画面の割り振りで決まります。ここでは直せません。予想売価を直しても、原価の割り振りはそのままです。" : "もう売れた分の粗利は変わりません（記録したときの原価のまま）。"}
+        一覧にないジャンル・仕入先は、そのまま入れると一覧に追加されます。
+      </p>
+      {err && <p className="err" style={{ margin: 0 }}>{err}</p>}
+      <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+        <button className="btn" onClick={onCancel}>やめる</button>
+        <button className="btn primary" disabled={pending} onClick={save}>保存する</button>
+      </div>
+    </div>
   );
 }
 

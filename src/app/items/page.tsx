@@ -2,16 +2,17 @@
 import { db } from "@/lib/db";
 import { fmtDate, todayJst } from "@/lib/format";
 import { returnLoss } from "@/lib/sale-calc";
-import { ItemsView, type ItemRow, type ChannelInfo, type LotInfo } from "./ItemsView";
+import { ItemsView, type ItemRow, type ChannelInfo, type LotInfo, type RemovedItem } from "./ItemsView";
 
 export const dynamic = "force-dynamic";
 
 export default async function ItemsPage() {
-  const [items, channels, lots, genres] = await Promise.all([
+  const [items, channels, lots, genres, suppliers, deleted] = await Promise.all([
     db.item.findMany({
       where: { deletedAt: null },
       include: {
         genre: true,
+        supplier: true,
         listings: { where: { state: { in: ["active", "sold"] } }, include: { channel: true }, orderBy: { startedAt: "asc" } },
         saleLines: { where: { sale: { cancelledAt: null } }, include: { sale: { include: { channel: true, lines: true, adjustments: { where: { cancelledAt: null } } } } } },
       },
@@ -20,6 +21,9 @@ export default async function ItemsPage() {
     db.channel.findMany({ where: { deletedAt: null }, orderBy: { sortOrder: "asc" } }),
     db.lot.findMany({ where: { deletedAt: null } }),
     db.genre.findMany({ where: { deletedAt: null }, orderBy: { sortOrder: "asc" } }),
+    db.supplier.findMany({ where: { deletedAt: null }, orderBy: { name: "asc" } }),
+    // 消した商品（山ごと消したときは、山の -0 だけを出す）
+    db.item.findMany({ where: { deletedAt: { not: null } }, include: { lot: true }, orderBy: { deletedAt: "desc" }, take: 200 }),
   ]);
 
   const today = new Date(`${todayJst()}T00:00:00+09:00`).getTime();
@@ -38,6 +42,7 @@ export default async function ItemsPage() {
       code: it.code,
       name: it.name,
       genre: it.genre?.name ?? "",
+      supplier: it.supplier?.name ?? "",
       purchasedAt: fmtDate(it.purchasedAt),
       unitCost: it.unitCost,
       expectedPrice: it.expectedPrice,
@@ -92,5 +97,12 @@ export default async function ItemsPage() {
   }));
   const lotInfo: LotInfo[] = lots.map((l) => ({ code: l.code, name: l.name, totalCost: l.totalCost }));
 
-  return <ItemsView rows={rows} channels={ch} lots={lotInfo} genres={genres.map((g) => g.name)} />;
+  const removed: RemovedItem[] = deleted
+    .filter((d) => !d.lot || !d.lot.deletedAt || d.code === `${d.lot.code}-0`)
+    .map((d) => ({
+      id: d.id, code: d.code, name: d.name, deletedAt: fmtDate(d.deletedAt!),
+      withBranches: !!d.lot?.deletedAt && d.code === `${d.lot.code}-0` ? deleted.filter((x) => x.lotId === d.lotId && x.id !== d.id && x.deletedAt?.getTime() === d.deletedAt?.getTime()).length : 0,
+    }));
+
+  return <ItemsView rows={rows} channels={ch} lots={lotInfo} genres={genres.map((g) => g.name)} suppliers={suppliers.map((x) => x.name)} removed={removed} />;
 }
