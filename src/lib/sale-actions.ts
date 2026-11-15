@@ -182,3 +182,78 @@ export async function unfixShipping(saleId: number, before: number): Promise<{ o
   revalidatePath("/sales");
   return { ok: true };
 }
+
+// ---------- まとめて売る（山売り・合わせ売り） ----------
+// docs/data-design.md「まとめて売る」：販売の記録は1件（1行）。中身はすべて売却済み。
+// 売れた金額は、山ごとの成績のために中身に分ける（画面で決めた額。合計が売れた金額と合わないと記録できない）
+// 粗利 ＝ 売れた金額 − 手数料 − 中身の原価の合計（金額は円で入れる）
+const bundleInput = z.object({
+  channel: z.string().min(1),
+  date: z.string(),
+  total: z.number().int().min(0),
+  fee: z.number().int().min(0),
+  real: z.number().int().min(0).default(0),
+  parts: z.array(z.object({ itemId: z.number().int().positive(), amount: z.number().int().min(0) })).min(1).max(200),
+});
+export type BundleInput = z.input<typeof bundleInput>;
+export type BundleResult = { ok: true; saleId: number; codes: string[]; others: { code: string; channels: string[] }[]; profit: number } | { ok: false; error: string };
+
+export async function recordBundle(raw: BundleInput): Promise<BundleResult> {
+  const p = bundleInput.safeParse(raw);
+  if (!p.success) return { ok: false, error: "入力の形が正しくありません" };
+  const b = p.data;
+  const sum = b.parts.reduce((a, x) => a + x.amount, 0);
+  if (sum !== b.total) return { ok: false, error: `分けた額の合計（${sum.toLocaleString()}円）が、売れた金額（${b.total.toLocaleString()}円）と合っていません` };
+  const soldAt = parseDate(b.date);
+  if (!soldAt) return { ok: false, error: `売却日「${b.date}」を 2026/11/12 の形で入れてください` };
+  try {
+    const res = await db.$transaction(async (tx) => {
+      const ch = await tx.channel.findFirst({ where: { name: b.channel, deletedAt: null } });
+      if (!ch) throw new Error(`販路「${b.channel}」が見つかりません`);
+      const items = await tx.item.findMany({ where: { id: { in: b.parts.map((x) => x.itemId) }, deletedAt: null }, include: { saleLines: { where: { sale: { cancelledAt: null } } } } });
+      if (items.length !== b.parts.length) throw new Error("見つからない商品があります");
+      for (const it of items) if (it.status !== "stock" && it.status !== "list") throw new Error(`${it.code} はもう在庫にありません`);
+      // 中身は「残り全部」を売る（縦積在庫なら残りの個数ぶん）
+      const lines = b.parts.map((x) => {
+        const it = items.find((i) => i.id === x.itemId)!;
+        const left = it.quantity - it.saleLines.reduce((a, l) => a + l.quantity, 0);
+        return { it, qty: left, cost: it.unitCost * left, amount: x.amount };
+      });
+      const cost = lines.reduce((a, l) => a + l.cost, 0);
+      const sale = await tx.sale.create({
+        data: {
+          soldAt, kind: "sale", channelId: ch.id, currency: "JPY", priceJpy: b.total, feeJpy: b.fee, actualShippingJpy: b.real, fxRateFinal: true,
+          note: "まとめて売る",
+          lines: { create: lines.map((l) => ({ itemId: l.it.id, quantity: l.qty, costJpy: l.cost, amountJpy: l.amount })) },
+        },
+      });
+      const profit = b.total - b.fee - b.real - cost;
+      const note = "まとめて売る";
+      await logChange(tx, { table: "Sale", recordId: sale.id, action: "create", after: { items: lines.map((l) => l.it.code), channel: ch.name, total: b.total, profit }, note });
+      const others: { code: string; channels: string[] }[] = [];
+      const now = new Date();
+      for (const l of lines) {
+        await tx.item.update({ where: { id: l.it.id }, data: { status: "sold" } });
+        await logChange(tx, { table: "Item", recordId: l.it.id, action: "update", before: { status: l.it.status }, after: { status: "sold" }, note });
+        const active = await tx.listing.findMany({ where: { itemId: l.it.id, state: "active" }, include: { channel: true } });
+        const off: string[] = [];
+        for (const a of active) {
+          const here = a.channelId === ch.id;
+          await tx.listing.update({ where: { id: a.id }, data: { state: here ? "sold" : "withdrawn", endedAt: now, endedBySaleId: sale.id } });
+          if (!here) off.push(a.channel.name);
+        }
+        if (!active.some((a) => a.channelId === ch.id)) {
+          await tx.listing.create({ data: { itemId: l.it.id, channelId: ch.id, state: "sold", endedAt: now, endedBySaleId: sale.id, createdBySale: true } });
+        }
+        if (off.length) others.push({ code: l.it.code, channels: off });
+      }
+      return { saleId: sale.id, codes: lines.map((l) => l.it.code), others, profit };
+    });
+    revalidatePath("/items");
+    revalidatePath("/sales");
+    revalidatePath("/lots/[code]", "page");
+    return { ok: true, ...res };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : "記録できませんでした" };
+  }
+}

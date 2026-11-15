@@ -44,7 +44,7 @@ export function SalesView({ items, channels, rates, today, todayList, tbdList }:
 }) {
   const router = useRouter();
   const [pending, start] = useTransition();
-  const [tab, setTab] = useState<"one" | "tbd">("one");
+  const [tab, setTab] = useState<"one" | "many" | "tbd">("one");
   const [q, setQ] = useState("");
   const [hi, setHi] = useState(0);
   const [selId, setSelId] = useState<number | null>(null);
@@ -128,7 +128,7 @@ export function SalesView({ items, channels, rates, today, todayList, tbdList }:
       </p>
       <div className="pills">
         <button className={`pill${tab === "one" ? " on" : ""}`} onClick={() => setTab("one")}>1件ずつ（スマホ向け）</button>
-        <button className="pill soon" disabled title="これから作ります">まとめて入力（パソコン向け）</button>
+        <button className={`pill${tab === "many" ? " on" : ""}`} onClick={() => setTab("many")}>まとめて入力（パソコン向け）</button>
         <button className={`pill${tab === "tbd" ? " on" : ""}`} onClick={() => setTab("tbd")}>送料未定 <span className="countbadge">{tbdList.length}</span></button>
         <button className="pill soon" disabled title="これから作ります">販路の設定</button>
       </div>
@@ -260,6 +260,8 @@ export function SalesView({ items, channels, rates, today, todayList, tbdList }:
         </div>
       )}
 
+      {tab === "many" && <BatchEntry items={items} channels={channels} rates={rates} today={today} />}
+
       {tab === "tbd" && (
         <div>
           <p className="muted" style={{ margin: "0 0 10px" }}>「送料未定」で記録した販売の一覧です。今は仮の送料で粗利を計算しています。本当の送料が分かったら、ここで入れて「確定」を押してください。粗利が計算し直され、一覧から消えます。</p>
@@ -287,5 +289,124 @@ export function SalesView({ items, channels, rates, today, todayList, tbdList }:
         </div>
       )}
     </section>
+  );
+}
+
+// ---------- まとめて入力（パソコン向け）：通知を見ながら1行に1件ずつ入れて、まとめて記録する ----------
+type MRow = { key: number; itemId: number | null; q: string; ch: string; date: string; price: string; ship: string; fee: string; ft: boolean; real: string; tbd: boolean };
+let mKey = 1;
+const newRow = (today: string, ch = "メルカリ"): MRow => ({ key: mKey++, itemId: null, q: "", ch, date: today, price: "", ship: "", fee: "", ft: false, real: "", tbd: false });
+
+function BatchEntry({ items, channels, rates, today }: { items: StockItem[]; channels: ChannelRule[]; rates: { EUR: number | null; USD: number | null }; today: string }) {
+  const router = useRouter();
+  const [pending, start] = useTransition();
+  const [rows, setRows] = useState<MRow[]>(() => Array.from({ length: 6 }, () => newRow(today)));
+  const [focus, setFocus] = useState<{ key: number; hi: number } | null>(null);
+  const set = (key: number, patch: Partial<MRow>) => setRows((rs) => rs.map((r) => (r.key === key ? { ...r, ...patch } : r)));
+  const rateOf = (c: ChannelRule) => (c.currency === "JPY" ? 1 : rates[c.currency as "EUR" | "USD"] ?? 0);
+
+  const calc = (m: MRow) => {
+    const it = items.find((i) => i.id === m.itemId);
+    const c = channels.find((x) => x.name === m.ch)!;
+    const r = calcSale(c, rateOf(c), { price: toNum(m.price), ship: toNum(m.ship), fee: toNum(m.fee), feeTouched: m.ft, real: toNum(m.real), cost: it ? it.unitCost : 0 });
+    return { it, c, r };
+  };
+  const valid = rows.filter((m) => m.itemId && toNum(m.price) != null && !Number.isNaN(toNum(m.price)) && ![m.ship, m.fee, m.real].some((v) => Number.isNaN(toNum(v))));
+  const total = valid.reduce((a, m) => a + calc(m).r.profit, 0);
+
+  const save = () => {
+    if (!valid.length) { toast("記録できる行がありません（商品と売値を入れてください）"); return; }
+    start(async () => {
+      const res = await recordSales(valid.map((m) => ({
+        itemId: m.itemId!, channel: m.ch, date: m.date, qty: 1, price: toNum(m.price), ship: toNum(m.ship), fee: toNum(m.fee), feeTouched: m.ft,
+        real: toNum(m.real) == null ? null : Math.round(toNum(m.real)!), tentative: m.tbd, shipped: false,
+      })), "販売を記録（まとめて入力）");
+      if (!res.ok) { toast(`<span style="color:#fca5a5">記録できませんでした</span>：${esc(res.error)}`); return; }
+      const keys = new Set(valid.map((m) => m.key));
+      setRows((rs) => { const left = rs.filter((r) => !keys.has(r.key)); while (left.length < 6) left.push(newRow(today)); return left; });
+      router.refresh();
+      const ids = res.done.map((d) => d.saleId);
+      toast(`${res.done.length}件を記録しました。商品一覧で「売却済み」になりました${delistText(res.done)}`, async () => { await cancelSales(ids, "まとめて入力を元に戻す"); router.refresh(); return "取り消しました。商品は元の状態（在庫・出品中）に戻りました"; });
+    });
+  };
+
+  const inp = (style?: React.CSSProperties) => ({ style: { width: "100%", border: "1px solid var(--line)", borderRadius: 6, padding: "6px 8px", font: "inherit", ...style } });
+
+  return (
+    <div>
+      <p className="muted" style={{ margin: "0 0 8px" }}>
+        通知を見ながら1行ずつ入れていきます。商品名の一部（例：「オリン」）や管理番号で探せます。実送料がまだ分からないときは「未定」を押して仮の金額を入れます（「未定 800」「仮 800」と打ってもOK）。あとで「送料未定」タブで直せます。
+      </p>
+      <div className="card tablewrap" style={{ padding: "4px 8px" }}>
+        <table>
+          <thead><tr><th style={{ width: 28 }}></th><th style={{ minWidth: 280 }}>商品（商品名・管理番号で探す）</th><th>売り先</th><th>売却日</th><th className="n">売値</th><th className="n">設定送料</th><th className="n">手数料</th><th className="n">実送料（円）</th><th className="n">粗利（円）</th></tr></thead>
+          <tbody>
+            {rows.map((m, i) => {
+              const { it, c, r } = calc(m);
+              const sign = CUR_SIGN[c.currency];
+              const cands = focus?.key === m.key ? search(items.filter((x) => !rows.some((o) => o.key !== m.key && o.itemId === x.id)), m.q) : [];
+              const feeVal = r.feeAuto ? (c.feeMode === "none" ? "0" : r.feeIn ? String(+r.feeIn.toFixed(2)) : "") : m.fee;
+              return (
+                <tr key={m.key}>
+                  <td className="muted">{i + 1}</td>
+                  <td style={{ position: "relative" }}>
+                    {it ? (
+                      <div className="picked-cell"><span className="muted">{it.code}</span> {it.name}<button className="linkbtn" onClick={() => set(m.key, { itemId: null })}>変更</button></div>
+                    ) : (
+                      <>
+                        <input {...inp()} value={m.q} placeholder="例：オリンパス、0120"
+                          onFocus={() => setFocus({ key: m.key, hi: 0 })} onBlur={() => setTimeout(() => setFocus((f) => (f?.key === m.key ? null : f)), 150)}
+                          onChange={(e) => { set(m.key, { q: e.target.value }); setFocus({ key: m.key, hi: 0 }); }}
+                          onKeyDown={(e) => {
+                            if (e.nativeEvent.isComposing || !focus) return;
+                            if (e.key === "ArrowDown") { e.preventDefault(); setFocus({ key: m.key, hi: Math.min(cands.length - 1, focus.hi + 1) }); }
+                            else if (e.key === "ArrowUp") { e.preventDefault(); setFocus({ key: m.key, hi: Math.max(0, focus.hi - 1) }); }
+                            else if (e.key === "Enter" && cands[focus.hi]) { e.preventDefault(); set(m.key, { itemId: cands[focus.hi].id, q: "" }); setFocus(null); }
+                          }} />
+                        {m.q.trim() && focus?.key === m.key && (
+                          <div className="sugg" style={{ display: "block", position: "absolute", top: "100%", left: 0, minWidth: 320 }}>
+                            {cands.length ? cands.map((x, k) => (
+                              <div key={x.id} className={`sg${k === focus.hi ? " on" : ""}`} data-i={k} onMouseDown={(e) => { e.preventDefault(); set(m.key, { itemId: x.id, q: "" }); setFocus(null); }}>
+                                <span className="muted">{x.code}</span> {x.name}<br /><small className="muted">原価 {yen(x.unitCost)}{x.channels.length ? `・${x.channels.join("・")}` : ""}</small>
+                              </div>
+                            )) : <div className="sg none">在庫に当てはまる商品がありません</div>}
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </td>
+                  <td><select {...inp({ width: 110 })} value={m.ch} onChange={(e) => set(m.key, { ch: e.target.value, ft: false, fee: "" })}>{channels.map((x) => <option key={x.name}>{x.name}</option>)}</select></td>
+                  <td><input {...inp({ width: 100 })} value={m.date} onChange={(e) => set(m.key, { date: e.target.value })} /></td>
+                  <td><div className="cin"><input {...inp({ width: 90, textAlign: "right" })} value={m.price} onChange={(e) => set(m.key, { price: e.target.value })} /><i>{sign}</i></div></td>
+                  <td>{c.usesShippingFee ? <div className="cin"><input {...inp({ width: 80, textAlign: "right" })} value={m.ship} onChange={(e) => set(m.key, { ship: e.target.value })} /><i>{sign}</i></div> : <span className="muted" style={{ padding: "0 8px" }}>なし</span>}</td>
+                  <td className={r.warn ? "warn2" : ""} title={r.warn}><div className="cin"><input {...inp({ width: 80, textAlign: "right" })} className={r.feeAuto ? "auto-in" : ""} value={feeVal} onChange={(e) => set(m.key, { fee: e.target.value, ft: e.target.value !== "" })} /><i>{sign}</i></div></td>
+                  <td>
+                    <div className="tbdcell">
+                      {m.tbd && <span className="tag t-temp" title="送料未定。仮の金額で計算します">仮</span>}
+                      <input {...inp({ width: 90, textAlign: "right" })} className={m.tbd ? "tmp-in" : ""} value={m.real} placeholder={m.tbd ? "仮の金額" : "0"}
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          if (/^\s*(未定|仮)/.test(v)) set(m.key, { tbd: true, real: v.replace(/^\s*(未定|仮)[\s:：]*/, "") }); // 「未定」と打っても（貼り付けても）未定にする
+                          else set(m.key, { real: v });
+                        }} />
+                      <button className="mini" title={m.tbd ? "未定をやめる（この金額で確定）" : "送料がまだ分からない"} onClick={() => set(m.key, { tbd: !m.tbd })}>{m.tbd ? "確定" : "未定"}</button>
+                    </div>
+                  </td>
+                  <td className={`n ${r.profit >= 0 ? "up" : "down"}`} style={{ padding: "0 8px", fontWeight: 600 }}>{it && m.price ? yen(r.profit) : <span className="muted">—</span>}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+      <div className="sheet-tools">
+        <button className="btn" onClick={() => setRows((rs) => [...rs, ...Array.from({ length: 5 }, () => newRow(today))])}>＋ 5行追加</button>
+        <span className="legend2"><i className="sw auto"></i>自動で入ったマス　<i className="sw warn2"></i>いつもと違う手数料</span>
+      </div>
+      <div className="card regbar">
+        <b>{valid.length}件　粗利の合計 <span className={total >= 0 ? "up" : "down"}>{yen(total)}</span></b>
+        <button className="btn primary" disabled={pending || !valid.length} onClick={save}>まとめて記録する</button>
+      </div>
+    </div>
   );
 }

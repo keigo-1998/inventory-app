@@ -4,6 +4,8 @@ import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { changeListings, undoListings, type ListingUndo } from "@/lib/listing-actions";
+import { recordBundle, cancelSales } from "@/lib/sale-actions";
+import { todayJst } from "@/lib/format";
 import { yen } from "@/lib/format";
 
 export type SaleInfo = {
@@ -69,6 +71,7 @@ export function ItemsView({ rows, channels, lots, genres }: { rows: ItemRow[]; c
   const [picked, setPicked] = useState<Set<string>>(new Set());
   const [openCode, setOpenCode] = useState<string | null>(null);
   const [bulkOpen, setBulkOpen] = useState(false);
+  const [bundleOpen, setBundleOpen] = useState(false);
   const [toast, setToast] = useState<Toast>(null);
   const [toastKey, setToastKey] = useState(0);
   const [flash, setFlash] = useState<Set<string>>(new Set());
@@ -167,7 +170,7 @@ export function ItemsView({ rows, channels, lots, genres }: { rows: ItemRow[]; c
       <p className="lead">
         全 {rows.length.toLocaleString()} 点（在庫 {inStockCount.toLocaleString()} 点）。出品先を変えたいときは、商品にチェックを入れて「出品先を変える」を押します。
         <br />
-        <span className="muted">商品を押すと、いくら利益が出ているかが見られます。<span className="tag t-yama">山 ▸</span> の行を押すと山の画面が開き、枝番を追加できます。まとめて売るは、これから作ります。</span>
+        <span className="muted">商品を押すと、いくら利益が出ているかが見られます。<span className="tag t-yama">山 ▸</span> の行を押すと山の画面が開き、枝番を追加できます。売れ残りをまとめて山売りしたいときは、チェックを入れて「まとめて売る」を押します。</span>
       </p>
       {error && <p className="err">{error}</p>}
       <div className="filters">
@@ -248,7 +251,7 @@ export function ItemsView({ rows, channels, lots, genres }: { rows: ItemRow[]; c
           <b>{picked.size}点を選んでいます</b>
           <button className="btn" onClick={() => setPicked(new Set())}>選択を外す</button>
           <button className="btn" onClick={() => setBulkOpen(true)}>出品先を変える</button>
-          <button className="btn primary" disabled title="これから作ります">まとめて売る</button>
+          <button className="btn primary" onClick={() => setBundleOpen(true)}>まとめて売る</button>
         </div>
       )}
 
@@ -274,6 +277,28 @@ export function ItemsView({ rows, channels, lots, genres }: { rows: ItemRow[]; c
         />
       )}
 
+      {bundleOpen && pickedRows.length > 0 && (
+        <BundleDialog
+          rows={pickedRows}
+          all={rows}
+          channels={listChannels}
+          pending={pending}
+          onClose={() => setBundleOpen(false)}
+          onSave={(input) => startTransition(async () => {
+            const res = await recordBundle(input);
+            if (!res.ok) { setError(res.error); setBundleOpen(false); return; }
+            setBundleOpen(false);
+            setPicked(new Set());
+            router.refresh();
+            flashCodes(res.codes);
+            showToast({
+              msg: <>{res.codes.length}点を1件の販売として記録しました（粗利 {yen(res.profit)}）
+                {res.others.length > 0 && <><br /><span className="delist">⚠ ほかに出品中：{res.others.map((o) => `${o.code} → ${o.channels.join("・")}`).join("、")} の出品を取り下げてください</span></>}</>,
+              undo: async () => { await cancelSales([res.saleId], "まとめて売るを元に戻す"); router.refresh(); flashCodes(res.codes); showToast({ msg: "取り消しました。商品は元の状態（在庫・出品中）に戻りました" }); },
+            });
+          })}
+        />
+      )}
       {!openRow && toastNode}
     </section>
   );
@@ -432,6 +457,94 @@ function BulkDialog({ rows, listChannels, pending, onClose, onRun }: {
       <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", flexWrap: "wrap" }}>
         <button className="btn" disabled={!has || pending} onClick={() => onRun(ch, false)}>{ch.name} を取り下げる</button>
         <button className="btn primary" disabled={has === rows.length || pending} onClick={() => onRun(ch, true)}>{ch.name} に出品した</button>
+      </div>
+    </Modal>
+  );
+}
+
+/** まとめて売る（山売り・合わせ売り）。販売の記録は1件。売れた金額は予想売価の比率で中身に分ける（手で直せる） */
+function BundleDialog({ rows, all, channels, pending, onClose, onSave }: {
+  rows: ItemRow[]; all: ItemRow[]; channels: ChannelInfo[]; pending: boolean; onClose: () => void;
+  onSave: (input: { channel: string; date: string; total: number; fee: number; real: number; parts: { itemId: number; amount: number }[] }) => void;
+}) {
+  const num = (s: string) => { const v = s.normalize("NFKC").replace(/[¥,円\s]/g, ""); return v === "" || Number.isNaN(+v) ? 0 : Math.max(0, Math.floor(+v)); };
+  const [ch, setCh] = useState((channels.find((c) => c.name === "ヤフオク") ?? channels[0]).name);
+  const [date, setDate] = useState(todayJst().replace(/-/g, "/"));
+  const [total, setTotal] = useState("");
+  const [fee, setFee] = useState("");
+  const [real, setReal] = useState("");
+  const [manual, setManual] = useState<Record<number, string>>({});
+  // 選んだ枝番の山に、まだ山の残り（-0）があれば「一緒に入れる」を出す
+  const lotHeads = [...new Set(rows.filter((r) => r.lotCode && !r.code.endsWith("-0")).map((r) => r.lotCode!))]
+    .map((l) => all.find((x) => x.code === `${l}-0` && inStock(x)))
+    .filter((x): x is ItemRow => !!x && !rows.some((r) => r.id === x.id));
+  const [extra, setExtra] = useState<number[]>([]);
+  const list = [...rows, ...lotHeads.filter((h) => extra.includes(h.id))];
+
+  const t = num(total), f = num(fee), rl = num(real);
+  const auto = list.filter((b) => manual[b.id] == null);
+  const fixed = list.reduce((a, b) => a + (manual[b.id] != null ? num(manual[b.id]) : 0), 0);
+  const rest = Math.max(0, t - fixed);
+  const expOf = (b: ItemRow) => b.expectedPrice ?? 0;
+  const expSum = auto.reduce((a, b) => a + expOf(b), 0);
+  const share: Record<number, number> = {};
+  let left = rest;
+  for (const b of auto) { share[b.id] = expSum ? Math.floor((rest * expOf(b)) / expSum) : Math.floor(rest / auto.length); left -= share[b.id]; }
+  if (auto.length) share[auto.reduce((m, b) => (expOf(b) > expOf(m) ? b : m), auto[0]).id] += left;
+  const amt = (b: ItemRow) => (manual[b.id] != null ? num(manual[b.id]) : share[b.id] ?? 0);
+  const sum = list.reduce((a, b) => a + amt(b), 0);
+  const costOf = (b: ItemRow) => b.unitCost * b.left;
+  const cost = list.reduce((a, b) => a + costOf(b), 0);
+  const profit = t - f - rl - cost;
+  const ok = sum === t && t > 0;
+
+  return (
+    <Modal onClose={onClose}>
+      <h2 style={{ margin: "0 0 4px" }}>まとめて売る（山売り・合わせ売り）</h2>
+      <p className="muted" style={{ margin: "0 0 12px" }}>販売の記録は<b>1件（1行）</b>になります。中身の商品はすべて売却済みになります。<br />売れた金額は、山ごとの成績が分かるように、予想売価の比率で中身に分けます（予想売価がなければ均等。金額のマスは手で直せます）。金額は円で入れます。</p>
+      <div className="filters">
+        <label className="muted" style={{ display: "flex", gap: 6, alignItems: "center" }}>売り先
+          <select value={ch} onChange={(e) => setCh(e.target.value)}>{channels.map((c) => <option key={c.id}>{c.name}</option>)}</select>
+        </label>
+        <input value={date} onChange={(e) => setDate(e.target.value)} style={{ flex: "0 1 130px", minWidth: 120 }} />
+        <label className="muted" style={{ display: "flex", gap: 6, alignItems: "center" }}>売れた金額<input value={total} onChange={(e) => setTotal(e.target.value)} inputMode="numeric" placeholder="0" style={{ width: 110 }} className="n" /></label>
+        <label className="muted" style={{ display: "flex", gap: 6, alignItems: "center" }}>手数料<input value={fee} onChange={(e) => setFee(e.target.value)} inputMode="numeric" placeholder="0" style={{ width: 90 }} className="n" /></label>
+        <label className="muted" style={{ display: "flex", gap: 6, alignItems: "center" }}>実送料<input value={real} onChange={(e) => setReal(e.target.value)} inputMode="numeric" placeholder="0" style={{ width: 90 }} className="n" /></label>
+      </div>
+      <div style={{ marginBottom: 10 }}>
+        {lotHeads.map((h) => (
+          <label key={h.id} className="chk">
+            <input type="checkbox" checked={extra.includes(h.id)} onChange={(e) => setExtra((x) => (e.target.checked ? [...x, h.id] : x.filter((i) => i !== h.id)))} />
+            山{h.lotCode}の残り（{h.code}・枝番にしていない物）も一緒に入れる
+          </label>
+        ))}
+      </div>
+      <div className="tablewrap">
+        <table>
+          <thead><tr><th>管理番号</th><th className="n">予想売価</th><th className="n">原価</th><th className="n">売上（分けた額）</th></tr></thead>
+          <tbody>
+            {list.map((b) => (
+              <tr key={b.id}>
+                <td>{b.code}{isLotHead(b) && <> <span className="tag t-yama">山の残り</span></>}<br /><span className="muted">{b.name}{b.left > 1 ? `（${b.left}個）` : ""}</span>{b.lotCode && <><br /><span className="muted">→ 山{b.lotCode}の売上に入ります</span></>}</td>
+                <td className="n">{yen(expOf(b))}</td>
+                <td className="n">{yen(costOf(b))}</td>
+                <td className="n"><input className={`n${manual[b.id] == null ? " auto-in" : ""}`} style={{ width: 110 }} inputMode="numeric" value={manual[b.id] ?? String(amt(b))} onChange={(e) => setManual((m) => ({ ...m, [b.id]: e.target.value }))} /></td>
+              </tr>
+            ))}
+            <tr className="tot"><td colSpan={2}><b>この販売（1件）</b></td><td className="n">{yen(cost)}</td><td className="n"><b>{yen(t)}</b></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p style={{ fontSize: 13 }}>
+        {ok ? <span className="up">分けた額の合計 {yen(sum)} ＝ 売れた金額 {yen(t)}</span>
+          : t ? <span className="down">分けた額の合計 {yen(sum)} が、売れた金額 {yen(t)} と合っていません</span>
+          : <span className="muted">売れた金額を入れてください</span>}
+        <br />粗利 ＝ 売れた金額 {yen(t)} − 手数料 {yen(f)}{rl ? ` − 実送料 ${yen(rl)}` : ""} − 原価 {yen(cost)} ＝ <b className={profit >= 0 ? "up" : "down"}>{yen(profit)}</b>
+      </p>
+      <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", flexWrap: "wrap" }}>
+        <button className="btn" onClick={() => setManual({})}>自動の割り振りに戻す</button>
+        <button className="btn" onClick={onClose}>閉じる</button>
+        <button className="btn primary" disabled={!ok || pending} onClick={() => onSave({ channel: ch, date, total: t, fee: f, real: rl, parts: list.map((b) => ({ itemId: b.id, amount: amt(b) })) })}>記録する</button>
       </div>
     </Modal>
   );
