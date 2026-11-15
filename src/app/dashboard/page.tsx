@@ -29,15 +29,25 @@ export default async function DashboardPage() {
     db.sale.count({ where: { cancelledAt: null, shippingTentative: true } }),
     db.monthlyReport.findMany({ where: { version: { gt: 0 } }, select: { month: true } }),
   ]);
-  const tmap = new Map(targets.map((t) => [t.month, t.amountJpy]));
+  const tmap = new Map(targets.map((t) => [t.month, t]));
 
   // 月ごとの売上・粗利
   const monthly = reports.map((r) => {
     const sales = r.lines.reduce((a, l) => a + l.price + l.ship, 0);
     const profit = r.lines.reduce((a, l) => a + l.profit, 0);
-    return { month: r.month, sales, profit, n: r.lines.filter((l) => l.kind === "sale").length, target: tmap.get(r.month) ?? null };
+    const t = tmap.get(r.month);
+    return { month: r.month, sales, profit, n: r.lines.filter((l) => l.kind === "sale").length, target: t?.amountJpy ?? null, profitTarget: t?.profitJpy ?? null };
   });
   const cur = reports[reports.length - 1];
+  // 今月の日ごと（返品・返金は、あった日に引く）
+  const [cy, cm] = now.split("-").map(Number);
+  const daysIn = new Date(Date.UTC(cy, cm, 0)).getUTCDate();
+  const daily = Array.from({ length: daysIn }, (_, i) => ({ day: i + 1, sales: 0, profit: 0, n: 0 }));
+  for (const l of cur.lines) {
+    const d = daily[Number(l.date.slice(3)) - 1];
+    if (!d) continue;
+    d.sales += l.price + l.ship; d.profit += l.profit; if (l.kind === "sale") d.n += 1;
+  }
   const channels = cur.channels.map((c) => ({ name: c.name, sales: c.price + c.shipFee, profit: c.profit, n: c.n }));
 
   // ジャンルごと（今月売れた商品の粗利。まとめて売った分は、分けた金額で）
@@ -94,9 +104,9 @@ export default async function DashboardPage() {
   const fxPending = reports.filter((r) => r.month < now).reduce((a, r) => a + r.fxPending, 0);
 
   const data: DashData = {
-    now, today: todayJst(), monthly, channels, genres, inventory, lots: lotRows,
+    now, today: todayJst(), monthly, daily, channels, genres, inventory, lots: lotRows,
     alerts: { tbd, fxPending, reportDraft: prevHasSales && !fixed.has(prev) ? prev : null },
-    futureTargets: [0, 1, 2, 3].map((i) => addMonth(now, i)).map((m) => ({ month: m, target: tmap.get(m) ?? null })),
+    futureTargets: [0, 1, 2, 3].map((i) => addMonth(now, i)).map((m) => ({ month: m, target: tmap.get(m)?.amountJpy ?? null, profitTarget: tmap.get(m)?.profitJpy ?? null })),
   };
   return <DashboardView data={data} />;
 }

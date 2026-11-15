@@ -421,3 +421,16 @@ tr.changed td:first-child{box-shadow:inset 3px 0 0 #f2b705}
 .dash-mini{height:4px;background:var(--gray-soft);border-radius:99px;margin-top:3px;max-width:160px;overflow:hidden}
 .dash-mini i{display:block;height:100%}
 @media (max-width:760px){.dash-kpis{grid-template-columns:repeat(2,1fr)}.dash-hbar{grid-template-columns:72px 1fr 110px}}
+.dash-seg{max-width:300px;flex:0 0 auto}
+.dash-seg button{padding:6px 12px;font-size:13px}
+.dash-ctitle{font-weight:700;font-size:13px;margin-bottom:4px}
+.dash-tcell{display:flex;flex-direction:column;gap:6px;border:1px solid var(--line);border-radius:10px;padding:10px}
+.dash-fc{display:flex;align-items:baseline;gap:8px;margin-top:4px}
+.dash-fc span{font-size:12px;color:var(--sub);width:28px}
+.dash-fc b{font-size:18px}
+.dash-fc em{font-style:normal;font-size:12px;color:var(--sub)}
+.dash-seg{max-width:none}
+.dash-seg button{white-space:nowrap;flex:0 0 auto}
+.dash-two{grid-template-columns:3fr 2fr}
+@media (max-width:760px){.dash-two{grid-template-columns:1fr}}
+.dash-chart svg{max-width:100%;height:auto;display:block}

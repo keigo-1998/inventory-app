@@ -245,11 +245,12 @@ model SlipFormat {
 
 // ---------- ダッシュボード ----------
 
-/// ECの売上目標（月ごとに1つ。売上 ＝ 売値＋設定送料）
+/// ECの売上目標・粗利目標（月ごとに1つずつ。売上 ＝ 売値＋設定送料）
 model SalesTarget {
   id        Int      @id @default(autoincrement())
   month     String   @unique // "2026-11"
-  amountJpy Int
+  amountJpy Int? // 売上目標
+  profitJpy Int? // 粗利目標
   updatedAt DateTime @updatedAt
 }
 
