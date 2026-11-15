@@ -4,14 +4,16 @@ import { LIVE_SALE } from "@/lib/sale-live";
 import { fmtDate, todayJst } from "@/lib/format";
 import { monthRate } from "@/lib/fx";
 import { SalesView, type StockItem, type TodaySale, type TbdSale } from "./SalesView";
+import type { ChannelSetting } from "./ChannelSettings";
 import { saleProfit, type ChannelRule } from "@/lib/sale-calc";
 
 export const dynamic = "force-dynamic";
 
-export default async function SalesPage() {
+export default async function SalesPage({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
+  const { tab } = await searchParams;
   const today = todayJst();
   const startOfToday = new Date(`${today}T00:00:00+09:00`);
-  const [items, channels, todays, tbd] = await Promise.all([
+  const [items, channels, todays, tbd, allChannels] = await Promise.all([
     db.item.findMany({
       where: { deletedAt: null, status: { in: ["stock", "list"] } },
       include: { listings: { where: { state: "active" }, include: { channel: true } }, saleLines: { where: { sale: LIVE_SALE } } },
@@ -24,6 +26,7 @@ export default async function SalesPage() {
       orderBy: { createdAt: "desc" },
     }),
     db.sale.findMany({ where: { cancelledAt: null, shippingTentative: true }, include: { channel: true, adjustments: true, lines: { include: { item: true } } }, orderBy: { soldAt: "asc" } }),
+    db.channel.findMany({ orderBy: { sortOrder: "asc" }, include: { _count: { select: { sales: { where: { cancelledAt: null } } } } } }),
   ]);
 
   const now = new Date();
@@ -56,5 +59,11 @@ export default async function SalesPage() {
     base: (profitOf(s) ?? 0) + s.actualShippingJpy,
   }));
 
-  return <SalesView items={stock} channels={rules} rates={rates} today={today.replace(/-/g, "/")} todayList={todayList} tbdList={tbdList} />;
+  const settings: ChannelSetting[] = allChannels.map((c) => ({
+    id: c.id, name: c.name, currency: c.currency, feeMode: c.feeMode, feeRate: c.feeRate == null ? null : Number(c.feeRate),
+    feeHintRate: c.feeHintRate == null ? null : Number(c.feeHintRate), usesShippingFee: c.usesShippingFee, shippingPaidBy: c.shippingPaidBy,
+    refundVia: c.refundVia, undecided: c.undecided, hidden: !!c.deletedAt, used: c._count.sales,
+  }));
+
+  return <SalesView settings={settings} initialTab={tab} items={stock} channels={rules} rates={rates} today={today.replace(/-/g, "/")} todayList={todayList} tbdList={tbdList} />;
 }

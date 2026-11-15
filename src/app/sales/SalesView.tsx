@@ -1,13 +1,13 @@
 "use client";
 // 販売を記録（画面イメージ docs/mockup/index.html の「販売を記録」と同じ見た目・操作）
-// 今あるもの：1件ずつ（スマホ向け）・今日記録した販売（取り消し）・送料未定（本当の送料を入れて確定）
-// これから：まとめて入力（パソコン向け）・販路の設定
+// 1件ずつ（スマホ向け）・まとめて入力（パソコン向け）・送料未定（本当の送料を入れて確定）・販路の設定
 import { useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { recordSales, cancelSales, fixShipping, unfixShipping, type SaleDone } from "@/lib/sale-actions";
 import { calcSale, toNum, CUR_SIGN, type ChannelRule } from "@/lib/sale-calc";
 import { yen } from "@/lib/format";
 import { toast, esc } from "@/lib/toast";
+import { ChannelSettings, type ChannelSetting } from "./ChannelSettings";
 
 export type StockItem = { id: number; code: string; name: string; unitCost: number; quantity: number; left: number; channels: string[] };
 export type TodaySale = { id: number; label: string; channel: string; qty: number; priceJpy: number; profit: number | null; tentative: boolean; others: string[] };
@@ -39,12 +39,13 @@ const delistText = (done: SaleDone[]) => {
   return l.length ? `<br><span class="delist">⚠ ほかに出品中：${l.map((d) => `${esc(d.code)} → <b>${d.others.map(esc).join("・")}</b>`).join("、")} の出品を取り下げてください</span>` : "";
 };
 
-export function SalesView({ items, channels, rates, today, todayList, tbdList }: {
+export function SalesView({ items, channels, rates, today, todayList, tbdList, settings, initialTab }: {
   items: StockItem[]; channels: ChannelRule[]; rates: { EUR: number | null; USD: number | null }; today: string; todayList: TodaySale[]; tbdList: TbdSale[];
+  settings: ChannelSetting[]; initialTab?: string;
 }) {
   const router = useRouter();
   const [pending, start] = useTransition();
-  const [tab, setTab] = useState<"one" | "many" | "tbd">("one");
+  const [tab, setTab] = useState<"one" | "many" | "tbd" | "ch">(initialTab === "ch" || initialTab === "tbd" || initialTab === "many" ? initialTab : "one");
   const [q, setQ] = useState("");
   const [hi, setHi] = useState(0);
   const [selId, setSelId] = useState<number | null>(null);
@@ -130,7 +131,7 @@ export function SalesView({ items, channels, rates, today, todayList, tbdList }:
         <button className={`pill${tab === "one" ? " on" : ""}`} onClick={() => setTab("one")}>1件ずつ（スマホ向け）</button>
         <button className={`pill${tab === "many" ? " on" : ""}`} onClick={() => setTab("many")}>まとめて入力（パソコン向け）</button>
         <button className={`pill${tab === "tbd" ? " on" : ""}`} onClick={() => setTab("tbd")}>送料未定 <span className="countbadge">{tbdList.length}</span></button>
-        <button className="pill soon" disabled title="これから作ります">販路の設定</button>
+        <button className={`pill${tab === "ch" ? " on" : ""}`} onClick={() => setTab("ch")}>販路の設定</button>
       </div>
 
       {tab === "one" && (
@@ -260,6 +261,7 @@ export function SalesView({ items, channels, rates, today, todayList, tbdList }:
         </div>
       )}
 
+      {tab === "ch" && <ChannelSettings list={settings} />}
       {tab === "many" && <BatchEntry items={items} channels={channels} rates={rates} today={today} />}
 
       {tab === "tbd" && (
