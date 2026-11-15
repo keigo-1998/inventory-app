@@ -41,8 +41,8 @@ async function refreshItem(tx: Tx, itemId: number, note: string) {
 const base = z.object({ saleId: z.number().int().positive(), date: z.string(), note: z.string().max(500).optional() });
 
 /** 返品（商品が戻ってくる） */
-export async function recordReturn(raw: z.input<typeof base> & { returnShipping: number; lostFee: number }): Promise<AdjResult> {
-  const p = base.extend({ returnShipping: z.number().int().min(0), lostFee: z.number().int().min(0) }).safeParse(raw);
+export async function recordReturn(raw: z.input<typeof base> & { returnShipping: number; lostFee: number; outboundBack: boolean }): Promise<AdjResult> {
+  const p = base.extend({ returnShipping: z.number().int().min(0), lostFee: z.number().int().min(0), outboundBack: z.boolean() }).safeParse(raw);
   if (!p.success) return { ok: false, error: "入力の形が正しくありません" };
   const date = parseDate(p.data.date);
   if (!date) return { ok: false, error: "返品の日を 2026/11/15 の形で入れてください" };
@@ -53,7 +53,7 @@ export async function recordReturn(raw: z.input<typeof base> & { returnShipping:
       if (!sale) throw new Error("この販売の記録が見つかりません（取り消し済み・返品済みかもしれません）");
       if (sale.kind !== "sale") throw new Error("廃棄・備品の記録は返品にできません。販売を取り消してください");
       const adj = await tx.saleAdjustment.create({
-        data: { saleId: sale.id, kind: "return", date, returnShippingJpy: p.data.returnShipping, lostFeeJpy: p.data.lostFee, note: p.data.note || null },
+        data: { saleId: sale.id, kind: "return", date, returnShippingJpy: p.data.returnShipping, lostFeeJpy: p.data.lostFee, outboundBack: p.data.outboundBack, note: p.data.note || null },
       });
       const loss = returnLoss(sale, adj);
       await logChange(tx, { table: "SaleAdjustment", recordId: adj.id, action: "create", after: { saleId: sale.id, kind: "return", loss }, note });

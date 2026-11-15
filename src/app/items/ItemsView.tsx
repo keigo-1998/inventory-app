@@ -14,7 +14,7 @@ import { markChanged, recentChanged, clearChanged, RECENT_MIN } from "@/lib/rece
 
 export type Refund = { id: number; date: string; amount: number; via: string };
 export type SaleInfo = {
-  saleId: number; refundVia: string; refunds: Refund[];
+  saleId: number; refundVia: string; returnShippingBack: boolean; refunds: Refund[];
   date: string; channel: string; currency: string; fxRate: number | null; fxRateFinal: boolean;
   priceForeign: number | null; shippingForeign: number | null; feeForeign: number | null;
   priceJpy: number; shippingFeeJpy: number; actualShippingJpy: number; shippingTentative: boolean; feeJpy: number;
@@ -71,7 +71,7 @@ type Toast = { msg: React.ReactNode; undo?: () => Promise<void> } | null;
 /** 返品・返金の記録の入力 */
 export type AdjInput =
   | { kind: "cancel" }
-  | { kind: "return"; date: string; returnShipping: number; lostFee: number }
+  | { kind: "return"; date: string; returnShipping: number; lostFee: number; outboundBack: boolean }
   | { kind: "refund"; date: string; amount: number; via: string };
 
 export function ItemsView({ rows, channels, lots, genres, suppliers, removed }: { rows: ItemRow[]; channels: ChannelInfo[]; lots: LotInfo[]; genres: string[]; suppliers: string[]; removed: RemovedItem[] }) {
@@ -189,7 +189,7 @@ export function ItemsView({ rows, channels, lots, genres, suppliers, removed }: 
         return;
       }
       const res = a.kind === "return"
-        ? await recordReturn({ saleId, date: a.date, returnShipping: a.returnShipping, lostFee: a.lostFee })
+        ? await recordReturn({ saleId, date: a.date, returnShipping: a.returnShipping, lostFee: a.lostFee, outboundBack: a.outboundBack })
         : await recordRefund({ saleId, date: a.date, amount: a.amount, via: a.via });
       if (!res.ok) { showToast({ msg: res.error }); return; }
       router.refresh();
@@ -668,10 +668,11 @@ function ReturnBox({ s, profit, pending, onCancel, onSave }: { s: SaleInfo; prof
   const [fee, setFee] = useState("0"); // 売買が成立しないので、手数料はふつう運営から返される
   const [amt, setAmt] = useState("");
   const [via, setVia] = useState(s.refundVia === "bank" ? "bank" : "payout");
+  const [back, setBack] = useState(s.returnShippingBack); // 行きの送料が戻ってくるか（販路の設定がはじめの値）
   const [err, setErr] = useState("");
   const num = (v: string) => { const n = Number(v.normalize("NFKC").replace(/[¥,円\s]/g, "")); return Number.isFinite(n) && n >= 0 ? Math.round(n) : NaN; };
   const shipN = num(ship || "0"), feeN = num(fee || "0"), amtN = num(amt || "0");
-  const loss = s.actualShippingJpy + (shipN || 0) + (feeN || 0);
+  const loss = (back ? 0 : s.actualShippingJpy) + (shipN || 0) + (feeN || 0);
   const save = () => {
     setErr("");
     if (kind === "cancel") {
@@ -680,7 +681,7 @@ function ReturnBox({ s, profit, pending, onCancel, onSave }: { s: SaleInfo; prof
     }
     if (kind === "return") {
       if (Number.isNaN(shipN) || Number.isNaN(feeN)) { setErr("金額は数字で入れてください"); return; }
-      onSave({ kind: "return", date, returnShipping: shipN, lostFee: feeN });
+      onSave({ kind: "return", date, returnShipping: shipN, lostFee: feeN, outboundBack: back });
       return;
     }
     if (Number.isNaN(amtN) || amtN <= 0) { setErr("返金した金額を入れてください"); return; }
@@ -701,9 +702,15 @@ function ReturnBox({ s, profit, pending, onCancel, onSave }: { s: SaleInfo; prof
       )}
       {kind === "return" && (
         <>
-          <div className="f">返品の送料（返送用封筒など・円）<input inputMode="numeric" placeholder="0" value={ship} onChange={(e) => setShip(e.target.value)} /><span className="hint">お客様に送った返送用封筒の代金など、戻すためにかかった送料</span></div>
+          <div className="f">行きの送料（{yen(s.actualShippingJpy)}）
+            <div className="seg">
+              <button className={back ? "on" : ""} onClick={() => setBack(true)}>戻ってくる（損にしない）</button>
+              <button className={!back ? "on" : ""} onClick={() => setBack(false)}>こちらの損</button>
+            </div>
+            <span className="hint">メルカリの返品は送料がかからないので「戻ってくる」。ヤフオクでこちらの都合で返品したときなどは「こちらの損」（はじめの値は販路の設定で決められます）</span></div>
+          <div className="f">返品の送料（返送用封筒など・円）<input inputMode="numeric" placeholder="0" value={ship} onChange={(e) => setShip(e.target.value)} /><span className="hint">こちらで返送の送料を払ったときだけ入れます（自社で返送した、返送用封筒を送った など）</span></div>
           <div className="f">戻ってこない手数料（円）<input inputMode="numeric" value={fee} onChange={(e) => setFee(e.target.value)} /><span className="hint">ふつうは 0 円です（売買が成立しないので、手数料は運営から返されます）。返されなかったときだけ入れます</span></div>
-          <div className="sumline">この返品の損：行きの送料 {yen(s.actualShippingJpy)} ＋ 返品の送料 {yen(shipN || 0)} ＋ 手数料 {yen(feeN || 0)} ＝ <b>{yen(loss)}</b></div>
+          <div className="sumline">この返品の損：行きの送料 {back ? "¥0（戻ってくる）" : yen(s.actualShippingJpy)} ＋ 返品の送料 {yen(shipN || 0)} ＋ 手数料 {yen(feeN || 0)} ＝ <b>{yen(loss)}</b>{loss === 0 && "（売上・粗利に影響しません）"}</div>
           <p className="hint" style={{ margin: 0 }}>売値は0円になり、商品は在庫に戻ります（同じ管理番号のまま）。確定済みの月のレポートは書き換えず、返品した月のレポートにマイナスの行として載せます。</p>
         </>
       )}

@@ -56,6 +56,8 @@ model Channel {
   shippingPaidBy   String    @default("bank")
   /// 一部返金のふだんの返し方: payout / bank
   refundVia        String    @default("payout")
+  /// 返品のとき、行きの送料が戻ってくるか（メルカリは戻る＝送料はかからない。ヤフオクはこちらの損）
+  returnShippingBack Boolean @default(false)
   undecided        Boolean   @default(false) // 計算のルールがまだ決まっていない（eBay など）
   sortOrder        Int       @default(0)
   listings         Listing[]
@@ -203,6 +205,7 @@ model SaleAdjustment {
   refundJpy         Int       @default(0) // 一部返金の金額
   returnShippingJpy Int       @default(0) // 返品の送料（返送用封筒など）
   lostFeeJpy        Int       @default(0) // 戻ってこない手数料
+  outboundBack      Boolean   @default(false) // 行きの送料が戻ってきた（損にしない）
   via               String? // payout（販路の振込から引かれる）/ bank（法人口座から）
   note              String?
   createdAt         DateTime  @default(now())

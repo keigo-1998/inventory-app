@@ -17,6 +17,7 @@ const FIELDS = {
   shippingPaidBy: z.enum(["payout", "bank"]),
   refundVia: z.enum(["payout", "bank"]),
   undecided: z.boolean(),
+  returnShippingBack: z.boolean(),
 } as const;
 export type ChannelField = keyof typeof FIELDS;
 export type ChannelValue = string | number | boolean | null;

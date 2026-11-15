@@ -11,7 +11,7 @@ const GENRES = ["雑貨", "カメラ", "PC、OA機器", "時計", "茶道具", "
 // 販路と計算のルール（docs/profit-formulas.md）
 const CHANNELS: Prisma.ChannelCreateInput[] = [
   { name: "Catawiki", currency: "EUR", feeMode: "manual", feeHintRate: 0.155, usesShippingFee: true, shippingPaidBy: "bank" },
-  { name: "メルカリ", currency: "JPY", feeMode: "auto", feeRate: 0.1, usesShippingFee: false, shippingPaidBy: "payout" },
+  { name: "メルカリ", currency: "JPY", feeMode: "auto", feeRate: 0.1, usesShippingFee: false, shippingPaidBy: "payout", returnShippingBack: true },
   { name: "ヤフオク", currency: "JPY", feeMode: "manual", feeHintRate: 0.091, usesShippingFee: true, shippingPaidBy: "payout", refundVia: "bank" },
   { name: "JOOM", currency: "USD", feeMode: "auto", feeRate: 0.15, usesShippingFee: true },
   { name: "Chrono24", currency: "JPY", feeMode: "auto", feeRate: 0.125, usesShippingFee: true },

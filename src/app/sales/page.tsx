@@ -66,7 +66,7 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
   const settings: ChannelSetting[] = allChannels.map((c) => ({
     id: c.id, name: c.name, currency: c.currency, feeMode: c.feeMode, feeRate: c.feeRate == null ? null : Number(c.feeRate),
     feeHintRate: c.feeHintRate == null ? null : Number(c.feeHintRate), usesShippingFee: c.usesShippingFee, shippingPaidBy: c.shippingPaidBy,
-    refundVia: c.refundVia, undecided: c.undecided, hidden: !!c.deletedAt, used: c._count.sales,
+    refundVia: c.refundVia, returnShippingBack: c.returnShippingBack, undecided: c.undecided, hidden: !!c.deletedAt, used: c._count.sales,
   }));
 
   // 為替レート：今月から3か月前までと、外貨の販売がある月

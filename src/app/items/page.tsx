@@ -58,6 +58,7 @@ export default async function ItemsPage() {
         ? {
             saleId: last.sale.id,
             refundVia: last.sale.channel?.refundVia ?? "payout",
+            returnShippingBack: last.sale.channel?.returnShippingBack ?? false,
             refunds: last.sale.adjustments.filter((a) => a.kind === "refund").map((a) => ({ id: a.id, date: fmtDate(a.date), amount: a.refundJpy, via: a.via ?? "payout" })),
             date: fmtDate(last.sale.soldAt),
             channel: last.sale.channel?.name ?? "",

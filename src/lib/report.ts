@@ -22,6 +22,7 @@ export type ReportLine = {
   profit: number;
   tentative: boolean; // 送料が仮
   inPayout: boolean; // 振込の突き合わせに入れるか（法人口座から返した返金は入れない）
+  payShip: number; // 振込から引かれる送料（販売の行は実送料、返品で行きの送料が戻った行はマイナス）
   note: string;
   saleId: number;
 };
@@ -70,7 +71,7 @@ export async function buildReport(db: Db, month: string): Promise<ReportData> {
       priceForeign: s.priceForeign == null ? null : s.priceForeign / 100,
       price: s.priceJpy, ship: s.shippingFeeJpy, real: s.actualShippingJpy, fee: s.feeJpy, cost,
       profit: s.priceJpy + s.shippingFeeJpy - s.actualShippingJpy - s.feeJpy - cost,
-      tentative: s.shippingTentative, inPayout: true, note: "", saleId: s.id,
+      tentative: s.shippingTentative, inPayout: true, payShip: s.actualShippingJpy, note: "", saleId: s.id,
     });
   }
   for (const a of adjs) {
@@ -79,17 +80,19 @@ export async function buildReport(db: Db, month: string): Promise<ReportData> {
     if (a.kind === "refund") {
       const viaBank = a.via === "bank";
       lines.push({
-        ...base, kind: "refund", price: -a.refundJpy, ship: 0, real: 0, fee: 0, cost: 0, profit: -a.refundJpy, inPayout: !viaBank,
+        ...base, kind: "refund", price: -a.refundJpy, ship: 0, real: 0, fee: 0, cost: 0, profit: -a.refundJpy, inPayout: !viaBank, payShip: 0,
         note: `一部返金（${md(s.soldAt)}に売れた分）${viaBank ? "・法人口座から振込（振込・CSVには入れない）" : "・販路の振込から引かれる"}`,
       });
     } else {
-      // 返品：売上と手数料を戻し（手数料は運営から返される）、商品が戻るので原価も戻す。返品の送料と戻らない手数料は損
+      // 返品：売上と手数料を戻し（手数料は運営から返される）、商品が戻るので原価も戻す
+      // 行きの送料が戻ってくる販路（メルカリ）は送料も戻す → 売上・粗利に影響しない。こちらの損なら、行き＋返品の送料が損
       const cost = s.lines.reduce((x, l) => x + l.costJpy, 0);
       const fee = -s.feeJpy + a.lostFeeJpy;
-      const price = -s.priceJpy, ship = -s.shippingFeeJpy, real = a.returnShippingJpy;
+      const back = a.outboundBack ? s.actualShippingJpy : 0;
+      const price = -s.priceJpy, ship = -s.shippingFeeJpy, real = a.returnShippingJpy - back;
       lines.push({
-        ...base, kind: "return", price, ship, real, fee, cost: -cost, profit: price + ship - real - fee + cost, inPayout: true,
-        note: `返品（${md(s.soldAt)}に売れた分。商品は在庫に戻った）`,
+        ...base, kind: "return", price, ship, real, fee, cost: -cost, profit: price + ship - real - fee + cost, inPayout: true, payShip: -back,
+        note: `返品（${md(s.soldAt)}に売れた分。商品は在庫に戻った）・${a.outboundBack ? "行きの送料は戻った" : "行きの送料はこちらの損"}${a.returnShippingJpy ? `・返品の送料 ¥${a.returnShippingJpy.toLocaleString()}` : ""}`,
       });
     }
   }
@@ -104,7 +107,7 @@ export async function buildReport(db: Db, month: string): Promise<ReportData> {
     const shipDeduct = c?.shippingPaidBy === "payout";
     const sales = sum(pay, "price") + sum(pay, "ship");
     const fee = sum(pay, "fee");
-    const ship = shipDeduct ? sum(ls.filter((l) => l.kind === "sale"), "real") : 0;
+    const ship = shipDeduct ? sum(pay, "payShip") : 0;
     return {
       name, currency: c?.currency ?? "JPY", shipDeduct, n: ls.filter((l) => l.kind === "sale").length,
       sales, fee, ship, expect: sales - fee - ship,

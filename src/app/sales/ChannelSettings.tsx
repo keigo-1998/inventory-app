@@ -8,7 +8,7 @@ import { toast, esc } from "@/lib/toast";
 
 export type ChannelSetting = {
   id: number; name: string; currency: string; feeMode: string; feeRate: number | null; feeHintRate: number | null;
-  usesShippingFee: boolean; shippingPaidBy: string; refundVia: string; undecided: boolean; hidden: boolean; used: number;
+  usesShippingFee: boolean; shippingPaidBy: string; refundVia: string; returnShippingBack: boolean; undecided: boolean; hidden: boolean; used: number;
 };
 
 const CUR = { JPY: "円", EUR: "ユーロ", USD: "ドル" } as const;
@@ -76,7 +76,7 @@ export function ChannelSettings({ list }: { list: ChannelSetting[] }) {
           <thead>
             <tr>
               <th>販路</th><th>通貨</th><th>為替レート</th><th>手数料</th><th className="n">率</th><th>設定送料</th>
-              <th>実送料の払い方</th><th>一部返金のふだんの返し方</th><th></th>
+              <th>実送料の払い方</th><th>一部返金のふだんの返し方</th><th>返品のときの行きの送料</th><th></th>
             </tr>
           </thead>
           <tbody>
@@ -128,6 +128,11 @@ export function ChannelSettings({ list }: { list: ChannelSetting[] }) {
                 <td>
                   <select value={c.refundVia} disabled={pending || c.hidden} onChange={(e) => save(c, "refundVia", e.target.value, "一部返金の返し方")}>
                     <option value="payout">販路の振込から引かれる</option><option value="bank">法人口座から振り込む</option>
+                  </select>
+                </td>
+                <td>
+                  <select value={c.returnShippingBack ? "1" : "0"} disabled={pending || c.hidden} onChange={(e) => save(c, "returnShippingBack", e.target.value === "1", "返品のときの行きの送料")}>
+                    <option value="1">戻ってくる（損にしない）</option><option value="0">こちらの損</option>
                   </select>
                 </td>
                 <td style={{ whiteSpace: "nowrap" }}>
