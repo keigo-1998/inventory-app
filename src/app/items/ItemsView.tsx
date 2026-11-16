@@ -1,6 +1,6 @@
 "use client";
 // 商品一覧の画面（画面イメージ docs/mockup/index.html の「商品一覧」と同じ見た目・操作）
-import { useEffect, useMemo, useRef, useState, useTransition } from "react";
+import { useDeferredValue, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { changeListings, undoListings, type ListingUndo } from "@/lib/listing-actions";
@@ -40,21 +40,46 @@ const ST: Record<string, [string, string]> = {
 };
 const inStock = (r: ItemRow) => r.status === "stock" || r.status === "list";
 const isLotHead = (r: ItemRow) => !!r.lotCode && r.code.endsWith("-0");
+/** 縦積在庫（個数で持つ在庫）：管理番号が L で始まるか、個数が2個以上 */
+const isStack = (r: ItemRow) => /^L/i.test(r.code) || r.quantity > 1;
 
 // ひらがな・カタカナ、全角・半角、大文字・小文字、空白の違いを気にせずに探す
 const norm = (s: string) =>
   s.normalize("NFKC").toLowerCase().replace(/[ァ-ヶ]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0x60)).replace(/\s+/g, "");
 
 // 絞り込み（docs/data-design.md「商品一覧の絞り込みと状態」）。「在庫」は未出品＋出品中
+// 縦積在庫は「縦積」を押したときだけ出す（検索したときは、どれでも出す）
 const FILTERS: [string, string, (r: ItemRow) => boolean][] = [
-  ["all", "すべて", () => true],
   ["now", "在庫", inStock],
+  ["all", "すべて", () => true],
   ["stock", "未出品", (r) => r.status === "stock"],
   ["list", "出品中", (r) => r.status === "list"],
   ["sold", "売却済み", (r) => !inStock(r)],
   ["lot", "山", isLotHead],
   ["old", "90日以上", (r) => inStock(r) && (r.days ?? 0) >= 90],
+  ["stack", "縦積", isStack],
 ];
+
+// 並び順（選んだものは次に開いたときも覚えておく）
+type SortKey = "added" | "code" | "name" | "genre" | "date" | "cost" | "exp" | "status" | "days";
+type Sort = { key: SortKey; desc: boolean };
+const SORTS: [string, string, Sort][] = [
+  ["added-d", "新しく登録した順", { key: "added", desc: true }],
+  ["added-a", "古く登録した順", { key: "added", desc: false }],
+  ["code-a", "管理番号順", { key: "code", desc: false }],
+  ["date-d", "仕入日の新しい順", { key: "date", desc: true }],
+  ["days-d", "滞留の長い順", { key: "days", desc: true }],
+  ["cost-d", "原価の高い順", { key: "cost", desc: true }],
+  ["exp-d", "予想売価の高い順", { key: "exp", desc: true }],
+  ["genre-a", "ジャンル順", { key: "genre", desc: false }],
+];
+const SORT_DEFAULT: Sort = { key: "added", desc: true };
+const SORT_STORE = "items-sort";
+const STATUS_ORDER = ["stock", "list", "sold", "closed", "disposed", "fixture"];
+const loadSort = (): Sort => {
+  try { const v = JSON.parse(localStorage.getItem(SORT_STORE) ?? "null"); if (v && typeof v.key === "string") return v; } catch {}
+  return SORT_DEFAULT;
+};
 
 function Chips({ r }: { r: ItemRow }) {
   if (!r.channels.length && !r.soldChannels.length) return <span className="muted">未出品</span>;
@@ -63,6 +88,15 @@ function Chips({ r }: { r: ItemRow }) {
       {r.soldChannels.map((c) => <span key={"s" + c} className="chip sold">{c}</span>)}
       {r.channels.map((c) => <span key={c} className="chip">{c}</span>)}
     </>
+  );
+}
+/** 押すと並び替わる表の見出し */
+function SortTh({ k, sort, onSort, n, children }: { k: SortKey; sort: Sort; onSort: (k: SortKey) => void; n?: boolean; children: React.ReactNode }) {
+  const on = sort.key === k;
+  return (
+    <th className={`sortth${n ? " n" : ""}${on ? " on" : ""}`} onClick={() => onSort(k)} title="押すと、この順に並び替えます" aria-sort={on ? (sort.desc ? "descending" : "ascending") : "none"}>
+      {children}<span className="sortmark">{on ? (sort.desc ? " ▼" : " ▲") : " ↕"}</span>
+    </th>
   );
 }
 const Days = ({ d }: { d: number | null }) => (d == null ? <span className="muted">—</span> : d >= 90 ? <span className="tag t-warn">{d}日</span> : <>{d}日</>);
@@ -77,9 +111,14 @@ export type AdjInput =
 export function ItemsView({ rows, channels, lots, genres, suppliers, removed }: { rows: ItemRow[]; channels: ChannelInfo[]; lots: LotInfo[]; genres: string[]; suppliers: string[]; removed: RemovedItem[] }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
-  const [invF, setInvF] = useState("all");
+  const [invF, setInvF] = useState("now");
   const [qInput, setQInput] = useState("");
-  const [q, setQ] = useState("");
+  const q = useDeferredValue(qInput); // 打ったそばから絞り込む（打つのが重くならないように少し遅らせる）
+  const [sort, setSortState] = useState<Sort>(SORT_DEFAULT);
+  useEffect(() => { setSortState(loadSort()); }, []);
+  const setSort = (s: Sort) => { setSortState(s); try { localStorage.setItem(SORT_STORE, JSON.stringify(s)); } catch {} };
+  /** 表の見出しを押したとき：同じ見出しなら向きを逆に、違う見出しならその見出しで並べる */
+  const sortBy = (key: SortKey) => setSort(sort.key === key ? { key, desc: !sort.desc } : { key, desc: ["date", "cost", "exp", "days", "added"].includes(key) });
   const [genre, setGenre] = useState("");
   const [chFilter, setChFilter] = useState("");
   const [picked, setPicked] = useState<Set<string>>(new Set());
@@ -106,27 +145,61 @@ export function ItemsView({ rows, channels, lots, genres, suppliers, removed }: 
   const listChannels = channels.filter((c) => !c.undecided);
 
   // 山（-0）の行のすぐ下に、その山の枝番を並べる。山の行は、枝番のどれかが当てはまれば見出しとして出す
-  const list = useMemo(() => {
-    const f = FILTERS.find((x) => x[0] === invF)![2];
+  // 並べ替えは「1件」または「山ひとまとまり」を単位にする（山の中は枝番の順のまま）
+  const build = (fk: string) => {
+    const f = FILTERS.find((x) => x[0] === fk)![2];
     const k = norm(q);
-    const kw = (r: ItemRow) => (!k || norm(r.code + r.name).includes(k)) && (!genre || r.genre === genre) && (!chFilter || r.channels.includes(chFilter) || r.soldChannels.includes(chFilter));
+    const stackOk = (r: ItemRow) => fk === "stack" || !!k || !isStack(r);
+    const kw = (r: ItemRow) => stackOk(r) && (!k || norm(r.code + r.name).includes(k)) && (!genre || r.genre === genre) && (!chFilter || r.channels.includes(chFilter) || r.soldChannels.includes(chFilter));
     const bn = (code: string) => (code.endsWith("-0") ? -1 : Number(code.split("-")[1]));
-    const out: ItemRow[] = [];
+    const units: ItemRow[][] = [];
     const done = new Set<string>();
     for (const r of rows) {
       const p = lotOf(r);
-      if (!p) { if (invF !== "lot" && f(r) && kw(r)) out.push(r); continue; }
+      if (!p) { if (fk !== "lot" && f(r) && kw(r)) units.push([r]); continue; }
       if (done.has(p)) continue;
       done.add(p);
       const grp = rows.filter((x) => lotOf(x) === p).sort((a, b) => bn(a.code) - bn(b.code));
       const [head, ...kids] = grp;
-      if (invF === "lot") { if (grp.some(kw)) out.push(...grp); continue; }
+      if (fk === "lot") { if (grp.some(kw)) units.push(grp); continue; }
       const hk = kids.filter((x) => f(x) && kw(x));
-      if ((f(head) && kw(head)) || hk.length) out.push(head, ...hk);
+      if ((f(head) && kw(head)) || hk.length) units.push([head, ...hk]);
     }
-    return out;
+    return units;
+  };
+  const list = useMemo(() => {
+    const units = build(invF);
+    const val = (u: ItemRow[]): number | string => {
+      const h = u[0];
+      const sum = (g: (r: ItemRow) => number) => u.reduce((a, r) => a + g(r), 0);
+      switch (sort.key) {
+        case "added": return Math.min(...u.map((r) => r.id)); // 山は、中でいちばん先に登録した商品で並べる
+        case "code": return h.code;
+        case "name": return norm(h.name);
+        case "genre": return h.genre || "\uffff"; // ジャンルなしは最後
+        case "date": return h.purchasedAt;
+        case "cost": return sum((r) => r.unitCost);
+        case "exp": return sum((r) => r.expectedPrice ?? 0);
+        case "status": return STATUS_ORDER.indexOf(h.status);
+        case "days": return Math.max(-1, ...u.map((r) => r.days ?? -1));
+      }
+    };
+    const dir = sort.desc ? -1 : 1;
+    const keyed = units.map((u) => ({ u, v: val(u) }));
+    keyed.sort((a, b) => {
+      const c = typeof a.v === "number" && typeof b.v === "number" ? a.v - b.v : String(a.v).localeCompare(String(b.v), "ja");
+      return c * dir || a.u[0].code.localeCompare(b.u[0].code) * (sort.key === "added" ? dir : 1) || a.u[0].id - b.u[0].id;
+    });
+    return keyed.flatMap((x) => x.u);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rows, invF, q, genre, chFilter]);
+  }, [rows, invF, q, genre, chFilter, sort]);
+  // 検索して見つからないとき、「すべて」なら何件あるか
+  const elsewhere = useMemo(() => (q && invF !== "all" && !list.length ? build("all").flat().length : 0),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [rows, invF, q, genre, chFilter, list.length]);
+  const pillCount = useMemo(() => Object.fromEntries(FILTERS.map(([k, , f]) => [k, rows.filter((r) => f(r) && (k === "stack" || !isStack(r))).length])),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [rows]);
 
   const rowCls = (r: ItemRow) => {
     const p = lotOf(r);
@@ -277,24 +350,30 @@ export function ItemsView({ rows, channels, lots, genres, suppliers, removed }: 
     </div>
   );
 
+  const Empty = () => (
+    <>当てはまる商品はありません{elsewhere > 0 && <>。<button className="linkbtn" onClick={() => setInvF("all")}>「すべて」にすると {elsewhere}点あります</button></>}</>
+  );
+
   return (
     <section>
       <h1>商品一覧</h1>
       <p className="lead">
         全 {rows.length.toLocaleString()} 点（在庫 {inStockCount.toLocaleString()} 点）。出品先を変えたいときは、商品にチェックを入れて「出品先を変える」を押します。
         <br />
-        <span className="muted">商品を押すと、いくら利益が出ているかが見られます。<span className="tag t-yama">山 ▸</span> の行を押すと山の画面が開き、枝番を追加できます。売れ残りをまとめて山売りしたいときは、チェックを入れて「まとめて売る」を押します。</span>
+        <span className="muted">商品を押すと、いくら利益が出ているかが見られます。<span className="tag t-yama">山 ▸</span> の行を押すと山の画面が開き、枝番を追加できます。売れ残りをまとめて山売りしたいときは、チェックを入れて「まとめて売る」を押します。縦積在庫は「縦積」を押すと出ます。表の見出しを押すと並び替わります。</span>
       </p>
       {error && <p className="err">{error}</p>}
       <div className="filters">
-        <input
-          placeholder="管理番号・商品名で検索"
-          value={qInput}
-          onChange={(e) => { setQInput(e.target.value); if (!e.target.value) setQ(""); }}
-          onKeyDown={(e) => { if (e.key === "Enter" && !e.nativeEvent.isComposing) setQ(qInput); }}
-          style={{ flex: 1 }}
-        />
-        <button className="btn primary" onClick={() => setQ(qInput)}>🔍 検索</button>
+        <span className="searchbox">
+          <input
+            type="search"
+            placeholder="🔍 管理番号・商品名で探す（打つとすぐ絞り込み）"
+            value={qInput}
+            onChange={(e) => setQInput(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Escape") setQInput(""); }}
+          />
+          {qInput && <button className="linkbtn" onClick={() => setQInput("")} aria-label="検索を消す">✕</button>}
+        </span>
         <select value={genre} onChange={(e) => setGenre(e.target.value)}>
           <option value="">ジャンル：すべて</option>
           {genres.map((g) => <option key={g}>{g}</option>)}
@@ -302,6 +381,10 @@ export function ItemsView({ rows, channels, lots, genres, suppliers, removed }: 
         <select value={chFilter} onChange={(e) => setChFilter(e.target.value)}>
           <option value="">出品先：すべて</option>
           {channels.map((c) => <option key={c.id}>{c.name}</option>)}
+        </select>
+        <select value={SORTS.find(([, , v]) => v.key === sort.key && v.desc === sort.desc)?.[0] ?? ""} onChange={(e) => setSort(SORTS.find(([k]) => k === e.target.value)![2])} aria-label="並び順">
+          {!SORTS.some(([, , v]) => v.key === sort.key && v.desc === sort.desc) && <option value="">並び順：表の見出しで選んだ順</option>}
+          {SORTS.map(([k, l]) => <option key={k} value={k}>並び順：{l}</option>)}
         </select>
       </div>
       {recentCount > 0 && (
@@ -312,7 +395,7 @@ export function ItemsView({ rows, channels, lots, genres, suppliers, removed }: 
       )}
       <div className="pills">
         {FILTERS.map(([k, l]) => (
-          <button key={k} className={`pill${k === invF ? " on" : ""}`} onClick={() => setInvF(k)}>{l}</button>
+          <button key={k} className={`pill${k === invF ? " on" : ""}`} onClick={() => setInvF(k)}>{l} <span className="pc-n">{pillCount[k]}</span></button>
         ))}
       </div>
 
@@ -320,12 +403,15 @@ export function ItemsView({ rows, channels, lots, genres, suppliers, removed }: 
         <table>
           <thead>
             <tr>
-              <th style={{ width: 28 }}></th><th>管理番号</th><th>商品名</th><th>ジャンル</th><th>仕入日</th>
-              <th className="n">原価</th><th className="n">予想売価</th><th>状態</th><th>出品先</th><th className="n">滞留</th>
+              <th style={{ width: 28 }}></th>
+              <SortTh k="code" sort={sort} onSort={sortBy}>管理番号</SortTh><SortTh k="name" sort={sort} onSort={sortBy}>商品名</SortTh>
+              <SortTh k="genre" sort={sort} onSort={sortBy}>ジャンル</SortTh><SortTh k="date" sort={sort} onSort={sortBy}>仕入日</SortTh>
+              <SortTh k="cost" sort={sort} onSort={sortBy} n>原価</SortTh><SortTh k="exp" sort={sort} onSort={sortBy} n>予想売価</SortTh>
+              <SortTh k="status" sort={sort} onSort={sortBy}>状態</SortTh><th>出品先</th><SortTh k="days" sort={sort} onSort={sortBy} n>滞留</SortTh>
             </tr>
           </thead>
           <tbody id="itemrows">
-            {!list.length && <tr><td colSpan={10} className="muted" style={{ padding: 16 }}>当てはまる商品はありません</td></tr>}
+            {!list.length && <tr><td colSpan={10} className="muted" style={{ padding: 16 }}><Empty /></td></tr>}
             {list.map((r) => (
               <tr key={r.id} className={`clickable ${rowCls(r)}`} onClick={() => openRowOf(r)}>
                 <td onClick={(e) => e.stopPropagation()}>
@@ -347,6 +433,7 @@ export function ItemsView({ rows, channels, lots, genres, suppliers, removed }: 
       </div>
 
       <div className="mcards" id="itemcards">
+        {!list.length && <p className="muted"><Empty /></p>}
         {list.map((r) => (
           <div key={r.id} className={`mc clickable ${rowCls(r)}`} onClick={() => openRowOf(r)}>
             <div className="top">

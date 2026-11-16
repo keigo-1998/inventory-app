@@ -434,3 +434,13 @@ tr.changed td:first-child{box-shadow:inset 3px 0 0 #f2b705}
 .dash-two{grid-template-columns:3fr 2fr}
 @media (max-width:760px){.dash-two{grid-template-columns:1fr}}
 .dash-chart svg{max-width:100%;height:auto;display:block}
+
+/* 商品一覧：打つとすぐ絞り込む検索・並び替えの見出し・ボタンの件数 */
+.searchbox { flex: 1; min-width: 220px; display: flex; align-items: center; gap: 4px; position: relative; }
+.searchbox input { flex: 1; width: 100%; }
+.searchbox .linkbtn { position: absolute; right: 8px; }
+th.sortth { cursor: pointer; user-select: none; white-space: nowrap; }
+th.sortth:hover { color: var(--ink, inherit); background: rgba(127, 127, 127, 0.08); }
+th.sortth .sortmark { opacity: 0.35; font-size: 0.85em; }
+th.sortth.on .sortmark { opacity: 1; }
+.pill .pc-n { opacity: 0.6; font-size: 0.85em; margin-left: 2px; }
