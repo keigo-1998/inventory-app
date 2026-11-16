@@ -14,12 +14,15 @@
 import fs from "node:fs";
 import { PrismaClient } from "@prisma/client";
 import { GENRES, CHANNELS, SUPPLIERS } from "../prisma/masters";
+import { backupNow } from "../src/lib/backup";
 
 const db = new PrismaClient();
 type Raw = { row: number; cells: string[] };
 const args = process.argv.slice(2);
 const src = args.find((a) => !a.startsWith("--")) ?? "import/sheet.json";
 const reset = args.includes("--reset");
+const force = args.includes("--force"); // アプリで入れた記録があっても消して入れ直す（ふつうは使わない）
+const IMPORT_NOTE = "スプレッドシートから取り込み";
 
 const num = (v: unknown): number | null => {
   const s = String(v ?? "").normalize("NFKC").replace(/[¥,円\s]/g, "");
@@ -55,6 +58,19 @@ async function main() {
 
   if ((await db.item.count()) > 0) {
     if (!reset) throw new Error("データベースにもう商品があります。全部消して入れ直すときは --reset を付けてください");
+    // アプリで入れた記録（取り込み以外の変更の履歴・目標・確定したレポート・覚えた伝票の形）があれば止める
+    const [logs, targets, reports, formats] = await Promise.all([
+      db.changeLog.count({ where: { NOT: { note: { startsWith: IMPORT_NOTE } } } }),
+      db.salesTarget.count(), db.monthlyReport.count(), db.slipFormat.count(),
+    ]);
+    if (logs + targets + reports + formats > 0 && !force) {
+      throw new Error(
+        `アプリで入れた記録があるので、取り込み直しを止めました（変更 ${logs}件・目標 ${targets}件・月次レポート ${reports}件・伝票の形 ${formats}件）。\n` +
+        "取り込み直すと、これらはすべて消えます。シートを直すのではなく、アプリの画面で直してください。\n" +
+        "どうしても消して入れ直すときだけ、Claude に相談してください（--force で止めずに進みます）。",
+      );
+    }
+    console.log(`控えを取りました: ${await backupNow(db, "before-import")}`);
     for (const t of ["ChangeLog", "SaleAdjustment", "SaleLine", "Sale", "Listing", "Item", "Lot", "MonthlyReport", "SalesTarget", "SlipFormat", "Expense", "Channel", "Supplier", "Genre"]) {
       await db.$executeRawUnsafe(`DELETE FROM "${t}"`);
     }

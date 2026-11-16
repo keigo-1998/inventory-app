@@ -8,3 +8,6 @@ tsconfig.tsbuildinfo
 
 # スプレッドシートから取り込むときの中間ファイルと結果（本物のデータなので GitHub に送らない）
 /import
+
+# データの控え（本物のデータなので GitHub に送らない）
+/backups
