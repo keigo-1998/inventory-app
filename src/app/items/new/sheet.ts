@@ -1,7 +1,7 @@
 // スプレッドシート風の登録の表（パソコン）。画面イメージ docs/mockup/index.html の「まとめて登録」と同じ動き。
 // ドラッグで選ぶ・⌘C/⌘V・右下の■で下にコピー・⌘D・Delete・伝票CSVの取り込み・確認（赤で知らせる）
 import { guessGenre } from "@/lib/genre-guess";
-import { padNo } from "@/lib/lot";
+import { padNo, stackNo } from "@/lib/lot";
 import { esc } from "@/lib/toast";
 import type { RegisterRow } from "@/lib/register-actions";
 import { parseCSV, readSlip, type SlipFormat, type SlipResult } from "@/lib/slip";
@@ -10,6 +10,8 @@ import { readPdfItems, pdfTextItems } from "@/lib/slip-pdf";
 export type SheetOpts = {
   existing: Set<string>;
   nextNo: number;
+  /** 縦積の次の番号（L00009 の 9） */
+  nextStack: number;
   genres: string[];
   /** 登録ボタンを押したとき。成功したら true を返す（表を空にする） */
   onRegister: (rows: RegisterRow[]) => Promise<boolean>;
@@ -61,7 +63,7 @@ export function initSheet(root: HTMLElement, opts: SheetOpts) {
   const box = () => ({ top: Math.min(sel.r1, sel.r2), bot: Math.max(sel.r1, sel.r2), left: Math.min(sel.c1, sel.c2), right: Math.max(sel.c1, sel.c2) });
   const cellEl = (r: number, c: number) => sheet.querySelector<HTMLTableCellElement>(`td[data-r="${r}"][data-c="${c}"]`);
   const fmt = (v: string, c: number) => {
-    if (c === 0) return v === "山" ? '<span class="tag t-yama">山</span>' : v ? '<span class="tag t-stock">単品</span>' : "";
+    if (c === 0) return v === "山" ? '<span class="tag t-yama">山</span>' : v === "縦積" ? '<span class="tag t-list">縦積</span>' : v ? '<span class="tag t-stock">単品</span>' : "";
     if (c === GENRE_COL) return `<span class="ddv">${esc(v)}</span><span class="dd" title="一覧から選ぶ">▾</span>`;
     if (!NUMCOL.has(c)) return esc(v);
     const n = num(v);
@@ -75,16 +77,23 @@ export function initSheet(root: HTMLElement, opts: SheetOpts) {
     autoCells.clear();
     const supplier = $<HTMLInputElement>("slipSupplier").value.trim();
     const date = $<HTMLInputElement>("slipDate").value.trim();
-    let n = opts.nextNo;
+    let n = opts.nextNo, m = opts.nextStack;
     grid.forEach((row, r) => {
       if (!hasContent(r)) return;
-      if (!row[0]) { row[0] = YAMA_WORDS.test(row[2]) ? "山" : "単品"; autoCells.add(r + ":0"); }
-      // 番号は、自分で入れた行は飛ばして、空いている行にだけ続きの番号を入れる
+      // 種類：商品名に「まとめ」などがあれば山、個数が2個以上なら縦積、ほかは単品
+      if (!row[0]) { row[0] = YAMA_WORDS.test(row[2]) ? "山" : (num(row[7]) ?? 1) >= 2 ? "縦積" : "単品"; autoCells.add(r + ":0"); }
+      // 番号は、自分で入れた行は飛ばして、空いている行にだけ続きの番号を入れる（縦積は L の続き）
       if (!row[1]) {
-        while (opts.existing.has(padNo(n)) || opts.existing.has(padNo(n) + "-0") || grid.some((x) => x[1] === padNo(n) || x[1] === padNo(n) + "-0")) n++;
-        row[1] = row[0] === "山" ? padNo(n) + "-0" : padNo(n);
+        if (row[0] === "縦積") {
+          while (opts.existing.has(stackNo(m)) || grid.some((x) => x[1] === stackNo(m))) m++;
+          row[1] = stackNo(m);
+          m++;
+        } else {
+          while (opts.existing.has(padNo(n)) || opts.existing.has(padNo(n) + "-0") || grid.some((x) => x[1] === padNo(n) || x[1] === padNo(n) + "-0")) n++;
+          row[1] = row[0] === "山" ? padNo(n) + "-0" : padNo(n);
+          n++;
+        }
         autoCells.add(r + ":1");
-        n++;
       }
       if (!row[3]) { const g = guessGenre(row[2], GENRES); if (g) { row[3] = g; autoCells.add(r + ":3"); } }
       if (!row[4] && supplier) { row[4] = supplier; autoCells.add(r + ":4"); }
@@ -129,8 +138,8 @@ export function initSheet(root: HTMLElement, opts: SheetOpts) {
     const r = +td.dataset.r!, c = +td.dataset.c!;
     if (t.classList.contains("dd")) { sel = { r1: r, c1: c, r2: r, c2: c }; paintSel(); e.preventDefault(); startEdit(r, c, false); return; }
     if (c === 0 && !e.shiftKey && grid[r][0]) {
-      // 種類のマスは押すたびに 単品⇔山
-      setCell(r, 0, grid[r][0] === "山" ? "単品" : "山");
+      // 種類のマスは押すたびに 単品→山→縦積→単品
+      setCell(r, 0, grid[r][0] === "単品" ? "山" : grid[r][0] === "山" ? "縦積" : "単品");
       if (autoCells.has(r + ":1")) grid[r][1] = "";
       sel = { r1: r, c1: 0, r2: r, c2: 0 };
       draw(); sheet.focus(); e.preventDefault(); return;
@@ -318,17 +327,20 @@ export function initSheet(root: HTMLElement, opts: SheetOpts) {
   // ---- 確認（直すところは赤、自動で入れたマスは青、一覧にないジャンルはオレンジ） ----
   function recalc() {
     const errs: string[] = [], warns: string[] = [], seen = new Map<string, number>();
-    let count = 0, yama = 0;
+    let count = 0, yama = 0, stack = 0;
     sheet.querySelectorAll<HTMLTableCellElement>("td.cell").forEach((td) => { td.classList.remove("err", "auto", "warn"); td.title = ""; });
     const mark = (r: number, c: number, msg: string) => { const td = cellEl(r, c); if (td) { td.classList.add("err"); td.title = msg; } errs.push(`${r + 1}行目「${COLS[c][0]}」：${msg}`); };
     grid.forEach((row, r) => {
       if (!row[0]) return;
       count++;
       if (row[0] === "山") yama++;
+      if (row[0] === "縦積") stack++;
       if (opts.existing.has(row[1])) mark(r, 1, "すでに登録されています");
       else if (seen.has(row[1])) mark(r, 1, `${seen.get(row[1])! + 1}行目と重複しています`);
       else if (row[0] === "山" && !/^\d+-0$/.test(row[1])) mark(r, 1, "山の番号は 0353-0 のように -0 で終わる形にしてください");
-      else if (row[0] === "単品" && /-0$/.test(row[1])) mark(r, 1, "-0 で終わる番号は山に使います");
+      else if (row[0] !== "山" && /-0$/.test(row[1])) mark(r, 1, "-0 で終わる番号は山に使います");
+      else if (row[0] === "縦積" && !/^L\d+/i.test(row[1])) mark(r, 1, "縦積の番号は L00009 のように L で始まる形にしてください");
+      else if (row[0] !== "縦積" && /^L\d+/i.test(row[1])) mark(r, 1, "L で始まる番号は縦積に使います（種類のマスを押すと縦積に変わります）");
       seen.set(row[1], r);
       if (!row[2]) mark(r, 2, "商品名がありません");
       if (!row[5]) mark(r, 5, "仕入日がありません（上の「仕入日」に入れると全部の行に入ります）");
@@ -349,7 +361,7 @@ export function initSheet(root: HTMLElement, opts: SheetOpts) {
     });
     $("warnlist").innerHTML = warns.slice(0, 5).map((e) => `<li>${e}</li>`).join("");
     const s = $("summary");
-    s.textContent = count ? (errs.length ? `${count}件のうち、直すところが${errs.length}か所あります` : `${count}件（単品 ${count - yama}・山 ${yama}）、すべて登録できます`) : "まだ何も入っていません";
+    s.textContent = count ? (errs.length ? `${count}件のうち、直すところが${errs.length}か所あります` : `${count}件（単品 ${count - yama - stack}・山 ${yama}・縦積 ${stack}）、すべて登録できます`) : "まだ何も入っていません";
     s.style.color = count ? (errs.length ? "var(--red)" : "var(--green)") : "";
     $("errlist").innerHTML = errs.slice(0, 8).map((e) => `<li>${esc(e)}</li>`).join("") + (errs.length > 8 ? `<li>ほか${errs.length - 8}か所</li>` : "");
     $<HTMLButtonElement>("doReg").disabled = busy || !count || errs.length > 0;
@@ -360,7 +372,7 @@ export function initSheet(root: HTMLElement, opts: SheetOpts) {
   $("clear").addEventListener("click", clearAll, sig);
   $("doReg").addEventListener("click", async () => {
     const rows: RegisterRow[] = grid.filter((r) => r[0]).map((r) => ({
-      kind: r[0] === "山" ? "山" : "単品", code: r[1], name: r[2], genre: r[3], supplier: r[4], date: r[5],
+      kind: r[0] === "山" ? "山" : r[0] === "縦積" ? "縦積" : "単品", code: r[1], name: r[2], genre: r[3], supplier: r[4], date: r[5],
       cost: num(r[6]) ?? 0, qty: num(r[7]) ?? 1, exp: num(r[8]), kids: [],
     }));
     busy = true; recalc();
@@ -370,7 +382,7 @@ export function initSheet(root: HTMLElement, opts: SheetOpts) {
   }, sig);
 
   /** 登録できたあとに、番号の続きと登録済みの番号を新しくする */
-  function update(next: { existing: Set<string>; nextNo: number }) { opts.existing = next.existing; opts.nextNo = next.nextNo; draw(); }
+  function update(next: { existing: Set<string>; nextNo: number; nextStack: number }) { opts.existing = next.existing; opts.nextNo = next.nextNo; opts.nextStack = next.nextStack; draw(); }
   function setFormats(f: SlipFormat[]) { opts.formats = f; }
 
   document.addEventListener("mouseup", onMouseUp, sig);

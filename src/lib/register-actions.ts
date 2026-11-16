@@ -15,7 +15,7 @@ type Tx = Prisma.TransactionClient;
 
 const kid = z.object({ name: z.string().trim().min(1), exp: z.number().int().min(0) });
 const row = z.object({
-  kind: z.enum(["単品", "山"]),
+  kind: z.enum(["単品", "山", "縦積"]), // 縦積 ＝ 同じ型番の商品が複数あるとき（番号は L00009 の形）
   code: z.string().trim().min(1).max(20),
   name: z.string().trim().min(1, "商品名がありません").max(300),
   genre: z.string().trim().max(50).default(""),
@@ -75,7 +75,9 @@ export async function registerItems(raw: RegisterRow[]): Promise<RegisterResult>
   if (taken.length) errors.push(`すでに登録されている管理番号です：${taken.map((t) => t.code).join("、")}`);
   rows.forEach((r, i) => {
     if (r.kind === "山" && !/^\d+-0$/.test(r.code)) errors.push(`${i + 1}件目：山の管理番号は「0353-0」のように -0 で終わる形にしてください`);
-    if (r.kind === "単品" && /-0$/.test(r.code)) errors.push(`${i + 1}件目：-0 で終わる番号は山に使います`);
+    if (r.kind !== "山" && /-0$/.test(r.code)) errors.push(`${i + 1}件目：-0 で終わる番号は山に使います`);
+    if (r.kind === "縦積" && !/^L\d+/i.test(r.code)) errors.push(`${i + 1}件目：縦積の管理番号は「L00009」のように L で始まる形にしてください`);
+    if (r.kind !== "縦積" && /^L\d+/i.test(r.code)) errors.push(`${i + 1}件目：L で始まる番号は縦積に使います`);
     if (!parseDate(r.date)) errors.push(`${i + 1}件目：仕入日「${r.date}」を 2026/11/04 の形で入れてください`);
   });
   if (errors.length) return { ok: false, errors };
@@ -90,7 +92,7 @@ export async function registerItems(raw: RegisterRow[]): Promise<RegisterResult>
       const purchasedAt = parseDate(r.date)!;
       const gid = await genreId(tx, r.genre, gc);
       const sid = await supplierId(tx, r.supplier, sc);
-      if (r.kind === "単品") {
+      if (r.kind !== "山") { // 単品・縦積は1件（縦積は個数ぶん持つ）
         const it = await tx.item.create({
           data: { code: r.code, name: r.name, genreId: gid, supplierId: sid, purchasedAt, unitCost: r.cost, quantity: r.qty, expectedPrice: r.exp },
         });

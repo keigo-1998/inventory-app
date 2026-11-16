@@ -39,6 +39,17 @@ export function allocateCost(cost: number, exps: number[]): number[] {
 export const padNo = (n: number) => String(n).padStart(5, "0");
 
 /** 今ある管理番号の続きの番号（数字で始まる番号のいちばん大きいもの ＋ 1） */
+/** 縦積在庫の次の番号（L00009 の 9）。縦積は「L＋5けた」の番号を、ふつうの番号とは別に続けて付ける */
+export function nextStackNumber(codes: string[]): number {
+  let max = 0;
+  for (const c of codes) {
+    const m = /^L(\d+)/i.exec(c);
+    if (m) max = Math.max(max, Number(m[1]));
+  }
+  return max + 1;
+}
+export const stackNo = (n: number) => "L" + padNo(n);
+
 export function nextNumber(codes: string[]): number {
   let max = 0;
   for (const c of codes) {

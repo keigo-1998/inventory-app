@@ -4,7 +4,7 @@ import { useDeferredValue, useEffect, useMemo, useRef, useState, useTransition }
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { changeListings, undoListings, type ListingUndo } from "@/lib/listing-actions";
-import { recordBundle, cancelSales } from "@/lib/sale-actions";
+import { recordBundle, recordSales, cancelSales } from "@/lib/sale-actions";
 import { recordReturn, recordRefund, cancelAdjustment } from "@/lib/adjust-actions";
 import { removeItem, undoRemove, restoreItem, updateItem, type ItemPatch } from "@/lib/item-actions";
 import { todayJst } from "@/lib/format";
@@ -308,6 +308,23 @@ export function ItemsView({ rows, channels, lots, genres, suppliers, removed }: 
       });
     });
   };
+  /** 廃棄にする（売る予定だったが捨てた。原価を損失として記録し、在庫から外す。販売の記録の「廃棄」と同じ） */
+  const runDispose = (r: ItemRow, date: string, qty: number, done: () => void) => {
+    startTransition(async () => {
+      const res = await recordSales([{ itemId: r.id, channel: "廃棄", date, qty, price: null, ship: null, fee: null, feeTouched: false, real: null }], "廃棄にする");
+      if (!res.ok) { showToast({ msg: res.error }); return; }
+      done();
+      const d = res.done[0];
+      markChanged([r.code]);
+      router.refresh();
+      const rest = d.left != null && d.left > 0;
+      if (!rest) setOpenCode(null);
+      showToast({
+        msg: <>{r.code} {qty > 1 || r.quantity > 1 ? `を${qty}個` : "を"}廃棄にしました（損失 {yen(r.unitCost * qty)}）。{rest ? `残りは${d.left}個です` : "在庫から外れました"}</>,
+        undo: async () => { const u = await cancelSales([d.saleId], "廃棄を元に戻す"); router.refresh(); flashCodes([r.code]); showToast({ msg: u.ok ? "元に戻しました。在庫に戻っています" : u.error ?? "" }); },
+      });
+    });
+  };
   /** 商品を直す */
   const runEdit = (r: ItemRow, patch: ItemPatch, done: () => void) => {
     startTransition(async () => {
@@ -499,6 +516,7 @@ export function ItemsView({ rows, channels, lots, genres, suppliers, removed }: 
           suppliers={suppliers}
           onEdit={(patch, done) => runEdit(openRow, patch, done)}
           onRemove={() => runRemove(openRow)}
+          onDispose={(date, qty, done) => runDispose(openRow, date, qty, done)}
           onUndoAdj={(id, what) => undoAdj(openRow, id, what)}
         />
       )}
@@ -550,13 +568,15 @@ function Modal({ className, onClose, children }: { className?: string; onClose: 
   );
 }
 
-function ItemDialog({ r, channels, listChannels, lot, pending, toast, onClose, onToggle, onAdjust, onUndoAdj, genres, suppliers, onEdit, onRemove }: {
+function ItemDialog({ r, channels, listChannels, lot, pending, toast, onClose, onToggle, onAdjust, onUndoAdj, genres, suppliers, onEdit, onRemove, onDispose }: {
   r: ItemRow; channels: ChannelInfo[]; listChannels: ChannelInfo[]; lot: LotInfo | null; pending: boolean; toast: React.ReactNode;
   onClose: () => void; onToggle: (ch: ChannelInfo, on: boolean) => void; onAdjust: (a: AdjInput) => void; onUndoAdj: (adjId: number, what: string) => void;
   genres: string[]; suppliers: string[]; onEdit: (p: ItemPatch, done: () => void) => void; onRemove: () => void;
+  onDispose: (date: string, qty: number, done: () => void) => void;
 }) {
   const [editOpen, setEditOpen] = useState(false);
-  useEffect(() => setEditOpen(false), [r.id]);
+  const [dispOpen, setDispOpen] = useState(false);
+  useEffect(() => { setEditOpen(false); setDispOpen(false); }, [r.id]);
   const st = ST[r.status];
   const [retOpen, setRetOpen] = useState(false);
   useEffect(() => setRetOpen(false), [r.status, r.sale?.saleId, r.sale?.refunds.length]);
@@ -681,6 +701,7 @@ function ItemDialog({ r, channels, listChannels, lot, pending, toast, onClose, o
           </div>
         </div>
       )}
+      {dispOpen && !editOpen && <DisposeBox r={r} pending={pending} onCancel={() => setDispOpen(false)} onSave={(d, q) => onDispose(d, q, () => setDispOpen(false))} />}
       {editOpen
         ? <EditBox r={r} genres={genres} suppliers={suppliers} pending={pending} onCancel={() => setEditOpen(false)} onSave={(p) => onEdit(p, () => setEditOpen(false))} />
         : body}
@@ -694,9 +715,10 @@ function ItemDialog({ r, channels, listChannels, lot, pending, toast, onClose, o
           <Link className="btn" href={`/lots/${lot.code}`}>山の画面へ</Link>
         </div>
       )}
-      {!editOpen && (
+      {!editOpen && !dispOpen && (
         <div className="itemfoot">
           <button className="btn" disabled={pending} onClick={() => setEditOpen(true)}>✎ 直す</button>
+          {inStock(r) && !isLotHead(r) && <button className="btn" disabled={pending} onClick={() => setDispOpen(true)} title="売る予定だったが捨てたとき。原価を損失として記録します">🗑 廃棄にする</button>}
           {inStock(r) && <button className="btn danger" disabled={pending} onClick={onRemove}>{isLotHead(r) ? "山ごと取り消す" : "この商品を取り消す"}</button>}
         </div>
       )}
@@ -706,6 +728,32 @@ function ItemDialog({ r, channels, listChannels, lot, pending, toast, onClose, o
 }
 
 /** 商品を直す（商品名・ジャンル・仕入先・仕入日・原価・個数・予想売価） */
+/** 廃棄にする：日付と（縦積なら）個数を選ぶ */
+function DisposeBox({ r, pending, onCancel, onSave }: { r: ItemRow; pending: boolean; onCancel: () => void; onSave: (date: string, qty: number) => void }) {
+  const [date, setDate] = useState(todayJst().replace(/-/g, "/"));
+  const [qty, setQty] = useState(r.quantity > 1 ? 1 : r.left || 1);
+  const multi = r.quantity > 1;
+  return (
+    <div className="retbox">
+      <b>廃棄にする</b>
+      <p className="muted" style={{ margin: "4px 0 8px" }}>売る予定だったけれど、壊れた・売れないなどで捨てたときに使います。原価を損失として記録し、在庫から外します（売上には入りません）。間違えたときは、あとから「元に戻す」で戻せます。</p>
+      <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "end" }}>
+        <label className="f">廃棄した日<input className="inp" value={date} onChange={(e) => setDate(e.target.value)} /></label>
+        {multi && (
+          <label className="f">個数（残り{r.left}個）
+            <input className="inp" inputMode="numeric" value={qty} onChange={(e) => setQty(Math.max(1, Math.min(r.left, Number(e.target.value.normalize("NFKC")) || 1)))} style={{ width: 80 }} />
+          </label>
+        )}
+        <div><span className="muted">損失</span> <b className="down">−{yen(r.unitCost * qty)}</b></div>
+      </div>
+      <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
+        <button className="btn danger" disabled={pending} onClick={() => onSave(date, qty)}>廃棄にする</button>
+        <button className="btn" disabled={pending} onClick={onCancel}>やめる</button>
+      </div>
+    </div>
+  );
+}
+
 function EditBox({ r, genres, suppliers, pending, onCancel, onSave }: {
   r: ItemRow; genres: string[]; suppliers: string[]; pending: boolean; onCancel: () => void; onSave: (p: ItemPatch) => void;
 }) {

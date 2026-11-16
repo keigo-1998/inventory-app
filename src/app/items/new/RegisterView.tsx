@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { registerItems, undoRegister, type RegisterRow } from "@/lib/register-actions";
-import { nextNumber, padNo } from "@/lib/lot";
+import { nextNumber, nextStackNumber, padNo, stackNo } from "@/lib/lot";
 import { toast, esc } from "@/lib/toast";
 import { initSheet } from "./sheet";
 import { MobileForm } from "./MobileForm";
@@ -21,6 +21,7 @@ export function RegisterView({ codes, genres, formats }: { codes: string[]; genr
   const codesRef = useRef(codes);
   codesRef.current = codes;
   const nextNo = nextNumber(codes);
+  const nextStack = nextStackNumber(codes);
 
   /** 登録する。うまくいけば true（「元に戻す」付きのお知らせを出す） */
   const onRegister = async (rows: RegisterRow[]) => {
@@ -31,7 +32,7 @@ export function RegisterView({ codes, genres, formats }: { codes: string[]; genr
     }
     markChanged(res.codes);
     const all = [...codesRef.current, ...res.codes];
-    sheetRef.current?.update({ existing: new Set(all), nextNo: nextNumber(all) });
+    sheetRef.current?.update({ existing: new Set(all), nextNo: nextNumber(all), nextStack: nextStackNumber(all) });
     router.refresh();
     const range = res.codes.length > 1 ? `${res.codes[0]}〜${res.codes[res.codes.length - 1]}` : res.codes[0];
     toast(`${res.codes.length}件を登録しました（${range}）。<a href="/items" style="color:#93c5fd">商品一覧で見る</a>`, async () => {
@@ -46,7 +47,7 @@ export function RegisterView({ codes, genres, formats }: { codes: string[]; genr
 
   useEffect(() => {
     const s = initSheet(rootRef.current!, {
-      existing: new Set(codesRef.current), nextNo: nextNumber(codesRef.current), genres, onRegister: (r) => onRegisterRef.current(r),
+      existing: new Set(codesRef.current), nextNo: nextNumber(codesRef.current), nextStack: nextStackNumber(codesRef.current), genres, onRegister: (r) => onRegisterRef.current(r),
       formats, onUnknownSlip: (rows, fileName) => setUnknown({ rows, fileName }),
     });
     sheetRef.current = s;
@@ -58,12 +59,12 @@ export function RegisterView({ codes, genres, formats }: { codes: string[]; genr
   return (
     <section ref={rootRef}>
       <h1>商品を登録</h1>
-      <MobileForm genres={genres} nextNo={nextNo} onRegister={onRegister} />
+      <MobileForm genres={genres} nextNo={nextNo} nextStack={nextStack} onRegister={onRegister} />
 
       <p className="lead pconly">
-        伝票のCSV（またはPDF）を入れるか、スプレッドシートからコピーして貼り付けます。山と単品が混ざっていて大丈夫です。山の行は「種類」のマスを押して切り替えます。
+        伝票のCSV（またはPDF）を入れるか、スプレッドシートからコピーして貼り付けます。山・縦積・単品が混ざっていて大丈夫です。種類は「種類」のマスを押すと切り替わります（個数を2個以上にすると、自動で縦積になります）。
         <br />
-        <b style={{ color: "var(--text)" }}>管理番号は空けておけば、今ある番号の続き（次は {padNo(nextNo)}）から自動で付きます。</b>
+        <b style={{ color: "var(--text)" }}>管理番号は空けておけば、今ある番号の続き（次は {padNo(nextNo)}。縦積は {stackNo(nextStack)}）から自動で付きます。</b>
       </p>
       <div className="howto pconly">
         <span><b>ドラッグ</b> 複数のマスを選ぶ</span>
@@ -113,7 +114,7 @@ export function RegisterView({ codes, genres, formats }: { codes: string[]; genr
         <button className="btn" id="addRows">＋ 10行追加</button>
         <button className="btn" id="clear">すべて消す</button>
         <span className="legend2">
-          <b style={{ fontWeight: 600 }}>ジャンル</b>は商品名から推測して自動で入れます（▾ で選び直せます）　<span className="tag t-yama">山</span>/<span className="tag t-stock">単品</span> 押すと切り替え　<i className="sw auto"></i>自動で入れたマス　<i className="sw err"></i>直すところ
+          <b style={{ fontWeight: 600 }}>ジャンル</b>は商品名から推測して自動で入れます（▾ で選び直せます）　<span className="tag t-stock">単品</span>/<span className="tag t-yama">山</span>/<span className="tag t-list">縦積</span> 押すと切り替え（縦積は同じ型番の商品が複数あるとき）　<i className="sw auto"></i>自動で入れたマス　<i className="sw err"></i>直すところ
         </span>
       </div>
       <div className="card regbar pconly">
