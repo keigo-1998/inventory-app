@@ -1,0 +1,2004 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>画面イメージ（物販管理）</title>
+<style>
+:root{
+  --bg:#f5f6f8; --card:#fff; --text:#1d2330; --sub:#6b7280; --line:#e5e7eb;
+  --accent:#2563eb; --accent-soft:#e8efff; --green:#15803d; --green-soft:#e7f6ec;
+  --orange:#c2410c; --orange-soft:#fdeee5; --red:#b91c1c; --red-soft:#fdeaea; --gray-soft:#f0f1f3;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif;font-size:14px;line-height:1.5}
+.note{background:#fff8db;border-bottom:1px solid #f1e3a1;padding:8px 16px;font-size:12px;color:#6b5800}
+header{background:var(--card);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+.hwrap{margin:0 auto;display:flex;align-items:center;gap:20px;padding:0 24px;height:60px}
+.logo{display:flex;align-items:center;gap:8px;white-space:nowrap;cursor:default;user-select:none;padding-right:20px;border-right:1px solid var(--line);height:32px}
+.logo img{height:22px;width:auto;display:block}
+.logo span{font-size:10px;font-weight:600;letter-spacing:.08em;color:var(--sub);background:var(--gray-soft);border-radius:4px;padding:2px 6px}
+nav.top{display:flex;gap:2px;background:#eef0f4;border-radius:10px;padding:3px}
+nav.top button{border:0;background:none;padding:7px 14px;border-radius:8px;font:inherit;font-size:13px;font-weight:500;color:#374151;cursor:pointer;white-space:nowrap}
+nav.top button:hover{background:#e2e6ec}
+nav.top button.on{background:var(--accent);color:#fff;font-weight:700;box-shadow:0 1px 3px rgba(37,99,235,.35)}
+.hright{margin-left:auto;display:flex;gap:8px}
+.btn{border:1px solid var(--line);background:var(--card);border-radius:8px;padding:8px 14px;font:inherit;cursor:pointer;white-space:nowrap}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+main{margin:0 auto;padding:20px 24px 96px} /* 画面いっぱいに広げる */
+h1{font-size:20px;margin:0 0 4px}
+.lead{color:var(--sub);margin:0 0 16px;font-size:13px}
+.grid{display:grid;gap:12px}
+.kpis{grid-template-columns:repeat(5,1fr)}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px}
+.kpi .l{color:var(--sub);font-size:12px}
+.kpi .v{font-size:22px;font-weight:700;margin-top:2px}
+.kpi .d{font-size:12px;margin-top:2px}
+.up{color:var(--green)} .down{color:var(--red)}
+.sec{font-size:13px;font-weight:700;color:var(--sub);margin:22px 0 8px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px}
+.card h2{font-size:15px;margin:0 0 12px;display:flex;align-items:center;gap:8px}
+.two{grid-template-columns:2fr 1fr}
+.tag{display:inline-block;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600;white-space:nowrap}
+.t-stock{background:var(--gray-soft);color:#374151}
+.t-list{background:var(--accent-soft);color:var(--accent)}
+.t-sold{background:var(--green-soft);color:var(--green)}
+.t-warn{background:var(--orange-soft);color:var(--orange)}
+.t-temp{background:#fff4cc;color:#8a6d00}
+.chip{display:inline-block;padding:1px 7px;border-radius:6px;font-size:11px;border:1px solid var(--line);margin:1px 2px 1px 0;color:var(--sub)}
+.chip.sold{border-color:var(--green);color:var(--green);font-weight:600}
+table{width:100%;border-collapse:collapse}
+th,td{text-align:left;padding:9px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+th{font-size:12px;color:var(--sub);font-weight:600}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+tr:last-child td{border-bottom:0}
+.list li{display:flex;justify-content:space-between;gap:8px;padding:9px 0;border-bottom:1px solid var(--line)}
+.list li:last-child{border-bottom:0}
+ul.list{list-style:none;margin:0;padding:0}
+.muted{color:var(--sub);font-size:12px}
+.bars .row{display:grid;grid-template-columns:80px 1fr 80px;gap:8px;align-items:center;margin:8px 0;font-size:13px}
+.bar{height:10px;background:var(--gray-soft);border-radius:99px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);border-radius:99px}
+.legend{display:flex;gap:14px;font-size:12px;color:var(--sub);margin-bottom:6px}
+.legend span::before{content:"";display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px;background:var(--c)}
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.filters input,.filters select{border:1px solid var(--line);border-radius:8px;padding:8px 10px;font:inherit;background:var(--card)}
+.filters input{flex:1;min-width:200px}
+.pills{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.dhead{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px}
+.dseg{flex:0 1 auto}
+.dseg button{padding:6px 12px;font-size:13px;cursor:pointer;white-space:nowrap}
+.dsum{display:flex;gap:18px;flex-wrap:wrap;font-size:13px;color:var(--sub);margin-top:4px}
+.dsum b{color:var(--text);font-size:15px}
+.pill{border:1px solid var(--line);background:var(--card);border-radius:99px;padding:5px 12px;font-size:12px;cursor:pointer}
+.pill.on{background:var(--text);color:#fff;border-color:var(--text)}
+.tablewrap{overflow-x:auto}
+.mcards{display:none}
+.lothead{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.lotnum{font-size:13px;color:var(--sub)}
+.progress{height:14px;background:var(--gray-soft);border-radius:99px;overflow:hidden;margin:8px 0 4px}
+.progress i{display:block;height:100%;background:var(--green)}
+.three{grid-template-columns:repeat(4,1fr)}
+.sold-row td{background:#fbfefc}
+.alert{background:var(--orange-soft);color:var(--orange);border-radius:10px;padding:10px 12px;font-size:13px;margin-bottom:12px}
+.screen{display:none}.screen.on{display:block}
+.step{display:inline-flex;width:22px;height:22px;border-radius:99px;background:var(--accent);color:#fff;font-size:12px;align-items:center;justify-content:center}
+.chk{display:flex;gap:8px;align-items:center;cursor:pointer}
+textarea{width:100%;border:1px dashed #b8c2d6;border-radius:10px;padding:10px;font:13px/1.5 ui-monospace,Menlo,monospace;background:#fafbfd;resize:vertical}
+td.err{background:var(--red-soft);color:var(--red)}
+td.auto{color:var(--accent);font-weight:600}
+.sheet-wrap{background:var(--card);border:1px solid #cfd5df;border-radius:8px;overflow:auto;max-height:520px;margin-top:12px}
+table.sheet{border-collapse:collapse;width:max-content;min-width:100%;font-size:13px}
+.sheet th{position:sticky;top:0;background:#f1f3f6;color:#374151;font-weight:600;border:1px solid #d9dee6;padding:6px 8px;z-index:1}
+.sheet td{border:1px solid #e3e7ed;padding:0}
+.sheet td.rn,.sheet th.rn{width:36px;min-width:36px;text-align:center;color:#8a93a3;background:#f1f3f6;font-size:12px;padding:0 4px;position:sticky;left:0;z-index:2}
+.sheet th.rn{z-index:3}
+.sheet input{border:0;width:100%;padding:6px 8px;font:inherit;background:transparent;outline:none}
+.sheet input.n{text-align:right;font-variant-numeric:tabular-nums}
+.sheet input:focus{box-shadow:inset 0 0 0 2px var(--accent);background:#fff}
+.sheet td.auto{background:#eaf1ff;color:var(--accent);font-weight:600}
+.sheet td.err{background:var(--red-soft);color:var(--red)}
+.sheet-tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px}
+.legend2{margin-left:auto;font-size:12px;color:var(--sub);display:flex;align-items:center;gap:4px}
+.sw{display:inline-block;width:12px;height:12px;border-radius:3px;border:1px solid #d9dee6}.sw.auto{background:#eaf1ff}.sw.err{background:var(--red-soft)}
+.lotbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:12px 14px}
+.lotbar input:not([type]){border:1px solid var(--line);border-radius:8px;padding:7px 10px;font:inherit;width:190px}
+.regbar{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-top:12px;flex-wrap:wrap}
+.regbar ul{margin:6px 0 0;padding-left:18px;color:var(--red);font-size:12px}
+.sheet:focus{outline:none}
+.sheet td.cell{padding:6px 8px;height:31px;cursor:cell;position:relative;user-select:none;max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sheet td.cell.n{text-align:right;font-variant-numeric:tabular-nums}
+.sheet td.cell.sel{background:#e8f0fe}
+.sheet td.cell.anchor{box-shadow:inset 0 0 0 2px var(--accent)}
+.sheet td.cell .handle{position:absolute;right:-4px;bottom:-4px;width:8px;height:8px;background:var(--accent);border:1px solid #fff;cursor:crosshair;z-index:4}
+.sheet td.cell .editor{position:absolute;inset:0;border:0;padding:6px 8px;font:inherit;box-shadow:inset 0 0 0 2px var(--accent);outline:none;background:#fff}
+.sheet td.cell .editor.n{text-align:right}
+.sheet td.cell.sel.auto{background:#d7e4ff}.sheet td.cell.sel.err{background:#f8d3d3}
+.howto{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--sub);margin:0 0 12px}
+.howto b{color:var(--text);background:var(--gray-soft);border-radius:4px;padding:1px 6px;font-weight:600;margin-right:4px}
+.t-yama{background:#fdeee5;color:#b45309}
+tr.lotleft td{background:var(--orange-soft);border-top:2px solid var(--line)}
+/* 商品一覧：山の行（-0）は色付き、その下の枝番は字下げ */
+#itemrows tr.lotrow td{background:var(--orange-soft);border-top:2px solid #f3c9a8}
+#itemrows tr.lotrow td:first-child{box-shadow:inset 4px 0 0 #e8894a}
+#itemrows tr.lotrow .nm{font-weight:700}
+#itemrows tr.brrow td{background:#fffaf6}
+#itemrows tr.brrow td:first-child{box-shadow:inset 4px 0 0 #f3c9a8}
+#itemrows tr.brrow .nm::before,#itemcards .brrow .nm::before{content:"└ ";color:var(--sub)}
+#itemcards .mc.lotrow{background:var(--orange-soft);border-left:4px solid #e8894a}
+#itemcards .mc.brrow{margin-left:14px;border-left:4px solid #f3c9a8}
+.sheet td.kind{cursor:pointer;text-align:center}
+.slipgrid{display:grid;grid-template-columns:1fr 1.4fr;gap:12px;margin-top:4px}
+.drop{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border:2px dashed #b8c2d6;border-radius:12px;background:#fafbfd;padding:18px;cursor:pointer;text-align:center}
+.drop.over{border-color:var(--accent);background:var(--accent-soft)}
+.slipbar{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center}
+.slipbar>div{width:100%}
+.slipbar label{display:flex;align-items:center;gap:6px;font-size:13px}
+.slipbar input{border:1px solid var(--line);border-radius:8px;padding:7px 10px;font:inherit;width:180px}
+.pickbar{display:none;position:sticky;bottom:12px;margin-top:12px;background:var(--text);color:#fff;border-radius:12px;padding:10px 12px;align-items:center;gap:8px;box-shadow:0 6px 20px rgba(0,0,0,.18)}
+.pickbar b{margin-right:auto}
+.pickbar .btn:not(.primary){background:transparent;color:#fff;border-color:#4b5563}
+dialog{border:0;border-radius:14px;padding:20px;width:min(640px,calc(100vw - 32px));box-shadow:0 20px 60px rgba(0,0,0,.25)}
+dialog::backdrop{background:rgba(17,24,39,.45)}
+dialog td input,.brtable input{border:1px solid var(--line);border-radius:6px;padding:6px 8px;font:inherit;width:100%}
+dialog td input{width:110px}
+input.n{text-align:right}
+input.auto-in{color:var(--accent);font-weight:600;background:#eaf1ff}
+.auto-txt{color:var(--accent);font-weight:600}
+@media (max-width:760px){.slipgrid{grid-template-columns:1fr}.pickbar{bottom:72px;flex-wrap:wrap}.pickbar b{flex-basis:100%;white-space:nowrap}.pickbar .btn{flex:1;padding-left:6px;padding-right:6px;white-space:nowrap}}
+.sheet td.cell .ddv{display:inline-block;max-width:calc(100% - 14px);overflow:hidden;text-overflow:ellipsis;vertical-align:bottom}
+.sheet td.cell .dd{position:absolute;right:4px;top:50%;transform:translateY(-50%);color:#8a93a3;font-size:11px;cursor:pointer;padding:2px 3px;border-radius:3px}
+.sheet td.cell .dd:hover{background:var(--gray-soft);color:var(--text)}
+.ddlist{position:fixed;min-width:160px;max-height:220px;overflow:auto;background:#fff;border:1px solid #cfd5df;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.15);z-index:10;padding:4px}
+.ddlist .opt{padding:6px 10px;border-radius:5px;cursor:pointer}
+.ddlist .opt:hover,.ddlist .opt.on{background:var(--accent-soft);color:var(--accent)}
+.ddlist .opt.cur{font-weight:700}
+.ddlist .none{padding:6px 10px;color:var(--sub);font-size:12px;white-space:normal}
+.sheet td.warn{background:#fff4e5}
+.warnlist{margin:4px 0 0;padding-left:18px;color:var(--orange);font-size:12px}
+.sheet-wrap{overflow:auto}
+.form .f{display:flex;flex-direction:column;gap:4px;margin-bottom:12px;font-size:13px;font-weight:600}
+.form .f>span{color:var(--text)}
+.form input:not([type=checkbox]){border:1px solid var(--line);border-radius:10px;padding:11px 12px;font:inherit;font-size:16px;font-weight:400}
+.form .cur{color:var(--sub);font-weight:400}
+.hint{font-weight:400;color:var(--sub);font-size:12px}
+.itembox{background:var(--gray-soft);border-radius:10px;padding:10px 12px;margin:-4px 0 12px;font-size:13px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chipbtn{border:1px solid var(--line);background:var(--card);border-radius:99px;padding:8px 12px;font:inherit;font-size:13px;cursor:pointer}
+.chipbtn.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+.chipbtn.sp{border-style:dashed;color:var(--sub)}
+.listbox{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:0 0 12px}
+.listbox .chips{margin-top:6px}
+.chipbtn.sp.on{background:var(--text);border-color:var(--text);color:#fff}
+.chk.small{font-size:12px;font-weight:400;margin-top:4px}
+.btn.big{width:100%;padding:13px;font-size:15px;margin-top:4px}
+table.calc td{padding:8px 4px}
+table.calc tr.tot td{border-top:2px solid var(--text);font-weight:700;font-size:16px}
+.mtable{border-collapse:collapse;width:max-content;min-width:100%;font-size:13px}
+.mtable th{position:sticky;top:0;background:#f1f3f6;color:#374151;font-weight:600;border:1px solid #d9dee6;padding:6px 8px;white-space:nowrap;z-index:1}
+.mtable td{border:1px solid #e3e7ed;padding:0;height:34px;white-space:nowrap}
+.mtable td.rn{width:36px;text-align:center;color:#8a93a3;background:#f1f3f6;font-size:12px}
+.mtable input,.mtable select{border:0;padding:7px 8px;font:inherit;background:transparent;width:100%;min-width:80px;outline:none}
+.mtable input:focus,.mtable select:focus{box-shadow:inset 0 0 0 2px var(--accent);background:#fff}
+.mtable td.err{background:var(--red-soft);color:var(--red)}
+.cin{display:flex;align-items:center}.cin input{min-width:70px;width:84px}.cin i{font-style:normal;color:var(--sub);padding-right:8px;font-size:12px}
+.warn2{background:#fff4e5!important}.sw.warn2{background:#fff4e5}
+#chTable select,#chTable input{border:1px solid var(--line);border-radius:6px;padding:5px 6px;font:inherit}
+.sugg{position:fixed;display:none;z-index:50;background:#fff;border:1px solid #cfd5df;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.18);padding:4px;max-height:340px;overflow:auto}
+.sugg .sg{padding:8px 10px;border-radius:7px;cursor:pointer;font-size:13px}
+.sugg .sg.on,.sugg .sg[data-i]:hover{background:var(--accent-soft)}
+.sugg .sg.none{cursor:default;color:var(--sub)}
+.sugg b{color:var(--accent)}
+.itembox.picked{background:var(--accent-soft)}
+.linkbtn{border:0;background:none;color:var(--accent);font:inherit;font-size:12px;cursor:pointer;padding:2px 4px;text-decoration:underline}
+.picked-cell{display:flex;align-items:center;gap:6px;padding:0 8px;white-space:nowrap}
+.picked-cell .linkbtn{margin-left:auto}
+#toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,140%);background:var(--text);color:#fff;border-radius:12px;padding:12px 14px 14px;display:flex;align-items:center;gap:12px;box-shadow:0 10px 30px rgba(0,0,0,.25);z-index:60;max-width:calc(100vw - 32px);transition:transform .25s;font-size:13px;overflow:hidden}
+#toast.show{transform:translate(-50%,0)}
+#toast .btn{background:#fff;color:var(--text);border:0;font-weight:700}
+#toast .x{border:0;background:none;color:#9ca3af;font-size:18px;cursor:pointer}
+#toast .bar{position:absolute;left:0;bottom:0;height:3px;background:#60a5fa;width:100%}
+#toast.show .bar{animation:shrink 10s linear forwards}
+@keyframes shrink{to{width:0}}
+tr.flash td,.mc.flash{animation:flash 2.5s ease}
+@keyframes flash{0%{background:#fff3b0}100%{background:transparent}}
+@media (max-width:760px){#toast{bottom:76px}}
+.clickable{cursor:pointer}
+tr.clickable:hover td{background:#f7f9fc}
+.itemdlg{width:min(520px,calc(100vw - 32px))}
+.dlghead{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:12px}
+.dlghead .x{border:0;background:none;font-size:22px;color:var(--sub);cursor:pointer;line-height:1}
+.infogrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
+.infogrid div{background:var(--gray-soft);border-radius:10px;padding:8px 10px;display:flex;flex-direction:column;gap:2px;font-size:12px}
+.infogrid span{color:var(--sub)}.infogrid b{font-size:14px}
+.profitbig{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;background:var(--green-soft);border-radius:12px;padding:12px 14px;margin-bottom:10px}
+.profitbig.down{background:var(--red-soft)}
+.delist{display:inline-block;margin-top:4px;color:var(--orange);font-weight:600;font-size:12px}
+#toast .delist{color:#fdba74}
+.retbox{border:1px solid var(--line);border-radius:12px;padding:12px;margin-top:12px;display:flex;flex-direction:column;gap:10px}
+.retbox .f{display:flex;flex-direction:column;gap:4px;font-size:13px}
+.retbox input{padding:8px 10px;border:1px solid var(--line);border-radius:8px;font:inherit;text-align:right}
+.retbox .hint{color:var(--sub);font-size:12px}
+.retbox .sumline{background:var(--red-soft);border-radius:8px;padding:8px 10px;font-size:13px}
+.rethist{background:var(--orange-soft);border-radius:10px;padding:8px 12px;margin:0 0 10px;font-size:13px}
+.profitbig span{font-size:13px;font-weight:600;color:var(--text)}
+.profitbig b{font-size:26px}
+.profitbig small{color:var(--sub);margin-left:auto}
+table.calc.small td{padding:6px 4px;font-size:13px}
+.lotbox{display:flex;justify-content:space-between;gap:10px;align-items:center;border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-top:12px;font-size:13px}
+@media (max-width:760px){.infogrid{grid-template-columns:repeat(2,1fr)}}
+.phonebtn{float:right;margin:-3px 0 -3px 12px;border:1px solid #d8c56a;background:#fff;border-radius:99px;padding:3px 12px;font:inherit;font-size:12px;font-weight:600;cursor:pointer;color:#5a4a00}
+#phoneOv{position:fixed;inset:0;z-index:100;background:#e9ecf1;display:flex;flex-direction:column;align-items:center;overflow:auto;padding:12px 16px 24px}
+.phonebar{display:flex;gap:12px;align-items:center;justify-content:space-between;width:min(390px,100%);margin-bottom:10px}
+.phone{width:390px;max-width:100%;height:min(844px,calc(100vh - 80px));border:10px solid #111827;border-radius:44px;overflow:hidden;background:#fff;box-shadow:0 20px 50px rgba(0,0,0,.25);flex:none}
+.phone iframe{width:100%;height:100%;border:0;display:block}
+.countbadge{display:inline-block;min-width:18px;padding:0 5px;border-radius:99px;background:var(--orange);color:#fff;font-size:11px;font-weight:700;margin-left:2px}
+.pill.on .countbadge{background:#fff;color:var(--orange)}
+.tbdbanner{display:flex;align-items:center;gap:10px;background:var(--orange-soft);color:var(--orange);border-radius:12px;padding:10px 14px;margin:0 0 12px}
+.tbdbanner b{margin-right:auto}
+.tbdrow{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:8px}
+.tbdinfo{display:flex;flex-direction:column;gap:2px;min-width:0}
+.tbdin{display:flex;gap:8px}
+.tbdin input{border:1px solid var(--line);border-radius:10px;padding:9px 12px;font:inherit;font-size:16px;width:150px;text-align:right}
+.tbdin input.errin{border-color:var(--red)}
+@media (max-width:760px){.tbdin{width:100%}.tbdin input{flex:1}}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+/* スマホ用の登録 */
+.mobonly{display:none}
+.mf .card{margin-bottom:12px}
+.mf label,.mf .flabel{display:block;font-size:12px;color:var(--sub);margin:12px 0 4px}
+.mf label input{display:block;width:100%;box-sizing:border-box;font:inherit;font-size:16px;padding:12px;border:1px solid var(--line);border-radius:10px;margin-top:4px;background:#fff;color:var(--text)}
+.mf label input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.mf .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.mf .mcommon label{margin-top:6px}
+.seg{display:flex;background:var(--gray-soft);border-radius:10px;padding:3px}
+.seg button{flex:1;border:0;background:none;padding:10px 4px;font:inherit;font-size:14px;border-radius:8px;color:var(--sub)}
+.seg button.on{background:var(--card);color:var(--text);font-weight:700;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.gchips{display:flex;flex-wrap:wrap;gap:6px}
+.gchips .chipbtn{padding:9px 12px}
+.stepper{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.stepper button{border:0;background:var(--gray-soft);width:48px;height:44px;font-size:20px}
+.stepper b{min-width:52px;text-align:center;font-size:16px}
+.kid{display:grid;grid-template-columns:1fr 92px 36px;gap:6px;align-items:center;margin-bottom:8px}
+.kid input{font:inherit;font-size:16px;padding:10px;border:1px solid var(--line);border-radius:8px;width:100%;box-sizing:border-box}
+.kid .x,.mitem .x{border:0;background:none;font-size:18px;color:var(--sub)}
+.kid .al{grid-column:1/-1;font-size:12px;color:var(--accent);margin-top:-4px}
+.mno{margin:14px 0 4px;font-size:13px}
+.merr{color:#b91c1c;font-size:13px;margin:4px 0}
+.btn.big{width:100%;padding:14px;font-size:16px;border-radius:12px}
+.mitem{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:8px;display:flex;justify-content:space-between;gap:8px}
+.mitem .name{font-weight:600;margin:2px 0 4px}
+.mitem .meta{font-size:12px;color:var(--sub)}
+.mbar{position:sticky;bottom:64px;padding:10px 0;background:linear-gradient(transparent,var(--bg) 30%)}
+@media (max-width:760px){.pconly{display:none!important}.mobonly{display:block}h1 .mobonly{display:inline}}
+.realrow{display:flex;gap:8px}
+.realrow input{flex:1;min-width:0}
+.realrow input.tmp-in,.tbdcell input.tmp-in{background:var(--orange-soft);color:var(--orange);font-weight:600;border-color:#f3c4a6}
+.tbdbtn{flex:none;padding:8px 16px}
+.tbdbtn.on{background:var(--orange);border-color:var(--orange);color:#fff}
+.tbdcell{display:flex;align-items:center;gap:4px;padding:0 4px}
+.tbdcell input{flex:1;min-width:60px}
+.tbdcell .mini{border:1px solid var(--line);background:var(--card);border-radius:6px;font:inherit;font-size:11px;padding:3px 6px;cursor:pointer;white-space:nowrap;color:var(--sub)}
+.tbdcell .tag{cursor:pointer}
+/* 月次レポート */
+.replist{display:grid;gap:8px;margin-bottom:16px}
+.reprow{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.reprow.on{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
+.reprow .m{font-weight:700;min-width:96px}
+.reprow .info{flex:1;min-width:180px;font-size:13px;color:var(--sub)}
+.reprow .info b{color:var(--text)}
+.repbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+.repbar b{margin-right:auto;font-size:15px}
+.repdoc{border:1px solid var(--line);border-radius:8px;padding:28px 32px;background:#fff;color:#111;font-size:12px;overflow-x:auto}
+.repdoc h2{font-size:18px;margin:0}
+.repdoc h3{font-size:14px;margin:22px 0 6px;padding-bottom:4px;border-bottom:2px solid #111;display:flex;justify-content:space-between;gap:8px}
+.repdoc h3 small{font-weight:400;color:#555;font-size:11px}
+.repdoc .rhead{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;border-bottom:1px solid #ccc;padding-bottom:10px;margin-bottom:12px}
+.repdoc .rhead img{height:20px}
+.repdoc .rmeta{font-size:11px;color:#555;text-align:right;line-height:1.6}
+.repdoc table{width:100%;border-collapse:collapse;margin-top:4px}
+.repdoc th,.repdoc td{border-bottom:1px solid #e3e3e3;padding:5px 6px;text-align:left;white-space:nowrap}
+.repdoc th{background:#f4f4f4;font-weight:600;font-size:11px}
+.repdoc td.n,.repdoc th.n{text-align:right}
+.repdoc tr.tot td{font-weight:700;border-top:2px solid #111;background:#fafafa}
+.repdoc .neg{color:#b91c1c}
+.repdoc .kp{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:8px 0 4px}
+.repdoc .kp div{border:1px solid #ddd;border-radius:6px;padding:8px 10px}
+.repdoc .kp span{display:block;font-size:10px;color:#555}
+.repdoc .kp b{font-size:16px}
+.repdoc .rnote{font-size:10px;color:#555;margin-top:18px;line-height:1.6}
+.recon{border:1px solid var(--line);border-radius:10px;padding:12px;margin:0 0 12px;background:var(--card)}
+.recon .rc-head{display:flex;flex-direction:column;gap:2px;margin-bottom:8px}
+.recon .rc-head .muted{font-size:12px}
+.recon .rc-warn{background:#fff4cc;color:#5c4800;border-radius:8px;padding:8px 10px;margin-bottom:8px;font-size:13px}
+.recon .rc-tmp{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:6px}
+.recon input.n{width:110px;text-align:right;padding:6px 8px;border:1px solid var(--line);border-radius:6px;font:inherit}
+.recon .rc-t{width:100%;border-collapse:collapse;font-size:13px}
+.recon .rc-t th,.recon .rc-t td{padding:6px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
+.recon .rc-t .n{text-align:right}
+.recon .nowrap{white-space:nowrap}
+.recon .ok{color:#15803d;font-weight:700}
+.recon .neg{color:#b91c1c;font-weight:700}
+.recon .btn.mini{padding:4px 8px;font-size:12px}
+.recon .rc-foot{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:10px}
+.fxq{background:#e0ecff;color:#1e40af;border-radius:4px;padding:0 4px;font-size:10px;font-weight:400}
+.repdoc .wmark{border:2px dashed #d97706;color:#b45309;text-align:center;font-weight:700;padding:4px;margin-bottom:10px;border-radius:6px}
+.repdoc .tmp{background:#fff4cc;color:#8a6d00;border-radius:4px;padding:0 4px;font-size:10px}
+@media (max-width:760px){.repdoc{padding:16px}.repdoc .kp{grid-template-columns:repeat(2,1fr)}}
+@media print{
+  @page{size:A4;margin:12mm}
+  body{background:#fff}
+  body>*:not(main),main>*:not(#report),#report>*:not(#repView),#repView>*:not(#repDoc){display:none!important}
+  main{padding:0;max-width:none}
+  #repView{border:0;padding:0;box-shadow:none}
+  #repDoc{border:0;padding:0;overflow:visible}
+  .repdoc .kp{grid-template-columns:repeat(4,1fr)}
+  .repdoc h3{break-after:avoid}
+  .repdoc tr{break-inside:avoid}
+}
+nav.bottom{display:none}
+.fab{display:none}
+body.picking .fab{display:none!important}
+
+@media (max-width:760px){
+  .hwrap{height:52px}
+  nav.top,.hright{display:none}
+  main{padding:14px 16px 96px}
+  .kpis{grid-template-columns:repeat(2,1fr)}
+  .kpis .kpi:first-child{grid-column:span 2}
+  .two,.three{grid-template-columns:1fr}
+  .three{grid-template-columns:repeat(2,1fr)}
+  .tablewrap.pc{display:none}
+  .mcards{display:block}
+  .mc{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:8px}
+  .mc .top{display:flex;justify-content:space-between;gap:8px}
+  .mc .name{font-weight:600;margin:2px 0 6px}
+  .mc .meta{display:flex;justify-content:space-between;font-size:12px;color:var(--sub)}
+  nav.bottom{display:flex;position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--line);z-index:6;padding-bottom:env(safe-area-inset-bottom)}
+  nav.bottom button{flex:1;border:0;background:none;padding:8px 0 10px;font:inherit;font-size:11px;color:var(--sub);display:flex;flex-direction:column;align-items:center;gap:2px}
+  nav.bottom button b{font-size:18px;font-weight:400;line-height:1}
+  nav.bottom button.on{color:var(--accent);font-weight:600}
+  .fab{display:block;position:fixed;right:16px;bottom:76px;z-index:6;border:0;background:var(--accent);color:#fff;border-radius:99px;padding:12px 18px;font:inherit;font-weight:700;box-shadow:0 4px 14px rgba(37,99,235,.35)}
+}
+</style>
+</head>
+<body>
+<div class="note"><button id="phoneBtn" class="phonebtn">📱 スマホ表示に切り替え</button>これは画面のイメージです。数字はすべて見本で、ボタンは押しても登録されません。上（スマホでは下）のメニューで画面を切り替えられます。</div>
+<header><div class="hwrap">
+  <div class="logo"><img src="joynt-logo.png" alt="JOYNT"><span>物販管理</span></div>
+  <nav class="top">
+    <button data-go="dash" class="on">ダッシュボード</button>
+    <button data-go="items">商品一覧</button>
+    <button data-go="report">月次レポート</button>
+  </nav>
+  <div class="hright"><button class="btn" data-go="sales">販売を記録</button><button class="btn primary" data-go="bulk">＋ 商品を登録</button></div>
+</div></header>
+
+<main>
+<!-- ダッシュボード -->
+<section class="screen on" id="dash">
+  <h1>ダッシュボード</h1>
+  <p class="lead">2026年11月11日（水）時点</p>
+  <div class="tbdbanner" id="tbdBanner"><span>🚚</span><b></b><button class="btn">送料を入れる</button></div>
+
+  <div class="sec">今日（EC）</div>
+  <div class="grid kpis">
+    <div class="kpi"><div class="l">売上</div><div class="v">¥72,123</div><div class="d up">▲ 昨日より +¥40,200</div></div>
+    <div class="kpi"><div class="l">粗利</div><div class="v">¥50,907</div><div class="d muted">粗利率 71%</div></div>
+    <div class="kpi"><div class="l">仕入額</div><div class="v">¥0</div><div class="d muted">0件</div></div>
+    <div class="kpi"><div class="l">出品数</div><div class="v">3</div><div class="d muted">件</div></div>
+    <div class="kpi"><div class="l">発送数</div><div class="v">1</div><div class="d down">未発送 4件</div></div>
+  </div>
+
+  <div class="sec">今月（EC・11月）</div>
+  <div class="grid three">
+    <div class="kpi"><div class="l">売上</div><div class="v">¥486,300</div><div class="d muted">目標 ¥1,000,000 の <b>49%</b>　<span class="tag t-temp">為替 仮</span></div></div>
+    <div class="kpi"><div class="l">粗利</div><div class="v">¥301,550</div><div class="d muted">粗利率 62%</div></div>
+    <div class="kpi"><div class="l">在庫（残原価）</div><div class="v">¥1,158,208</div><div class="d muted">412点・出品率 <b>77%</b></div></div>
+    <div class="kpi"><div class="l">成約件数</div><div class="v">19件</div><div class="d up">▲ 先月の同じ日より +3件</div></div>
+  </div>
+
+  <div class="card" style="margin-top:12px">
+    <div class="dhead"><h2 style="margin:0">今月の日ごとの数字（EC・11月）</h2>
+      <div class="seg dseg" id="dMetric"><button data-m="sp" class="on">売上・粗利</button><button data-m="buy">仕入額</button><button data-m="list">出品数</button><button data-m="deal">成約件数</button></div></div>
+    <div class="legend" id="dLegend"></div>
+    <svg viewBox="0 0 960 200" width="100%" role="img" aria-label="今月の日ごとのグラフ"><g id="dChart"></g></svg>
+    <div class="dsum" id="dSum"></div>
+  </div>
+  <div class="grid two" style="margin-top:12px">
+    <div class="card">
+      <h2>月ごとの売上と粗利（EC）</h2>
+      <div class="legend"><span style="--c:#93b4f7">売上</span><span style="--c:#15803d">粗利</span></div>
+      <svg viewBox="0 0 600 220" width="100%" role="img" aria-label="月ごとの売上と粗利のグラフ">
+        <g font-size="11" fill="#6b7280">
+          <line x1="40" y1="190" x2="590" y2="190" stroke="#e5e7eb"/>
+          <line x1="40" y1="130" x2="590" y2="130" stroke="#f0f1f3"/>
+          <line x1="40" y1="70" x2="590" y2="70" stroke="#f0f1f3"/>
+          <text x="34" y="194" text-anchor="end">0</text>
+          <text x="34" y="134" text-anchor="end">50万</text>
+          <text x="34" y="74" text-anchor="end">100万</text>
+        </g>
+        <g id="chart"></g>
+      </svg>
+    </div>
+    <div class="card">
+      <h2>売り先別（EC・今月）</h2>
+      <div class="bars">
+        <div class="row"><span>Catawiki</span><div class="bar"><i style="width:82%"></i></div><span class="n" style="text-align:right">¥241,800</span></div>
+        <div class="row"><span>メルカリ</span><div class="bar"><i style="width:48%"></i></div><span style="text-align:right">¥142,000</span></div>
+        <div class="row"><span>ヤフオク</span><div class="bar"><i style="width:20%"></i></div><span style="text-align:right">¥58,500</span></div>
+        <div class="row"><span>Amazon</span><div class="bar"><i style="width:12%"></i></div><span style="text-align:right">¥34,000</span></div>
+        <div class="row"><span>市場</span><div class="bar"><i style="width:4%"></i></div><span style="text-align:right">¥10,000</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid two" style="margin-top:12px">
+    <div class="card">
+      <h2>売れ残っている商品 <span class="tag t-warn">90日以上</span></h2>
+      <ul class="list">
+        <li><span>0042-3 オリンパス フィルムカメラ<br><span class="muted">出品先: メルカリ・ヤフオク</span></span><span class="n">212日<br><span class="muted">¥3,000</span></span></li>
+        <li><span>0058-0 レトロ 薬箱 赤<br><span class="muted">未出品</span></span><span>184日<br><span class="muted">¥1,200</span></span></li>
+        <li><span>L00004 北欧 チェア<br><span class="muted">出品先: メルカリ（残り5個）</span></span><span>121日<br><span class="muted">¥2,500</span></span></li>
+      </ul>
+    </div>
+    <div class="card">
+      <h2>未発送 <span class="tag t-warn">4件</span></h2>
+      <ul class="list">
+        <li><span>0237-0 Canon ビデオカメラ<br><span class="muted">Catawiki・11/11</span></span><button class="btn">発送済み</button></li>
+        <li><span>0303-0 ドリームキャスト<br><span class="muted">メルカリ・11/11</span></span><button class="btn">発送済み</button></li>
+        <li><span>0120-2 SEIKO 腕時計<br><span class="muted">Catawiki・11/10</span></span><button class="btn">発送済み</button></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- 商品一覧 -->
+<section class="screen" id="items">
+  <h1>商品一覧</h1>
+  <p class="lead">全 1,284 点（在庫 412 点）。売れ残りをまとめて山売りしたいときは、商品にチェックを入れて「まとめて売る」を押します。<br><span class="muted">商品を押すと、いくら利益が出ているかが見られます。<span class="tag t-yama">山 ▸</span> の行を押すと山の画面が開き、枝番を追加できます。</span></p>
+  <div class="filters">
+    <input id="invQ" placeholder="管理番号・商品名で検索" style="flex:1"><button class="btn primary" id="invGo">🔍 検索</button>
+    <select><option>ジャンル：すべて</option><option>カメラ</option><option>ゲーム</option><option>茶道具</option><option>家具</option></select>
+    <select><option>出品先：すべて</option><option>Catawiki</option><option>メルカリ</option><option>ヤフオク</option></select>
+  </div>
+  <div class="pills">
+    <span id="invPills"></span>
+  </div>
+
+  <div class="card tablewrap pc" style="padding:4px 8px">
+    <table>
+      <thead><tr><th style="width:28px"></th><th>管理番号</th><th>商品名</th><th>ジャンル</th><th>仕入日</th><th class="n">原価</th><th class="n">予想売価</th><th>状態</th><th>出品先</th><th class="n">滞留</th></tr></thead>
+      <tbody id="itemrows"></tbody>
+    </table>
+  </div>
+  <div class="mcards" id="itemcards"></div>
+  <div class="pickbar" id="pickBar"><b id="pickCount"></b><button class="btn" id="pickClear">選択を外す</button><button class="btn" id="pickList">出品先を変える</button><button class="btn primary" id="pickSell">まとめて売る</button></div>
+  <dialog id="bundleDlg">
+    <h2 style="margin:0 0 4px">まとめて売る（山売り・合わせ売り）</h2>
+    <p class="muted" style="margin:0 0 12px">販売の記録は<b>1件（1行）</b>になります。中身の商品はすべて売却済みになります。<br>売れた金額は、山ごとの成績が分かるように、予想売価の比率で中身に分けます（予想売価がなければ均等。金額のマスは手で直せます）。</p>
+    <div class="filters">
+      <label class="muted" style="display:flex;gap:6px;align-items:center">売り先<select id="bCh"></select></label>
+      <input value="2026/11/13" style="flex:0 1 130px;min-width:120px">
+      <label class="muted" style="display:flex;gap:6px;align-items:center">売れた金額<input id="bAmt" value="8000" inputmode="numeric" style="width:110px" class="n"></label>
+      <label class="muted" style="display:flex;gap:6px;align-items:center">手数料<input id="bFee" value="800" inputmode="numeric" style="width:90px" class="n"></label>
+    </div>
+    <div id="leftovers" style="margin-bottom:10px"></div>
+    <div class="tablewrap"><table>
+      <thead><tr><th>管理番号</th><th class="n">予想売価</th><th class="n">原価</th><th class="n">売上（分けた額）</th></tr></thead>
+      <tbody id="bRows"></tbody>
+    </table></div>
+    <p id="bCheck" style="font-size:13px"></p>
+    <div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap"><button class="btn" id="bReset">自動の割り振りに戻す</button><button class="btn" id="bClose">閉じる</button><button class="btn primary" id="bSave">記録する</button></div>
+  </dialog>
+</section>
+
+<!-- 山の詳細 -->
+<section class="screen" id="lot">
+  <p class="muted" style="margin:0 0 6px"><button class="linkbtn" id="lotBack">← 商品一覧</button> ＞ 山 <span id="lotNoTxt"></span></p>
+  <div id="lotBody"></div>
+</section>
+
+<!-- まとめて登録 -->
+<section class="screen" id="bulk">
+  <h1>商品を登録</h1>
+  <!-- スマホ用：1件ずつ入れやすい登録 -->
+  <div class="mobonly mf">
+    <div class="card mcommon">
+      <div class="muted" style="font-size:12px">仕入れの情報（続けて登録するとき、そのまま使います）</div>
+      <div class="row2"><label>仕入先<input id="mSup" placeholder="例：オークション（関東）"></label><label>仕入日<input id="mDate" type="date"></label></div>
+    </div>
+    <div class="card">
+      <div class="seg" id="mKind"><button data-k="単品" class="on">単品</button><button data-k="山">山（まとめて仕入れ）</button></div>
+      <label>商品名<input id="mName" placeholder="例：CASIO G-SHOCK" autocomplete="off"></label>
+      <div class="flabel">ジャンル <span class="auto-txt" id="mGAuto"></span></div>
+      <div class="gchips" id="mGenres"></div>
+      <div class="row2">
+        <label>原価（円）<input id="mCost" inputmode="numeric" placeholder="0"></label>
+        <label>予想売価（円）<input id="mExp" inputmode="numeric" placeholder="0"></label>
+      </div>
+      <div class="flabel" id="mQtyRow">個数</div>
+      <div class="stepper" id="mQtyBox"><button id="mMinus">−</button><b id="mQty">1</b><button id="mPlus">＋</button></div>
+      <div id="mKidsBox" style="display:none">
+        <div class="flabel">山の中身（売ると決めたものだけ。あとから足せます）</div>
+        <div id="mKids"></div>
+        <button class="btn" id="mAddKid" style="width:100%">＋ 中身を追加</button>
+        <div class="muted" style="font-size:12px;margin-top:6px">原価は、中身の予想売価の比率で全部割り振ります</div>
+      </div>
+      <div class="mno">管理番号 <b id="mNo"></b> <span class="muted">（自動）</span></div>
+      <p id="mErr" class="merr"></p>
+      <button class="btn primary big" id="rAdd">リストに追加して、次を入力</button>
+    </div>
+    <div class="sec">今回登録するもの <span id="mCount" class="muted"></span></div>
+    <div id="mList"></div>
+    <p class="muted" style="font-size:12px">伝票のCSVを取り込むときは、パソコンの「＋ 商品を登録」画面が便利です。</p>
+    <div class="mbar"><button class="btn primary big" id="mReg" disabled>登録する</button></div>
+  </div>
+  <p class="lead pconly">伝票のCSVを入れるか、スプレッドシートからコピーして貼り付けます。山と単品が混ざっていて大丈夫です。山の行は「種類」のマスを押して切り替えます。</p>
+  <div class="howto pconly">
+    <span><b>ドラッグ</b> 複数のマスを選ぶ</span>
+    <span><b>⌘+C / ⌘+V</b> コピー・貼り付け（スプレッドシートからもOK）</span>
+    <span><b>右下の■をドラッグ</b> 下にコピー</span>
+    <span><b>⌘+D</b> いちばん上の行を下にコピー</span>
+    <span><b>Delete</b> まとめて消す</span>
+    <span><b>ダブルクリック / 文字を打つ</b> マスを編集</span>
+  </div>
+
+  <div class="slipgrid pconly">
+    <label class="drop" id="drop"><input type="file" id="slipFile" accept=".csv,text/csv" hidden>
+      <b>伝票のCSVをここにドラッグ</b><span class="muted">またはクリックしてファイルを選ぶ</span></label>
+    <div class="card slipbar">
+      <div class="muted" style="font-size:12px">伝票の共通の情報（全部の行に自動で入ります）</div>
+      <label>仕入先<input id="slipSupplier" placeholder="例：オークション（関東）"></label>
+      <label>仕入日<input id="slipDate" placeholder="例：2026/11/04"></label>
+      <button class="btn" id="sampleSlip">見本の伝票CSVを入れてみる</button>
+    </div>
+  </div>
+  <p id="slipInfo" class="muted pconly" style="margin:8px 0 0"></p>
+
+  <div class="sheet-wrap pconly">
+    <table class="sheet" id="sheet" tabindex="0"></table>
+  </div>
+  <div class="sheet-tools pconly">
+    <button class="btn" id="addRows">＋ 10行追加</button>
+        <button class="btn" id="clear">すべて消す</button>
+    <span class="legend2"><b style="font-weight:600">ジャンル</b>は商品名から推測して自動で入れます（▾ で選び直せます）　<span class="tag t-yama">山</span>/<span class="tag t-stock">単品</span> 押すと切り替え　<i class="sw auto"></i>自動で入れたマス　<i class="sw err"></i>直すマス</span>
+  </div>
+
+  <div class="card regbar pconly">
+    <div><b id="summary">まだ何も入っていません</b><ul id="errlist"></ul><ul id="warnlist" class="warnlist"></ul></div>
+    <button class="btn primary" id="doReg" disabled>この内容で登録する</button>
+  </div>
+</section>
+<!-- 販売を記録 -->
+<section class="screen" id="sales">
+  <h1>販売を記録</h1>
+  <p class="lead">売れた商品の売値・手数料・送料を入れると、粗利が自動で出ます。為替レート：<b>1€ = <span id="rateEUR"></span>円</b>、<b>1$ = <span id="rateUSD"></span>円</b> <span class="tag t-temp">11月・仮</span> <span class="muted">（月初のTTM。月末に平均TTMで確定）</span></p>
+  <div class="pills" id="salesTabs">
+    <button class="pill on" data-st="one">1件ずつ（スマホ向け）</button>
+    <button class="pill" data-st="many">まとめて入力（パソコン向け）</button>
+    <button class="pill" data-st="tbd" id="tbdTab">送料未定 <span class="countbadge" id="tbdCount">0</span></button>
+    <button class="pill" data-st="ch">販路の設定</button>
+  </div>
+
+  <!-- 1件ずつ -->
+  <div id="st-one" class="grid two">
+    <div class="card form">
+      <label class="f"><span>売れた商品</span>
+        <input id="sQ" placeholder="商品名か管理番号で探す（例：オリンパス）" autocomplete="off">
+      </label>
+      <div id="sItem" class="itembox muted"></div>
+
+      <div class="f"><span>売り先</span><div class="chips" id="sCh"></div></div>
+
+      <div id="sPriceArea">
+        <label class="f"><span>売却日</span><input id="sDate" value="2026/11/12"></label>
+        <label class="f" id="qtyWrap" style="display:none"><span>個数 <small class="muted" id="qtyLeft"></small></span><input id="sQty" inputmode="numeric" value="1"></label>
+        <label class="f"><span><span id="priceLbl">売値</span> <b class="cur" id="curPrice"></b></span><input id="sPrice" inputmode="decimal" placeholder="0"></label>
+        <label class="f" id="shipWrap"><span>設定送料（お客様からもらう送料） <b class="cur" id="curShip"></b></span><input id="sShip" inputmode="decimal" placeholder="0"></label>
+        <label class="f"><span>手数料 <b class="cur" id="curFee"></b></span><input id="sFee" inputmode="decimal" placeholder="0"><small id="feeHint" class="hint"></small></label>
+        <div class="f"><span id="realLabel">実送料（実際にかかった送料・円）</span>
+          <div class="realrow"><input id="sReal" inputmode="numeric" placeholder="0"><button type="button" class="chipbtn tbdbtn" id="sTbdBtn">未定</button></div>
+          <input type="checkbox" id="sShipTbd" hidden>
+          <small class="hint" id="realHint">まだ分からないときは「未定」を押して、仮の金額を入れます。あとで「送料未定」タブで直せます</small></div>
+        <label class="chk"><input type="checkbox" id="sSent"> 発送済み</label>
+      </div>
+      <button class="btn primary big" id="sSave">記録する</button>
+    </div>
+
+    <div>
+      <div class="card">
+        <h2>計算の内訳</h2>
+        <table class="calc" id="sCalc"></table>
+        <p class="muted" id="sCalcNote" style="margin:8px 0 0"></p>
+      </div>
+      <div class="card" style="margin-top:12px">
+        <h2>今日記録した販売</h2>
+        <ul class="list" id="sToday"><li class="muted">まだありません</li></ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- まとめて入力 -->
+  <div id="st-many" style="display:none">
+    <p class="muted" style="margin:0 0 8px">実送料がまだ分からないときは、実送料のマスの「未定」を押して仮の金額を入れます（「未定 800」「仮 800」のように打っても、貼り付けてもOK）。あとで「送料未定」タブから入れられます。通知を見ながら1行ずつ入れていきます。商品名の一部（例：「オリンパス」）を入れると候補が出るので、選んでください。売り先を選ぶと手数料（自動の販路）と粗利が入ります。スプレッドシートから行を貼り付けることもできます（本物のアプリでは「商品を登録」の表と同じ操作になります）。</p>
+    <div class="sheet-wrap"><table class="mtable" id="mTable"></table></div>
+    <div class="sheet-tools"><button class="btn" id="mAdd">＋ 5行追加</button><span class="legend2"><i class="sw auto"></i>自動で入ったマス　<i class="sw warn2"></i>いつもと違う手数料</span></div>
+    <div class="card regbar"><b id="mSum"></b><button class="btn primary" id="mSave">まとめて記録する</button></div>
+  </div>
+
+  <!-- 送料未定 -->
+  <div id="st-tbd" style="display:none">
+    <p class="muted" style="margin:0 0 10px">「送料未定」で記録した販売の一覧です。今は仮の送料で粗利を計算しています。本当の送料が分かったら、ここで入れて「確定」を押してください。粗利が計算し直され、一覧から消えます。</p>
+    <div id="tbdRows"></div>
+  </div>
+
+  <!-- 販路の設定 -->
+  <div id="st-ch" style="display:none">
+    <p class="muted" style="margin:0 0 8px">販路ごとの計算方法です。ここを変えると、「1件ずつ」「まとめて入力」の計算もすぐ変わります。粗利の式はすべての販路で共通です：<b>売値（円）＋ 設定送料（円）− 実送料 − 手数料（円）− 原価</b></p>
+    <div class="card tablewrap" style="padding:4px 8px"><table id="chTable"></table></div>
+    <p class="muted">「毎回入力」の販路は、過去の手数料率の平均を目安として表示し、平均から大きく外れたときに知らせます。<br>
+    「実送料の払い方」「一部返金のふだんの返し方」は、月次レポートの振込予定額とfreeeの取込用CSVに使います。「法人口座から」にしたものは、freeeでは銀行の明細から登録するので、CSVには入れません（二重にならないように）。一部返金の返し方は、記録するときにその都度変えることもできます。</p>
+  </div>
+</section>
+<!-- 月次レポート -->
+<section class="screen" id="report">
+  <h1>月次レポート</h1>
+  <p class="lead">毎月1日に、前の月の販売を販路ごとにまとめた下書きを自動で作ります。<b>10日までに</b>仮の送料を確定し、通帳の振込額を入れて「確定」すると、freeeに貼る根拠のPDFとして保存されます。販路ごとのPDFと、freeeに取り込むCSVも出せます。</p>
+  <div class="replist" id="repList"></div>
+  <div class="card repview" id="repView">
+    <div class="repbar">
+      <b id="repTitle"></b>
+      <span class="repbtns"><button class="btn" id="repPrint">⬇ 全販路のPDF</button></span>
+    </div>
+    <div class="recon" id="repRecon"></div>
+    <div class="muted" style="font-size:12px;margin:-4px 0 10px">※ 画面イメージでは印刷の画面が開きます。「送信先」を「PDFに保存」にすると、PDFとして保存できます。本物のアプリでは、作ったPDFファイルをそのままダウンロードします。</div>
+    <div class="repdoc" id="repDoc"></div>
+  </div>
+</section>
+</main>
+
+<button class="fab" data-go="bulk">＋ 登録</button>
+<nav class="bottom">
+  <button data-go="dash" class="on"><b>▦</b>ホーム</button>
+  <button data-go="items"><b>☰</b>商品</button>
+  <button data-go="sales"><b>¥</b>販売</button>
+  <button data-go="report"><b>▤</b>レポート</button>
+</nav>
+
+<script>
+// 山（見本）：仕入額は全部、枝番に予想売価の比率で割り振る。-0（山の残り）は原価0円
+const LOTS={
+  "0120":{name:"腕時計まとめ 12点",cost:10000,sup:"トレファクオークション",date:"2026/09/14",genre:"時計"},
+  "0353":{name:"【ジャンク】メガネグッズまとめ他小物まとめ",cost:52333,sup:"オークション（関東）",date:"2026/11/04",genre:"雑貨"},
+  "0460":{name:"茶道具まとめ 20点",cost:24000,sup:"古物市場（京都）",date:"2026/08/02",genre:"茶道具"},
+  "0470":{name:"古着まとめ 30点",cost:18000,sup:"古着卸",date:"2026/07/20",genre:"アパレル"},
+};
+// 前に売れた枝番（見本）：[管理番号,商品名,予想売価,原価,売り先,売値,粗利]
+const LOT_SOLD={"0120":[["0120-1","SEIKO 5 自動巻き",30000,3000,"Catawiki",34000,24100],["0120-2","CITIZEN クロノグラフ",20000,2000,"Catawiki",28000,19750],["0120-0","腕時計まとめ 残り7点",0,0,"古物市場",10000,4500]]};
+const items=[
+ ["0237-0","Canon ビデオカメラ","カメラ","2026/08/26",10588,60000,"sold",["Catawiki*"],null],
+ ["0303-0","ドリームキャスト 本体","ゲーム","2025/09/22",0,6000,"sold",["メルカリ*"],null],
+ ["0120-3","ORIENT スター","時計","2026/09/14",2000,20000,"list",["メルカリ","ヤフオク"],58],
+ ["0120-4","CASIO G-SHOCK","時計","2026/09/14",1500,15000,"list",["メルカリ"],58],
+ ["0042-3","オリンパス フィルムカメラ","カメラ","2026/04/13",3000,12000,"list",["メルカリ","ヤフオク"],212],
+ ["0058-0","レトロ 薬箱 赤","雑貨","2026/05/11",1200,4000,"stock",[],184],
+ ["L00004","北欧 チェア","家具","2026/07/13",2500,9000,"list",["メルカリ"],121],
+ ["0311-0","吉左衛門 茶碗","茶道具","2026/10/30",8000,30000,"stock",[],12],
+ ["0350","ニコン 純正ストラップ","カメラ","2026/10/02",800,4000,"stock",[],41],
+ ["0351-2","メガネケース 革","雑貨","2026/10/20",300,1000,"list",["メルカリ"],23],
+ // 見本の行を増やす（画面のイメージ用。実際の商品ではありません）
+ ["0401","SEIKO 5 自動巻き","時計","2026/09/21",2000,6000,"sold",["Catawiki*"],null],
+ ["0402-2","CITIZEN エコドライブ","時計","2026/06/02",500,2000,"list",["ヤフオク"],150],
+ ["0403","CASIO データバンク","時計","2026/09/14",300,600,"sold",["メルカリ*"],null],
+ ["0404","オリエント バンビーノ","時計","2026/11/07",5000,25000,"list",["メルカリ"],5],
+ ["0405","TISSOT クオーツ","時計","2026/06/19",1000,2000,"list",["ヤフオク"],150],
+ ["0406","Canon AE-1","カメラ","2026/10/14",300,900,"sold",["メルカリ*"],null],
+ ["0407-3","Nikon FM2","カメラ","2026/07/27",8000,32000,"list",["メルカリ"],121],
+ ["0408","PENTAX SP","カメラ","2026/10/04",8000,24000,"list",["メルカリ"],58],
+ ["0409","ミノルタ α-7","カメラ","2026/06/07",8000,16000,"list",["Catawiki", "メルカリ"],150],
+ ["0410","FUJIFILM 写ルンです まとめ","カメラ","2026/08/19",3000,12000,"list",["メルカリ", "ヤフオク"],95],
+ ["0411","タクマー 55mm F1.8","カメラ","2026/11/01",1500,4500,"list",["ヤフオク"],23],
+ ["0412-4","Canon EF 50mm","カメラ","2026/07/16",500,2000,"stock",[],121],
+ ["0413","萩焼 湯呑","茶道具","2026/06/03",4000,16000,"sold",["ヤフオク*"],null],
+ ["0414","九谷焼 茶碗","茶道具","2026/11/01",800,3200,"list",["Catawiki"],23],
+ ["0415","鉄瓶 南部","茶道具","2026/07/19",300,600,"list",["メルカリ", "ヤフオク"],121],
+ ["0416","棗 漆","茶道具","2026/06/16",2000,8000,"list",["Catawiki"],150],
+ ["0417-1","建水 銅","茶道具","2026/10/16",500,1000,"list",["メルカリ"],41],
+ ["0418","スーパーファミコン 本体","ゲーム","2026/05/19",300,1200,"list",["Catawiki"],203],
+ ["0419","ゲームボーイ カラー","ゲーム","2026/05/12",1500,7500,"sold",["ヤフオク*"],null],
+ ["0420","PS2 ソフト まとめ","ゲーム","2026/06/04",2000,6000,"list",["ヤフオク"],150],
+ ["0421","NINTENDO 64 本体","ゲーム","2026/10/13",1500,4500,"list",["Catawiki"],34],
+ ["0422-2","セガサターン 本体","ゲーム","2026/08/13",500,1500,"list",["ヤフオク"],95],
+ ["0423","LEVI'S 501 デニム","アパレル","2026/09/12",3000,12000,"list",["Catawiki"],66],
+ ["0424","ハーレーダビッドソン Tシャツ","アパレル","2026/11/01",1000,3000,"sold",["メルカリ*"],null],
+ ["0425","NIKE スウェット","アパレル","2026/08/27",1000,2000,"list",["メルカリ", "ヤフオク"],95],
+ ["0426","ミリタリー ジャケット","アパレル","2026/11/01",1500,3000,"list",["メルカリ", "ヤフオク"],23],
+ ["0427-3","ルイヴィトン 財布","ブランド品","2026/11/01",8000,32000,"list",["Catawiki", "メルカリ"],23],
+ ["0428","GUCCI ショルダーバッグ","ブランド品","2026/08/28",8000,16000,"stock",[],95],
+ ["0429","マイセン カップ&ソーサー","ブランド品","2026/09/13",5000,25000,"list",["Catawiki"],66],
+ ["0430","バカラ グラス","ブランド品","2026/10/03",3000,6000,"list",["Catawiki"],34],
+ ["0431","SONY ウォークマン","家電","2026/10/20",800,1600,"sold",["メルカリ*"],null],
+ ["0432-4","Technics ターンテーブル","家電","2026/07/04",8000,24000,"list",["Catawiki", "メルカリ"],121],
+ ["0433","ナショナル ラジオ","家電","2026/10/20",300,600,"stock",[],34],
+ ["0434","竹細工 かご","家具","2026/06/12",1500,6000,"list",["メルカリ"],150],
+ ["0435","木製 スツール","家具","2026/08/16",4000,20000,"list",["ヤフオク"],95],
+ ["0436","昭和レトロ ランプ","家具","2026/10/16",500,2000,"list",["ヤフオク"],41],
+ ["0437-1","油絵 風景画","絵画、美術品","2026/10/17",5000,10000,"stock",[],34],
+ ["0438","掛軸 山水","絵画、美術品","2026/07/10",5000,10000,"list",["メルカリ"],121],
+ ["0439","ブロンズ 置物","絵画、美術品","2026/11/01",1500,6000,"list",["ヤフオク"],23],
+ ["0440","着物 訪問着","着物関係","2026/05/08",5000,20000,"list",["ヤフオク"],203],
+ ["0441","帯 袋帯","着物関係","2026/10/07",1000,5000,"list",["メルカリ", "ヤフオク"],34],
+ ["0442-2","ZIPPO ライター","雑貨","2026/10/16",300,600,"stock",[],41],
+ ["0443","サングラス レイバン","雑貨","2026/08/26",8000,32000,"list",["メルカリ", "ヤフオク"],95],
+ ["0444","民芸品 こけし","雑貨","2026/10/04",2000,4000,"list",["ヤフオク"],34],
+ ["0445","ブリキ おもちゃ","ホビー","2026/08/20",2000,6000,"list",["Catawiki", "メルカリ"],95],
+ ["0446","ミニカー トミカ まとめ","ホビー","2026/05/12",300,1500,"list",["メルカリ"],203],
+ ["0447-3","MacBook Air 2015","PC、OA機器","2026/10/16",500,2500,"list",["Catawiki"],34],
+ ["0448","iPad 第6世代","PC、OA機器","2026/09/15",2000,4000,"list",["メルカリ"],66],
+ ["0449","ヤマハ アコースティックギター","楽器","2026/11/01",800,2400,"sold",["Catawiki*"],null],
+ ["0450","カシオ キーボード","楽器","2026/06/27",4000,12000,"list",["Catawiki"],150],
+];
+const st={stock:["未出品","t-stock"],list:["出品中","t-list"],sold:["売却済み","t-sold"]};
+const yen=v=>"¥"+v.toLocaleString();
+const chips=a=>a.length?a.map(c=>c.endsWith("*")?`<span class="chip sold">${c.slice(0,-1)}</span>`:`<span class="chip">${c}</span>`).join(""):'<span class="muted">未出品</span>';
+const days=d=>d==null?'<span class="muted">—</span>':(d>=90?`<span class="tag t-warn">${d}日</span>`:d+"日");
+document.getElementById("itemrows").innerHTML=items.map(r=>`<tr><td>${r[6]==="sold"?"":`<input type="checkbox" class="pick" data-no="${r[0]}">`}</td><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td class="n">${yen(r[4])}</td><td class="n">${yen(r[5])}</td><td><span class="tag ${st[r[6]][1]}">${st[r[6]][0]}</span></td><td>${chips(r[7])}</td><td class="n">${days(r[8])}</td></tr>`).join("");
+document.getElementById("itemcards").innerHTML=items.map(r=>`<div class="mc"><div class="top"><span class="muted">${r[6]==="sold"?"":`<input type="checkbox" class="pick" data-no="${r[0]}"> `}${r[0]}・${r[2]}</span><span class="tag ${st[r[6]][1]}">${st[r[6]][0]}</span></div><div class="name">${r[1]}</div><div class="meta"><span>原価 ${yen(r[4])} / 予想 ${yen(r[5])}</span><span>${r[8]==null?"":r[8]+"日"}</span></div><div style="margin-top:6px">${chips(r[7])}</div></div>`).join("");
+
+// ---- 今月の日ごとのグラフ（見本） ----
+(function(){
+  // [日, 売上, 粗利, 仕入額, 出品数, 成約件数]
+  const D=[[1,24500,8200,0,6,3],[2,98400,41200,12000,4,1],[3,0,0,0,8,0],[4,17300,10220,35000,5,2],[5,9800,6100,0,9,1],[6,142000,38500,0,3,1],[7,0,0,8000,7,0],[8,19000,10800,0,4,2],[9,37840,19184,52000,2,1],[10,24000,13853,0,6,2],[11,82578,57597,0,5,2],[12,72123,50907,0,3,4]];
+  const M={sp:{l:"売上・粗利",s:[[1,"#93b4f7","売上"],[2,"#15803d","粗利"]],yen:true},buy:{s:[[3,"#d97706","仕入額"]],yen:true},list:{s:[[4,"#7c3aed","出品数"]]},deal:{s:[[5,"#0891b2","成約件数"]]}};
+  const fm=(v,yen)=>yen?(v>=10000?Math.round(v/1000)/10+"万":v.toLocaleString()):v;
+  function draw(k){
+    const m=M[k],max=Math.max(...D.flatMap(d=>m.s.map(x=>d[x[0]])))||1,top=Math.ceil(max/(m.yen?50000:2))*(m.yen?50000:2);
+    const base=170,H=150,x0=46,cw=(960-x0-10)/30,bw=m.s.length>1?cw*0.36:cw*0.6;
+    let g=`<g font-size="10" fill="#6b7280">`;
+    [0,0.5,1].forEach(t=>{const y=base-H*t;g+=`<line x1="${x0}" y1="${y}" x2="950" y2="${y}" stroke="${t?"#f0f1f3":"#e5e7eb"}"/><text x="${x0-6}" y="${y+3}" text-anchor="end">${fm(top*t,m.yen)}</text>`});
+    for(let d=1;d<=30;d+=1){const x=x0+(d-1)*cw;if(d%5===1||d===30)g+=`<text x="${x+cw/2}" y="${base+16}" text-anchor="middle">${d}</text>`}
+    g+=`<text x="${x0+12*cw+2}" y="${base+28}" fill="#2563eb">今日</text></g>`;
+    D.forEach(d=>m.s.forEach((sr,i)=>{const v=d[sr[0]],h=v/top*H,x=x0+(d[0]-1)*cw+(cw-bw*m.s.length)/2+i*bw;
+      if(v)g+=`<rect x="${x}" y="${base-h}" width="${bw-1}" height="${h}" rx="2" fill="${sr[1]}"><title>11/${d[0]} ${sr[2]} ${m.yen?"¥":""}${v.toLocaleString()}</title></rect>`}));
+    document.getElementById("dChart").innerHTML=g;
+    document.getElementById("dLegend").innerHTML=m.s.map(x=>`<span style="--c:${x[1]}">${x[2]}</span>`).join("");
+    const tot=i=>D.reduce((a,d)=>a+d[i],0);
+    document.getElementById("dSum").innerHTML=m.s.map(x=>`<span>${x[2]}の合計 <b>${m.yen?"¥":""}${tot(x[0]).toLocaleString()}${m.yen?"":"件"}</b></span>`).join("")+`<span>（11/1〜11/12）</span>`;
+    document.querySelectorAll("#dMetric button").forEach(b=>b.classList.toggle("on",b.dataset.m===k));
+  }
+  document.querySelectorAll("#dMetric button").forEach(b=>b.onclick=()=>draw(b.dataset.m));
+  draw("sp");
+})();
+const months=[["6月",320,190],["7月",410,260],["8月",380,230],["9月",520,330],["10月",610,390],["11月",486,301]];
+const max=1150,h=180,base=190,bw=28,gap=92;
+document.getElementById("chart").innerHTML=months.map((m,i)=>{
+  const x=60+i*gap, s=m[1]/1000*120, g=m[2]/1000*120; // 値は千円。100万円＝120px
+  return `<rect x="${x}" y="${base-s}" width="${bw}" height="${s}" rx="4" fill="#93b4f7"/>
+          <rect x="${x+bw+4}" y="${base-g}" width="${bw}" height="${g}" rx="4" fill="#15803d"/>
+          <text x="${x+bw+2}" y="208" font-size="11" fill="#6b7280" text-anchor="middle">${m[0]}</text>`;}).join("");
+
+document.querySelectorAll("[data-go]").forEach(b=>b.addEventListener("click",()=>{
+  const id=b.dataset.go;
+  document.querySelectorAll(".screen").forEach(s=>s.classList.toggle("on",s.id===id));
+  document.querySelectorAll("[data-go]").forEach(x=>x.classList.toggle("on",x.dataset.go===id));
+  document.querySelector(".fab").style.display=id==="bulk"?"none":""; // 登録画面では「＋登録」ボタンを隠す
+  window.scrollTo(0,0);
+}));
+// ---- まとめて登録（伝票の取り込み・スプレッドシート風の表） ----
+const COLS=[["種類",64],["管理番号",96],["商品名",300],["ジャンル",90],["仕入先",150],["仕入日",100],["原価",90],["個数",54],["予想売価",90]];
+const GENRE_COL=3;
+const GENRES=["雑貨","カメラ","PC、OA機器","時計","茶道具","絵画、美術品","家電","家具","アパレル","ブランド品","ホビー","ゲーム","着物関係","楽器"]; // スプレッドシートのジャンル（家具・アンティーク家具・小家具→家具、ブランド食器→ブランド品にまとめた）。よく使う順
+// ---- 商品名からジャンルを推測する ----
+// スプレッドシートの過去の商品（約600件）でよく出た言葉と、一般的なブランド名・品名から作った手がかり
+const GENRE_HINTS={
+  "カメラ":["カメラ","レンズ","一眼","フィルム","ビデオカメラ","ズイコー","タクマー","canon","キヤノン","キャノン","nikon","ニコン","pentax","ペンタックス","olympus","オリンパス","minolta","ミノルタ","fujifilm","富士フイルム","leica","ライカ","rolleiflex","mamiya","マミヤ","contax","コンタックス","asahi","takumar","eos","om-1","om-system","hi-matic","camera","lens"],
+  "時計":["時計","腕時計","懐中時計","クォーツ","クオーツ","自動巻","seiko","セイコー","citizen","シチズン","casio","カシオ","g-shock","orient","オリエント","grand seiko","tissot","chrono"],
+  "PC、OA機器":["パソコン","ノートパソコン","デスクトップ","プリンター","モニター","マザーボード","グラボ","キーボード","マウス","pc","macbook","imac","ipad","iphone","apple","mac","thinkpad","surface","dell","asus","lenovo","hp","intel","core","cpu","ssd","hdd","ddr3","ddr4","i5","i7","i9","ryzen","geforce","gtx","rtx"],
+  "茶道具":["茶道具","茶碗","茶器","茶入","茶杓","棗","水指","建水","香合","急須","湯呑","抹茶","一輪挿","花入","薩摩焼","楽焼","中次","釜"],
+  "絵画、美術品":["絵画","油絵","水彩","版画","リトグラフ","掛軸","掛け軸","日本画","彫刻","ブロンズ","美術","模造刀","刀","仏像","書画"],
+  "家電":["家電","ラジオ","リモコン","ウォークマン","スピーカー","アンプ","オーディオ","コンポ","テレビ","扇風機","掃除機","ドライヤー","炊飯器","レンジ","ポータブル","denon","sony","ソニー","panasonic","パナソニック","bose","technics"],
+  "家具":["家具","チェア","椅子","スツール","テーブル","ソファ","ベッド","デスク","キャビネット","チェスト","シェルフ","ランプ","照明","竹細工","boconcept","boconsept","stool","newport","shogun","xtra","アクタス","カリモク"],
+  "アパレル":["シャツ","tシャツ","パンツ","ボトム","ジーンズ","デニム","ジャケット","コート","ニット","パーカー","スウェット","ドレス","ワンピース","スカート","スニーカー","ブーツ","リーバイス","levi's","gildan","ハーレーダビッドソン","nike","ナイキ","adidas","アディダス"],
+  "ブランド品":["louis vuitton","ルイヴィトン","ヴィトン","chanel","シャネル","gucci","グッチ","hermes","エルメス","prada","プラダ","dior","ディオール","rolex","ロレックス","omega","オメガ","cartier","カルティエ","rimowa","リモワ","リモア","スワロフスキー","swarovski","バカラ","baccarat","マイセン","meissen","ウェッジウッド","wedgwood","ロイヤルコペンハーゲン","ヘレンド","ベネチアンガラス","バッグ","ショルダーバッグ","財布","スーツケース"],
+  "ホビー":["フィギュア","プラモデル","ミニカー","ドール","人形","西洋人形","トレカ","トレーディングカード","ワンピースカード","ポケモンカード","ぬいぐるみ","鉄道模型","ガンプラ","おもちゃ"],
+  "ゲーム":["ゲーム","ドリームキャスト","ファミコン","スーパーファミコン","プレイステーション","プレステ","playstation","ps2","ps3","ps4","ps5","nintendo","任天堂","switch","ゲームボーイ","game boy","セガ","sega","xbox","3ds"],
+  "着物関係":["着物","羽織","帯","浴衣","反物","和装","振袖","留袖","帯締"],
+  "楽器":["ギター","ベース","ウクレレ","バイオリン","ピアノ","シンセサイザー","ドラム","サックス","トランペット","楽器","エフェクター"],
+  "雑貨":["雑貨","小物","メガネ","眼鏡","サングラス","zippo","ジッポ","ルアー","民芸品","置物","直筆","サイン","チェキ","生写真","衣装","コスチューム","一点物"],
+};
+const HINT_LIST=Object.entries(GENRE_HINTS).filter(([g])=>GENRES.includes(g.trim())).flatMap(([g,ws])=>ws.map(w=>[g.trim(),w.normalize("NFKC").toLowerCase()]));
+function guessGenre(name){
+  const n=String(name||"").normalize("NFKC").toLowerCase();if(!n)return "";
+  const score={};
+  HINT_LIST.forEach(([g,w])=>{
+    const ascii=/^[a-z0-9 .'\-]+$/.test(w);
+    const hit=ascii?new RegExp(`(^|[^a-z0-9])${w.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")}([^a-z0-9]|$)`).test(n):n.includes(w);
+    if(hit)score[g]=(score[g]||0)+w.length; // 長い言葉ほど確か
+  });
+  const best=Object.entries(score).sort((a,b)=>b[1]-a[1])[0];
+  return best?best[0]:"";
+}
+const NC=COLS.length, NUMCOL=new Set([6,7,8]);
+const ALIAS={"商品名 メーカー/ブランド":"商品名","f":"仕入日","在庫残":"個数","予想売上":"予想売価","数量":"個数","小計":"原価"};
+const num=s=>{const v=String(s??"").replace(/[¥,円\s]/g,"");return v===""?null:(isNaN(+v)?NaN:+v)};
+const existing=new Set(items.map(r=>r[0]));
+const NEXT_NO=352; // 前回の続きの番号（本物のアプリでは自動で調べる）
+const YAMA_WORDS=/まとめ|山売り|ロット|大量|詰め合わせ|\d+点/;
+const pad=n=>String(n).padStart(4,"0");
+let grid=[], autoCells=new Set();
+let sel={r1:0,c1:2,r2:0,c2:2}, dragging=false, filling=null, editing=null;
+const sheet=document.getElementById("sheet");
+const blank=()=>Array(NC).fill("");
+const ensureRows=n=>{while(grid.length<n)grid.push(blank())};
+const box=()=>({top:Math.min(sel.r1,sel.r2),bot:Math.max(sel.r1,sel.r2),left:Math.min(sel.c1,sel.c2),right:Math.max(sel.c1,sel.c2)});
+const cellEl=(r,c)=>sheet.querySelector(`td[data-r="${r}"][data-c="${c}"]`);
+const fmt=(v,c)=>{if(c===0)return v==="山"?'<span class="tag t-yama">山</span>':(v?'<span class="tag t-stock">単品</span>':"");if(c===GENRE_COL)return `<span class="ddv">${esc(v)}</span><span class="dd" title="一覧から選ぶ">▾</span>`;if(!NUMCOL.has(c))return esc(v);const n=num(v);return n==null||Number.isNaN(n)?esc(v):n.toLocaleString()};
+const esc=s=>String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;");
+const hasContent=r=>[2,3,6,7,8].some(c=>String(grid[r][c]).trim()!=="")||(!autoCells.has(r+":1")&&grid[r][1]);
+
+function applyAuto(){
+  autoCells.forEach(k=>{const [r,c]=k.split(":").map(Number);if(grid[r])grid[r][c]=""});autoCells.clear();
+  const supplier=document.getElementById("slipSupplier").value.trim(),date=document.getElementById("slipDate").value.trim();
+  let n=NEXT_NO;
+  grid.forEach((row,r)=>{
+    if(!hasContent(r))return;
+    if(!row[0]){row[0]=YAMA_WORDS.test(row[2])?"山":"単品";autoCells.add(r+":0")}
+    if(!row[1]){row[1]=row[0]==="山"?pad(n)+"-0":pad(n);autoCells.add(r+":1")}
+    n++;
+    if(!row[3]){const g=guessGenre(row[2]);if(g){row[3]=g;autoCells.add(r+":3")}}
+    if(!row[4]&&supplier){row[4]=supplier;autoCells.add(r+":4")}
+    if(!row[5]&&date){row[5]=date;autoCells.add(r+":5")}
+    if(!row[7]){row[7]="1";autoCells.add(r+":7")}
+  });
+}
+function draw(){
+  applyAuto();
+  sheet.innerHTML=`<thead><tr><th class="rn"></th>${COLS.map(([c,w],i)=>`<th style="min-width:${w}px" class="${NUMCOL.has(i)?"n":""}">${c}</th>`).join("")}</tr></thead><tbody>`+
+    grid.map((r,ri)=>`<tr><td class="rn">${ri+1}</td>${r.map((v,ci)=>`<td data-r="${ri}" data-c="${ci}" class="cell${NUMCOL.has(ci)?" n":""}${ci===0?" kind":""}">${fmt(v,ci)}</td>`).join("")}</tr>`).join("")+"</tbody>";
+  paintSel();recalc();
+}
+function paintSel(){
+  sheet.querySelectorAll("td.cell").forEach(td=>td.classList.remove("sel","anchor"));
+  sheet.querySelectorAll(".handle").forEach(h=>h.remove());
+  const b=box();
+  const fb=filling?{top:b.top,bot:Math.max(b.bot,filling.to),left:b.left,right:b.right}:b;
+  for(let r=fb.top;r<=fb.bot;r++)for(let c=fb.left;c<=fb.right;c++){const td=cellEl(r,c);td&&td.classList.add("sel")}
+  const a=cellEl(sel.r1,sel.c1);a&&a.classList.add("anchor");
+  const br=cellEl(fb.bot,fb.right);
+  if(br&&!editing){const h=document.createElement("div");h.className="handle";h.title="下にドラッグしてコピー";br.appendChild(h);
+    h.addEventListener("mousedown",e=>{e.preventDefault();e.stopPropagation();filling={to:box().bot}})}
+}
+function setCell(r,c,v){ensureRows(r+1);grid[r][c]=String(v??"").trim();autoCells.delete(r+":"+c)}
+// ---- マウス操作 ----
+sheet.addEventListener("mousedown",e=>{
+  const td=e.target.closest("td.cell");if(!td||e.target.classList.contains("handle"))return;
+  if(editing&&td.contains(editing.inp))return;
+  commitEdit();
+  const r=+td.dataset.r,c=+td.dataset.c;
+  if(e.target.classList.contains("dd")){sel={r1:r,c1:c,r2:r,c2:c};paintSel();e.preventDefault();startEdit(r,c,false);return}
+  if(c===0&&!e.shiftKey&&grid[r][0]){ // 種類のマスは押すたびに 単品⇔山
+    setCell(r,0,grid[r][0]==="山"?"単品":"山");
+    if(autoCells.has(r+":1"))grid[r][1]="";
+    sel={r1:r,c1:0,r2:r,c2:0};draw();sheet.focus();e.preventDefault();return;
+  }
+  if(e.shiftKey){sel.r2=r;sel.c2=c}else sel={r1:r,c1:c,r2:r,c2:c};
+  dragging=true;paintSel();sheet.focus();e.preventDefault();
+});
+sheet.addEventListener("mouseover",e=>{
+  const td=e.target.closest("td.cell");if(!td)return;
+  if(dragging){sel.r2=+td.dataset.r;sel.c2=+td.dataset.c;paintSel()}
+  if(filling){filling.to=Math.max(box().bot,+td.dataset.r);paintSel()}
+});
+document.addEventListener("mouseup",()=>{
+  dragging=false;
+  if(filling){const b=box(),to=filling.to;filling=null;
+    if(to>b.bot){const h=b.bot-b.top+1;for(let r=b.bot+1;r<=to;r++)for(let c=b.left;c<=b.right;c++){if(c===1)continue;setCell(r,c,grid[b.top+((r-b.top)%h)][c])}sel.r1=b.top;sel.r2=to;sel.c1=b.left;sel.c2=b.right;}
+    draw();}
+});
+sheet.addEventListener("dblclick",e=>{const td=e.target.closest("td.cell");if(td&&+td.dataset.c!==0)startEdit(+td.dataset.r,+td.dataset.c,false)});
+// ---- 編集 ----
+function startEdit(r,c,clear,initial=""){
+  if(c===0)return;
+  commitEdit();const td=cellEl(r,c);if(!td)return;
+  const inp=document.createElement("input");inp.className="editor"+(NUMCOL.has(c)?" n":"");
+  inp.value=clear?initial:grid[r][c];td.textContent="";td.appendChild(inp);editing={r,c,inp};
+  inp.focus();inp.setSelectionRange(inp.value.length,inp.value.length);
+  let dd=null,hi=-1;
+  if(c===GENRE_COL){
+    dd=document.createElement("div");dd.className="ddlist";document.body.appendChild(dd);editing.dd=dd;
+    const place=()=>{const rc=td.getBoundingClientRect();dd.style.left=rc.left+"px";dd.style.top=(rc.bottom+2)+"px";dd.style.minWidth=Math.max(180,rc.width)+"px"};place();
+    let typed=clear;
+    const show=()=>{const q=typed?inp.value.trim():"";const cur=inp.value.trim();const opts=GENRES.filter(g=>!q||norm(g).includes(norm(q)));if(!typed&&hi<0)hi=opts.indexOf(cur);
+      dd.innerHTML=opts.map((g,i)=>`<div class="opt${i===hi?" on":""}${g===cur?" cur":""}" data-v="${g}">${g===cur?"✓ ":""}${g}</div>`).join("")||`<div class="none">「${esc(q)}」は一覧にありません（Enterでそのまま入れる）</div>`;
+      dd.querySelectorAll(".opt").forEach(o=>o.addEventListener("mousedown",ev=>{ev.preventDefault();inp.value=o.dataset.v;commitEdit();sheet.focus()}));};
+    inp.addEventListener("input",()=>{typed=true;hi=-1;show()});
+    inp.addEventListener("keydown",ev=>{const n=dd.querySelectorAll(".opt").length;
+      if(ev.key==="ArrowDown"){ev.preventDefault();hi=Math.min(n-1,hi+1);show()}
+      else if(ev.key==="ArrowUp"){ev.preventDefault();hi=Math.max(-1,hi-1);show()}
+      else if(ev.key==="Enter"&&hi>=0){const o=dd.querySelectorAll(".opt")[hi];if(o)inp.value=o.dataset.v}});
+    show();
+  }
+  inp.addEventListener("keydown",ev=>{
+    if(ev.key==="Enter"){ev.preventDefault();commitEdit();move(1,0)}
+    else if(ev.key==="Tab"){ev.preventDefault();commitEdit();move(0,ev.shiftKey?-1:1)}
+    else if(ev.key==="Escape"){editing.dd&&editing.dd.remove();editing=null;draw();sheet.focus()}
+  });
+  inp.addEventListener("blur",()=>setTimeout(commitEdit,0));
+}
+function commitEdit(){if(!editing)return;const {r,c,inp,dd}=editing;editing=null;dd&&dd.remove();setCell(r,c,inp.value);draw();}
+function move(dr,dc,extend=false){
+  const r=Math.max(0,sel.r2+dr),c=Math.min(NC-1,Math.max(0,sel.c2+dc));
+  if(r>=grid.length){ensureRows(r+5);draw()}
+  if(extend){sel.r2=r;sel.c2=c}else sel={r1:r,c1:c,r2:r,c2:c};
+  paintSel();sheet.focus();cellEl(r,c)?.scrollIntoView({block:"nearest",inline:"nearest"});
+}
+// ---- キーボード ----
+sheet.addEventListener("keydown",e=>{
+  if(editing)return;
+  const mod=e.metaKey||e.ctrlKey,k=e.key;
+  const arrows={ArrowUp:[-1,0],ArrowDown:[1,0],ArrowLeft:[0,-1],ArrowRight:[0,1]};
+  if(arrows[k]){e.preventDefault();move(...arrows[k],e.shiftKey);return}
+  if(k==="Enter"){e.preventDefault();startEdit(sel.r1,sel.c1,false);return}
+  if(k==="Tab"){e.preventDefault();move(0,e.shiftKey?-1:1);return}
+  if(k==="Delete"||k==="Backspace"){e.preventDefault();const b=box();for(let r=b.top;r<=b.bot;r++)for(let c=b.left;c<=b.right;c++)setCell(r,c,"");draw();return}
+  if(mod&&k.toLowerCase()==="d"){e.preventDefault();const b=box();for(let r=b.top+1;r<=b.bot;r++)for(let c=b.left;c<=b.right;c++){if(c===1)continue;setCell(r,c,grid[b.top][c])}draw();return}
+  if(mod&&k.toLowerCase()==="a"){e.preventDefault();sel={r1:0,c1:0,r2:grid.length-1,c2:NC-1};paintSel();return}
+  if(!mod&&k.length===1){e.preventDefault();startEdit(sel.r1,sel.c1,true,k)}
+});
+// ---- コピー・貼り付け ----
+const selText=()=>{const b=box(),rows=[];for(let r=b.top;r<=b.bot;r++)rows.push(grid[r].slice(b.left,b.right+1).join("\t"));return rows.join("\n")};
+document.addEventListener("copy",e=>{if(document.activeElement!==sheet)return;e.clipboardData.setData("text/plain",selText());e.preventDefault()});
+document.addEventListener("cut",e=>{if(document.activeElement!==sheet)return;e.clipboardData.setData("text/plain",selText());e.preventDefault();const b=box();for(let r=b.top;r<=b.bot;r++)for(let c=b.left;c<=b.right;c++)setCell(r,c,"");draw()});
+document.addEventListener("paste",e=>{
+  if(document.activeElement!==sheet)return;
+  e.preventDefault();
+  let rows=(e.clipboardData.getData("text/plain")||"").replace(/\r/g,"").split("\n");
+  if(rows.length>1&&rows[rows.length-1]==="")rows.pop();
+  rows=rows.map(l=>l.split("\t"));
+  const b=box();let colMap=null,left=b.left;
+  const head=rows[0].map(h=>ALIAS[h.trim()]||h.trim());
+  if(rows.length>1&&head.some(h=>COLS.some(([c])=>c===h))){colMap=head.map(h=>COLS.findIndex(([c])=>c===h));rows=rows.slice(1);left=0}
+  const h=rows.length,w=rows[0].length;
+  const fillH=(b.bot-b.top+1)>h&&(b.bot-b.top+1)%h===0?b.bot-b.top+1:h;
+  const fillW=!colMap&&(b.right-b.left+1)>w&&(b.right-b.left+1)%w===0?b.right-b.left+1:w;
+  ensureRows(b.top+fillH+3);
+  for(let i=0;i<fillH;i++)for(let j=0;j<fillW;j++){
+    const c=colMap?colMap[j%w]:left+j;if(c==null||c<0||c>=NC)continue;
+    setCell(b.top+i,c,rows[i%h][j%w]);
+  }
+  sel={r1:b.top,c1:colMap?0:left,r2:b.top+fillH-1,c2:colMap?NC-1:Math.min(NC-1,left+fillW-1)};
+  draw();sheet.focus();
+});
+// ---- 伝票CSVの読み込み ----
+function parseCSV(text){
+  return text.replace(/\r/g,"").split("\n").map(line=>{const out=[];let cur="",q=false;
+    for(let i=0;i<line.length;i++){const ch=line[i];
+      if(q){if(ch==='"'&&line[i+1]==='"'){cur+='"';i++}else if(ch==='"')q=false;else cur+=ch}
+      else if(ch==='"')q=true;else if(ch===","){out.push(cur);cur=""}else cur+=ch}
+    out.push(cur);return out});
+}
+function loadSlip(text,fileName){
+  const rows=parseCSV(text);
+  const get=k=>(rows.find(r=>r[0]===k)||[])[1]||"";
+  const date=get("開催日"),hall=get("会場");
+  const hi=rows.findIndex((r,i)=>r.includes("商品名")&&r.includes("小計")&&(rows[i-1]||[])[0]==="請求明細");
+  if(hi<0){alert("この形式の伝票はまだ読み取れません。本物のアプリでは、初めての形式のときに列を選んでいただきます。");return}
+  const H=rows[hi],ix=k=>H.indexOf(k),lines=[];
+  for(let i=hi+1;i<rows.length&&rows[i].length>1;i++){const r=rows[i];
+    lines.push(["","",r[ix("商品名")],"","","",r[ix("小計")],r[ix("数量")],""])}
+  document.getElementById("slipSupplier").value=hall?`オークション（${hall}）`:"";
+  document.getElementById("slipDate").value=date;
+  const extra=rows.find(r=>r[0]==="入場料");
+  document.getElementById("slipInfo").innerHTML=`<b>${fileName}</b> を読み込みました：商品 ${lines.length}件`+(extra?`／入場料 ¥${(+extra[3]).toLocaleString()} は商品の原価に入れず、経費として別に記録します`:"");
+  grid=[];autoCells.clear();lines.forEach((l,i)=>grid[i]=l);ensureRows(Math.max(12,lines.length+4));
+  sel={r1:0,c1:0,r2:0,c2:0};draw();
+}
+const SAMPLE_SLIP=`"開催日","2026/11/04"
+"会場","関東"
+
+"請求明細"
+"レーン","商品ID","商品名","数量","単価","税","落札手数料","税","小計"
+"レーンB","5807165","Apple MacBookAir A2941","1","67500","6750","6750","675","81675"
+"レーンC","5806536","【ジャンク】メガネグッズまとめ他小物まとめ","1","43250","4325","4325","433","52333"
+"レーンC","5806632","BAKUNE Dry TENTIAL ロングスリーブTシャツ/ロングパンツセット　SIZE M ネイビー","1","12000","1200","1200","120","14520"
+"レーンC","5806657","ボトムまとめ 山売り","1","7750","775","775","78","9378"
+""
+"請求","金額","消費税","合計金額"
+"入場料","2000","200","2200"`;
+async function readFile(f){
+  const buf=await f.arrayBuffer();let text;
+  try{text=new TextDecoder("utf-8",{fatal:true}).decode(buf)}catch{text=new TextDecoder("shift_jis").decode(buf)} // 文字コードを自動で判定
+  loadSlip(text,f.name);
+}
+const drop=document.getElementById("drop");
+document.getElementById("slipFile").addEventListener("change",e=>e.target.files[0]&&readFile(e.target.files[0]));
+drop.addEventListener("dragover",e=>{e.preventDefault();drop.classList.add("over")});
+drop.addEventListener("dragleave",()=>drop.classList.remove("over"));
+drop.addEventListener("drop",e=>{e.preventDefault();drop.classList.remove("over");const f=e.dataTransfer.files[0];f&&readFile(f)});
+document.getElementById("sampleSlip").addEventListener("click",()=>loadSlip(SAMPLE_SLIP,"見本の伝票.csv"));
+["slipSupplier","slipDate"].forEach(id=>document.getElementById(id).addEventListener("input",draw));
+// ---- 確認 ----
+function recalc(){
+  const errs=[],warns=[],seen=new Map();let count=0,yama=0;
+  sheet.querySelectorAll("td.cell").forEach(td=>{td.classList.remove("err","auto","warn");td.title=""});
+  const mark=(r,c,msg)=>{const td=cellEl(r,c);if(td){td.classList.add("err");td.title=msg}errs.push(`${r+1}行目「${COLS[c][0]}」：${msg}`)};
+  grid.forEach((row,r)=>{
+    if(!row[0])return;count++;if(row[0]==="山")yama++;
+    if(existing.has(row[1]))mark(r,1,"すでに登録されています");
+    else if(seen.has(row[1]))mark(r,1,`${seen.get(row[1])+1}行目と重複しています`);
+    seen.set(row[1],r);
+    if(!row[2])mark(r,2,"商品名がありません");
+    NUMCOL.forEach(c=>{if(Number.isNaN(num(row[c])))mark(r,c,"数字を入れてください")});
+    if(row[GENRE_COL]&&!GENRES.includes(row[GENRE_COL])){const td=cellEl(r,GENRE_COL);if(td){td.classList.add("warn");td.title="一覧にないジャンルです"}warns.push(`${r+1}行目「ジャンル」：「${row[GENRE_COL]}」は一覧にありません。登録すると一覧に追加されます`)}
+  });
+  autoCells.forEach(k=>{const [r,c]=k.split(":");const td=cellEl(r,c);if(td&&!td.classList.contains("err")){td.classList.add("auto");if(+c===GENRE_COL)td.title="商品名から推測しました。違っていたら ▾ で選び直してください"}});
+  document.getElementById("warnlist").innerHTML=warns.slice(0,5).map(e=>`<li>${e}</li>`).join("");
+  const s=document.getElementById("summary");
+  s.textContent=count?(errs.length?`${count}件のうち、直すところが${errs.length}か所あります`:`${count}件（単品 ${count-yama}・山 ${yama}）、すべて登録できます`):"まだ何も入っていません";
+  s.style.color=count?(errs.length?"var(--red)":"var(--green)"):"";
+  document.getElementById("errlist").innerHTML=errs.slice(0,8).map(e=>`<li>${e}</li>`).join("")+(errs.length>8?`<li>ほか${errs.length-8}か所</li>`:"");
+  document.getElementById("doReg").disabled=!count||errs.length>0;
+}
+document.getElementById("addRows").addEventListener("click",()=>{ensureRows(grid.length+10);draw()});
+document.getElementById("clear").addEventListener("click",()=>{grid=[];autoCells.clear();ensureRows(12);sel={r1:0,c1:2,r2:0,c2:2};document.getElementById("slipInfo").textContent="";draw()});
+document.getElementById("doReg").addEventListener("click",()=>alert("これは画面イメージなので、登録はされません。"));
+ensureRows(12);draw();
+
+// ---- 山の画面（商品一覧で山の行を押すと開く） ----
+// 枝番（-0 以外）の一覧。売れた見本（LOT_SOLD）も含める
+const lotBranches=l=>items.filter(r=>r[0].startsWith(l+"-")&&!/-0$/.test(r[0]));
+const saleOfNo=no=>{for(const h of saleLog){if(h.undone)continue;if(h.no===no)return {ch:h.ch,price:h.priceY,profit:h.profit};
+  const k=h.kids&&h.kids.find(k=>k.no===no);if(k)return {ch:h.ch,price:k.amt,profit:k.amt-k.cost}}return null};
+function lotRows(l){
+  const old=Object.fromEntries((LOT_SOLD[l]||[]).map(x=>[x[0],{ch:x[4],price:x[5],profit:x[6]}]));
+  const rows=(LOT_SOLD[l]||[]).filter(x=>!items.some(r=>r[0]===x[0])).map(x=>({no:x[0],name:x[1],exp:x[2],cost:x[3],status:"sold",chips:[x[4]+"*"],price:x[5],profit:x[6],fixed:true}));
+  items.filter(r=>r[0].startsWith(l+"-")).forEach(r=>{const sv=r[6]==="sold"?(saleOfNo(r[0])||old[r[0]]):null;
+    rows.push({no:r[0],name:r[1],exp:r[5],cost:r[4],status:r[6],chips:r[7],price:sv?sv.price:null,profit:sv?sv.profit:null,item:true})});
+  const k=no=>/-0$/.test(no)?1e9:+no.split("-")[1];return rows.sort((a,b)=>k(a.no)-k(b.no));
+}
+function lotStats(l){
+  const rows=lotRows(l),br=rows.filter(x=>!/-0$/.test(x.no)),sold=rows.filter(x=>x.status==="sold");
+  return {rows,sales:sold.reduce((a,x)=>a+(x.price||0),0),profit:sold.reduce((a,x)=>a+(x.profit||0),0),sold:br.filter(x=>x.status==="sold").length,total:br.length};
+}
+// 割り振り：仕入額 − 売れた枝番の原価 を、まだ売れていない枝番（＋新しく足す枝番）に予想売価の比率で分ける。端数はいちばん高い商品へ
+function lotAlloc(l,extra){
+  const rows=lotRows(l).filter(x=>!/-0$/.test(x.no));
+  const pool=LOTS[l].cost-rows.filter(x=>x.status==="sold").reduce((a,x)=>a+x.cost,0);
+  const tgt=[...rows.filter(x=>x.status!=="sold"&&!ZERO_BR.has(x.no)).map(x=>({no:x.no,exp:x.exp||0})),...extra];
+  const tot=tgt.reduce((a,x)=>a+x.exp,0);if(!tgt.length)return {pool,map:{}};
+  const map={};let left=pool;tgt.forEach(x=>{map[x.no]=tot?Math.floor(pool*x.exp/tot):Math.floor(pool/tgt.length);left-=map[x.no]});
+  map[tgt.reduce((m,x)=>x.exp>m.exp?x:m,tgt[0]).no]+=left;return {pool,map};
+}
+let lotCur=null,lotNew=[];
+const ZERO_BR=new Set(); // 「0円で出す」で登録した枝番。あとで割り振り直すときも0円のまま
+// 枝番を足すときの原価の付け方：最初の仕分けは「割り振る」、枝番があとから増えるときは「0円で出す」がふつう
+const lotMode=l=>lotRows(l).some(x=>!/-0$/.test(x.no))?"zero":"alloc";
+const newLotRows=(l,n)=>Array.from({length:n},()=>["","",lotMode(l)]);
+function openLot(l){
+  lotCur=l;lotNew=newLotRows(l,3);
+  document.querySelectorAll(".screen").forEach(s=>s.classList.toggle("on",s.id==="lot"));
+  document.querySelectorAll("[data-go]").forEach(x=>x.classList.toggle("on",x.dataset.go==="items"));
+  window.scrollTo(0,0);drawLot();
+}
+function drawLot(){
+  const l=lotCur,L=LOTS[l],S=lotStats(l),rows=S.rows,head=items.find(r=>r[0]===l+"-0");
+  document.getElementById("lotNoTxt").textContent=l;
+  const nextNo=Math.max(0,...rows.filter(x=>!/-0$/.test(x.no)).map(x=>+x.no.split("-")[1]))+1;
+  const filled=lotNew.map((b,i)=>({i,name:b[0].trim(),exp:num(b[1])||0,mode:b[2]})).filter(b=>b.name);
+  filled.forEach((b,k)=>b.no=`${l}-${nextNo+k}`);
+  const toAlloc=filled.filter(f=>f.mode==="alloc"),toZero=filled.filter(f=>f.mode==="zero");
+  const A=toAlloc.length?lotAlloc(l,toAlloc):{pool:0,map:{}};
+  filled.forEach(f=>f.cost=f.mode==="alloc"?A.map[f.no]:0);
+  const changed=rows.filter(x=>x.status!=="sold"&&!/-0$/.test(x.no)&&A.map[x.no]!=null&&A.map[x.no]!==x.cost);
+  const pct=Math.min(100,Math.round(S.sales/L.cost*100));
+  const tr=x=>`<tr class="${x.status==="sold"?"sold-row":""} ${x.item?"clickable":""} ${/-0$/.test(x.no)?"lotleft":""}" ${x.item?`data-lotno="${x.no}"`:""}>
+    <td>${x.no}</td><td>${esc(x.name)}${/-0$/.test(x.no)?' <span class="tag t-yama">山の残り</span>':ZERO_BR.has(x.no)?' <span class="tag t-yama">残りから0円</span>':""}</td>
+    <td class="n">${/-0$/.test(x.no)?"—":yen(x.exp)}</td>
+    <td class="n">${yen(x.cost)}${filled.length&&A.map[x.no]!=null&&A.map[x.no]!==x.cost?`<br><span class="auto-txt">→ ${yen(A.map[x.no])}</span>`:""}</td>
+    <td><span class="tag ${st[x.status][1]}">${st[x.status][0]}</span></td><td>${chips(x.chips)}</td>
+    <td class="n">${x.price!=null?yen(r0(x.price)):"—"}</td><td class="n ${x.profit>=0?"up":"down"}">${x.profit!=null?yen(r0(x.profit)):"—"}</td></tr>`;
+  document.getElementById("lotBody").innerHTML=`
+  <div class="lothead"><div>
+    <div class="lotnum">${l}-0（山）</div><h1>${esc(L.name)}</h1>
+    <p class="lead" style="margin:0">仕入先：${esc(L.sup)} ／ 仕入日：${L.date}</p></div></div>
+  <div class="grid three" style="margin-top:16px">
+    <div class="kpi"><div class="l">仕入額</div><div class="v">${yen(L.cost)}</div><div class="d muted">全部を枝番に割り振り</div></div>
+    <div class="kpi"><div class="l">売上合計</div><div class="v">${yen(r0(S.sales))}</div></div>
+    <div class="kpi"><div class="l">粗利合計</div><div class="v ${S.sold||S.sales?"up":""}">${S.sales?yen(r0(S.profit)):"—"}</div></div>
+    <div class="kpi"><div class="l">枝番</div><div class="v">${S.total?`${S.sold} / ${S.total}`:"まだなし"}</div><div class="d muted">${S.total?"売れた数 / 枝番の数":"仕分けしたら下で追加"}</div></div>
+  </div>
+  <div class="card" style="margin-top:12px"><h2>仕入額の回収</h2><div class="progress"><i style="width:${pct}%"></i></div>
+    <div class="muted">売上 ${yen(r0(S.sales))} ÷ 仕入額 ${yen(L.cost)} ＝ <b style="${S.sales>=L.cost?"color:var(--green)":""}">${Math.round(S.sales/L.cost*100)}%</b>${S.sales>=L.cost?"（回収済み）":""}</div></div>
+  <div class="card tablewrap" style="padding:4px 8px;margin-top:12px"><table>
+    <thead><tr><th>管理番号</th><th>商品名</th><th class="n">予想売価</th><th class="n">原価（割り振り）</th><th>状態</th><th>出品先</th><th class="n">売値</th><th class="n">粗利</th></tr></thead>
+    <tbody>${rows.map(tr).join("")}</tbody></table></div>
+  <p class="muted" style="font-size:13px">${head?`${l}-0（山の残り）は、枝番にしなかった物です。${S.total?"原価は0円で、売れた金額はまるごと利益になります。":`まだ枝番がないので、仕入額 ${yen(L.cost)} はまるごとここに入っています。`}${inStock(head)?"ほかの山の残りと一緒に売るときは、商品一覧でチェックを入れて「まとめて売る」。":""}`:`${l}-0（山の残り）は売却済みです。`}</p>
+  <div class="card" style="margin-top:12px">
+    <h2>枝番を追加（単品で売れそうなもの）</h2>
+    <p class="muted" style="margin:-6px 0 10px">商品名と予想売価を入れます。管理番号と原価は自動で入ります。原価の付け方は1行ずつ選べます。<br>
+      <b>割り振る</b>：仕入額${S.sold?"（売れた枝番の原価を引いた残り）":""}を、まだ売れていない枝番と一緒に予想売価の比率で分けます。<b>最初の仕分けで、ちゃんと売れそうな物</b>に使います。<br>
+      <b>0円で出す</b>：山の残りから原価0円で出します。ほかの枝番の原価は変わりません。<b>あとで気が向いて出す安い物</b>に使います。</p>
+    <div class="tablewrap"><table class="brtable">
+      <thead><tr><th style="width:90px">管理番号</th><th>商品名</th><th class="n" style="width:120px">予想売価</th><th style="width:130px">原価の付け方</th><th class="n" style="width:110px">原価（自動）</th></tr></thead>
+      <tbody>${lotNew.map((b,i)=>{const f=filled.find(x=>x.i===i);return `<tr><td class="muted">${f?f.no:"—"}</td>
+        <td><input data-i="${i}" data-k="0" value="${esc(b[0])}" placeholder="商品名"></td>
+        <td><input data-i="${i}" data-k="1" value="${esc(b[1])}" placeholder="0" class="n" inputmode="numeric"></td>
+        <td><select data-i="${i}" data-k="2"><option value="alloc"${b[2]==="alloc"?" selected":""}>割り振る</option><option value="zero"${b[2]==="zero"?" selected":""}>0円で出す</option></select></td>
+        <td class="n auto-txt">${f?yen(f.cost):"—"}</td></tr>`}).join("")}</tbody></table></div>
+    <p class="muted" style="font-size:13px">${filled.length?[
+      toAlloc.length?`${toAlloc.length}点に原価を割り振ります。${changed.length?`まだ売れていない枝番 ${changed.length}点の原価も割り振り直します（上の表の → の金額）。売れた商品の原価は変わりません。`:""}${head&&head[4]?`${l}-0（山の残り）の原価 ${yen(head[4])} は 0円になります。`:""}`:"",
+      toZero.length?`${toZero.length}点は原価0円で出します。ほかの枝番の原価は変わりません。${head&&head[4]&&!toAlloc.length?`（仕入額 ${yen(head[4])} は、まだ山の残りに入ったままです）`:""}`:"",
+      toAlloc.length?(()=>{const e=Object.keys(A.map).reduce((a,no)=>a+((filled.find(f=>f.no===no)||rows.find(x=>x.no===no)||{}).exp||0),0);return e<A.pool?`<span class="down">割り振る枝番の予想売価の合計 ${yen(e)} が、割り振る原価 ${yen(A.pool)} より少ないので、このままだと赤字の見込みです</span>`:""})():""
+    ].filter(Boolean).join("<br>"):"商品名と予想売価を入れると、原価が自動で入ります"}</p>
+    <div style="display:flex;gap:8px;justify-content:space-between;flex-wrap:wrap"><button class="btn" id="lotAddRow">＋ 行を追加</button><button class="btn primary" id="lotReg"${filled.length?"":" disabled"}>枝番を登録する</button></div>
+  </div>`;
+  const B=document.getElementById("lotBody");
+  B.querySelectorAll(".brtable input,.brtable select").forEach(inp=>inp.addEventListener("change",()=>{lotNew[+inp.dataset.i][+inp.dataset.k]=inp.value;drawLot()}));
+  B.querySelector("#lotAddRow").onclick=()=>{lotNew.push(...newLotRows(l,2));drawLot()};
+  B.querySelectorAll("[data-lotno]").forEach(t=>t.onclick=()=>openItem(t.dataset.lotno));
+  B.querySelector("#lotReg").onclick=()=>{
+    // 枝番を在庫に足す。「割り振る」があれば、まだ売れていない枝番の原価を割り振り直し、-0 は原価0円にする
+    const prevCost=items.filter(r=>r[0].startsWith(l+"-")).map(r=>[r,r[4]]);
+    filled.forEach(f=>items.push([f.no,f.name,L.genre,L.date,f.cost,f.exp,"stock",[],head?head[8]:0]));
+    items.forEach(r=>{if(r[0].startsWith(l+"-")&&A.map[r[0]]!=null)r[4]=A.map[r[0]]});
+    toZero.forEach(f=>ZERO_BR.add(f.no));
+    if(head&&toAlloc.length)head[4]=0;
+    const added=filled.map(f=>f.no);lotNew=newLotRows(l,3);renderItems();drawLot();
+    toast(`${added.join("・")} を登録しました（${[toAlloc.length?`割り振り ${toAlloc.length}点`:"",toZero.length?`原価0円 ${toZero.length}点`:""].filter(Boolean).join("・")}）`,()=>{added.forEach(no=>{ZERO_BR.delete(no);const i=items.findIndex(r=>r[0]===no);if(i>=0)items.splice(i,1)});prevCost.forEach(([r,c])=>r[4]=c);renderItems();if(lotCur===l)drawLot()},"取り消しました。枝番を登録する前に戻りました");
+  };
+}
+document.getElementById("lotBack").onclick=()=>document.querySelector('nav.top [data-go="items"]').click();
+
+// ---- 商品一覧：まとめて売る ----
+const picked=new Set();
+function drawPickBar(){
+  const bar=document.getElementById("pickBar");
+  bar.style.display=picked.size?"flex":"none";
+  document.body.classList.toggle("picking",picked.size>0); // 選んでいる間は「＋登録」ボタンを隠す（帯と重なるため）
+  document.getElementById("pickCount").textContent=`${picked.size}点を選んでいます`;
+}
+document.querySelectorAll(".pick").forEach(cb=>cb.addEventListener("change",()=>{cb.checked?picked.add(cb.dataset.no):picked.delete(cb.dataset.no);
+  document.querySelectorAll(`.pick[data-no="${cb.dataset.no}"]`).forEach(x=>x.checked=cb.checked);drawPickBar()}));
+let bundle=[];
+// 山の残り（-0）：枝番にしなかった物。原価は「仕入額 − 枝番の原価」
+const isLotLeft=no=>/-0$/.test(no)&&!!LOTS[no.split("-")[0]];
+function openBundle(){
+  const bCh=document.getElementById("bCh");if(!bCh.options.length)bCh.innerHTML=Object.keys(CH).filter(k=>!CH[k].tbd).map(k=>`<option${k==="ヤフオク"?" selected":""}>${k}</option>`).join("");
+  bundle=items.filter(r=>picked.has(r[0])).map(r=>({no:r[0],name:r[1],cost:r[4],exp:r[5],amt:null}));
+  const lots=[...new Set(bundle.filter(b=>b.no.includes("-")).map(b=>b.no.split("-")[0]))]
+    .filter(l=>!picked.has(l+"-0")&&items.some(r=>r[0]===l+"-0"&&inStock(r)));
+  document.getElementById("leftovers").innerHTML=lots.map(l=>`<label class="chk"><input type="checkbox" data-lot="${l}" class="lo"> 山${l}の残り（${l}-0・枝番にしていない物）も一緒に入れる</label>`).join("");
+  document.querySelectorAll(".lo").forEach(cb=>cb.addEventListener("change",()=>{
+    const no=`${cb.dataset.lot}-0`,r=items.find(x=>x[0]===no);
+    if(cb.checked)bundle.push({no,name:r[1],cost:r[4],exp:r[5],amt:null,left:true});else bundle=bundle.filter(b=>b.no!==no);
+    drawBundle()}));
+  document.getElementById("bundleDlg").showModal();drawBundle();
+}
+function drawBundle(){
+  const total=num(document.getElementById("bAmt").value)||0, fee=num(document.getElementById("bFee").value)||0;
+  const auto=bundle.filter(b=>b.amt==null),fixed=bundle.reduce((a,b)=>a+(b.amt??0),0);
+  const rest=Math.max(0,total-fixed),expSum=auto.reduce((a,b)=>a+b.exp,0);
+  let left=rest;auto.forEach(b=>{b._a=expSum?Math.floor(rest*b.exp/expSum):Math.floor(rest/auto.length);left-=b._a});
+  if(auto.length){const top=auto.reduce((m,b)=>b.exp>m.exp?b:m,auto[0]);top._a+=left}
+  const sum=bundle.reduce((a,b)=>a+(b.amt??b._a),0), cost=bundle.reduce((a,b)=>a+b.cost,0), profit=total-fee-cost;
+  document.getElementById("bRows").innerHTML=bundle.map((b,i)=>{const a=b.amt??b._a;return `<tr>
+    <td>${b.no}${isLotLeft(b.no)?' <span class="tag t-yama">山の残り</span>':""}<br><span class="muted">${b.name}</span>${b.no.includes("-")?`<br><span class="muted">→ 山${b.no.split("-")[0]}の売上に入ります</span>`:""}</td>
+    <td class="n">${yen(b.exp)}</td><td class="n">${yen(b.cost)}</td>
+    <td class="n"><input data-i="${i}" class="bamt n${b.amt==null?" auto-in":""}" value="${a}" inputmode="numeric"></td></tr>`}).join("")+
+    `<tr class="tot"><td colspan="2"><b>この販売（1件）</b></td><td class="n">${yen(cost)}</td><td class="n"><b>${yen(total)}</b></td></tr>`;
+  document.querySelectorAll(".bamt").forEach(inp=>inp.addEventListener("change",()=>{bundle[+inp.dataset.i].amt=num(inp.value)??0;drawBundle()}));
+  const ok=sum===total;
+  document.getElementById("bCheck").innerHTML=(ok?`<span class="up">分けた額の合計 ${yen(sum)} ＝ 売れた金額 ${yen(total)}</span>`:`<span class="down">分けた額の合計 ${yen(sum)} が、売れた金額 ${yen(total)} と合っていません</span>`)+
+    `<br>粗利 ＝ 売れた金額 ${yen(total)} − 手数料 ${yen(fee)} − 原価 ${yen(cost)} ＝ <b class="${profit>=0?"up":"down"}">${yen(profit)}</b>`;
+  document.getElementById("bSave").disabled=!ok||!bundle.length;
+}
+document.getElementById("bAmt").addEventListener("input",drawBundle);document.getElementById("bFee").addEventListener("input",drawBundle);
+document.getElementById("bReset").addEventListener("click",()=>{bundle.forEach(b=>b.amt=null);drawBundle()});
+document.getElementById("pickSell").addEventListener("click",openBundle);
+document.getElementById("pickList").addEventListener("click",()=>openListBulk());
+document.getElementById("pickClear").addEventListener("click",()=>{picked.clear();document.querySelectorAll(".pick").forEach(x=>x.checked=false);drawPickBar()});
+document.getElementById("bClose").addEventListener("click",()=>document.getElementById("bundleDlg").close());
+document.getElementById("bSave").addEventListener("click",()=>{
+  // 1件の販売として記録。中身はすべて売却済みにする
+  const ch=document.getElementById("bCh").value,total=num(document.getElementById("bAmt").value)||0,fee=num(document.getElementById("bFee").value)||0;
+  const kids=bundle.map(b=>{const r=items.find(x=>x[0]===b.no);const k={no:b.no,amt:b.amt??b._a,cost:b.cost,prev:{status:r[6],chips:[...r[7]]}};
+    k.others=r[7].map(c=>c.replace("*","")).filter(c=>c!==ch);r[6]="sold";r[7]=[ch+"*"];r._flash=true;setTimeout(()=>{r._flash=false},2500);return k});
+  const others=[...new Set(kids.flatMap(k=>k.others))];
+  const rec={id:recId++,no:kids.map(k=>k.no).join(" ＋ "),name:`まとめて売る（中身${kids.length}点）`,ch,priceY:total,profit:total-fee-kids.reduce((a,k)=>a+k.cost,0),kids,others};
+  saleLog.unshift(rec);
+  document.getElementById("bundleDlg").close();picked.clear();drawPickBar();afterChange();
+  const lotsDone=kids.filter(k=>isLotLeft(k.no)).map(k=>"山"+k.no.split("-")[0]);
+  toast(`1件の販売として記録しました（${rec.no}）${lotsDone.length?`。${lotsDone.join("・")}の残りは0になりました`:""}${others.length?`<br><span class="delist">⚠ ${others.join("・")} の出品を取り下げてください</span>`:""}`,
+    ()=>{undoSale(rec);afterChange()},"取り消しました。中身の商品は元の状態に戻りました");
+});
+
+// ---- 販売を記録 ----
+const RATES={JPY:1,EUR:177.36,USD:152.40}; // 見本の数字（11月・仮）
+const CUR_SIGN={JPY:"円",EUR:"€",USD:"$"};
+const CH={
+  "Catawiki":{cur:"EUR",fee:"manual",rate:null,avg:0.155,ship:true},
+  "メルカリ":{cur:"JPY",fee:"auto",rate:0.10,ship:false,shipDeduct:true},
+  "ヤフオク":{cur:"JPY",fee:"manual",rate:null,avg:0.091,ship:true,shipDeduct:true,refundVia:"bank"},
+  "JOOM":{cur:"USD",fee:"auto",rate:0.15,ship:true},
+  "Chrono24":{cur:"JPY",fee:"auto",rate:0.125,ship:true},
+  "浜屋":{cur:"JPY",fee:"manual",rate:null,avg:0.10,ship:true},
+  "古物市場":{cur:"JPY",fee:"manual",rate:null,avg:0.10,ship:true},
+  "ジモティー":{cur:"JPY",fee:"none",rate:null,ship:true},
+  "eBay":{cur:"USD",fee:"manual",rate:null,avg:null,ship:true,tbd:true},
+};
+const SPECIAL={"廃棄":"捨てた（原価を損失として記録）","備品にした":"会社で使う（売上に入れない）"};
+Object.assign(st,{disposed:["廃棄","t-warn"],fixture:["備品","t-stock"]});
+// 在庫の見本を足す
+[["0120-5","SEIKO クオーツ","時計","2026/09/14",1500,15000,"stock",[],58],
+ ["0352","Apple MacBookAir A2941","PC、OA機器","2026/11/04",81675,110000,"stock",[],8],
+ ["0354","BAKUNE Dry TENTIAL ロングスリーブTシャツ/ロングパンツセット","アパレル","2026/11/04",14520,22000,"list",["メルカリ"],8],
+ ["0360-1","オリンパス OM-1 ボディ","カメラ","2026/10/21",4000,18000,"list",["メルカリ","ヤフオク"],22],
+ ["0361","オリンパス ズイコー 50mm F1.8","カメラ","2026/10/21",2500,9000,"stock",[],22]].forEach(r=>items.push(r));
+// 縦積在庫（同じ商品が複数個）：管理番号 → {total:仕入個数, sold:売れた個数}
+const STOCKQ={"0399":{total:10,sold:2},"L00004":{total:8,sold:3}};
+items.push(["0399","CASIO チープカシオ A158W","時計","2026/10/20",1500,4000,"list",["メルカリ","ヤフオク"],23]);
+// 山の見本：0353 は届いたばかりで枝番なし（仕入額はまるごと -0）。0460・0470 は枝番に全部割り振り済み（-0 は原価0円）
+[["0120-0","腕時計まとめ 残り7点","時計","2026/09/14",0,0,"sold",["古物市場*"],null],
+ ["0353-0","【ジャンク】メガネグッズまとめ他小物まとめ","雑貨","2026/11/04",52333,0,"stock",[],9],
+ ["0460-1","楽焼 茶碗","茶道具","2026/08/02",16000,20000,"list",["ヤフオク"],103],
+ ["0460-2","棗 漆塗り","茶道具","2026/08/02",8000,10000,"list",["メルカリ"],103],
+ ["0460-0","茶道具まとめ 残り18点","茶道具","2026/08/02",0,0,"stock",[],103],
+ ["0470-1","リーバイス 501 ヴィンテージ","アパレル","2026/07/20",10000,15000,"list",["メルカリ"],116],
+ ["0470-2","リーバイス デニムジャケット","アパレル","2026/07/20",8000,12000,"stock",[],116],
+ ["0470-0","古着まとめ 残り28点","アパレル","2026/07/20",0,0,"stock",[],116]].forEach(r=>items.push(r));
+const qLeft=no=>STOCKQ[no]?STOCKQ[no].total-STOCKQ[no].sold:null;
+const findItem=no=>{const r=items.find(x=>x[0]===String(no||"").trim());return r?[r[0],r[1],r[4],r]:null};
+const inStock=r=>r[6]==="stock"||r[6]==="list";
+const r0=v=>Math.round(v);
+document.getElementById("rateEUR").textContent=RATES.EUR;document.getElementById("rateUSD").textContent=RATES.USD.toFixed(2);
+
+// ---- 商品一覧の再表示（販売を記録すると状態が変わる） ----
+// 絞り込み：「在庫」は今あるすべての在庫（未出品＋出品中）
+let invF="all",invQ="";
+const INV_F=[["all","すべて",()=>true],["now","在庫",r=>inStock(r)],["stock","未出品",r=>r[6]==="stock"],["list","出品中",r=>r[6]==="list"],["sold","売却済み",r=>!inStock(r)],["lot","山",r=>isLotLeft(r[0])],["old","90日以上",r=>inStock(r)&&r[8]>=90]];
+const grpCls=r=>{const p=lotOf(r[0]);return !p?"":/-0$/.test(r[0])?"lotrow":"brrow"};
+const qtyTag=r=>(isLotLeft(r[0])?` <span class="tag t-yama">山${lotBranches(r[0].split("-")[0]).length?"の残り":""} ▸</span>`:"")+(STOCKQ[r[0]]?` <span class="tag t-list">残り${qLeft(r[0])}／${STOCKQ[r[0]].total}個</span>`:"");
+// 山（-0）の行のすぐ下に、その山の枝番を並べる。山の行は、枝番のどれかが当てはまれば出す
+const lotOf=no=>{const p=no.includes("-")?no.split("-")[0]:null;return p&&LOTS[p]&&items.some(r=>r[0]===p+"-0")?p:null};
+function invList(){
+  const f=INV_F.find(x=>x[0]===invF)[2],k=norm(invQ),kw=r=>!k||norm(r[0]+r[1]).includes(k);
+  const out=[],done=new Set(),bn=no=>/-0$/.test(no)?-1:+no.split("-")[1];
+  items.forEach(r=>{const p=lotOf(r[0]);
+    if(!p){if(invF!=="lot"&&f(r)&&kw(r))out.push(r);return}
+    if(done.has(p))return;done.add(p);
+    const grp=items.filter(x=>lotOf(x[0])===p).sort((a,b)=>bn(a[0])-bn(b[0])),head=grp[0],kids=grp.slice(1);
+    if(invF==="lot"){if(grp.some(kw))out.push(...grp);return}
+    const hk=kids.filter(x=>f(x)&&kw(x));if((f(head)&&kw(head))||hk.length)out.push(head,...hk);
+  });
+  return out;
+}
+function renderItems(){
+  const list=invList();
+  document.getElementById("invPills").innerHTML=INV_F.map(([k,l])=>`<button class="pill${k===invF?" on":""}" data-f="${k}">${l}</button>`).join("");
+  document.querySelectorAll("#invPills .pill").forEach(b=>b.onclick=()=>{invF=b.dataset.f;renderItems()});
+  document.getElementById("itemrows").innerHTML=(list.length?"":`<tr><td colspan="10" class="muted" style="padding:16px">当てはまる商品はありません</td></tr>`)+list.map(r=>`<tr data-no="${r[0]}" class="clickable ${r._flash?"flash":""} ${grpCls(r)}"><td>${inStock(r)?`<input type="checkbox" class="pick" data-no="${r[0]}"${picked.has(r[0])?" checked":""}>`:""}</td><td>${r[0]}</td><td><span class="nm">${r[1]}</span>${qtyTag(r)}</td><td>${r[2]}</td><td>${r[3]}</td><td class="n">${yen(r[4])}</td><td class="n">${yen(r[5])}</td><td><span class="tag ${st[r[6]][1]}">${st[r[6]][0]}</span></td><td>${chips(r[7])}</td><td class="n">${inStock(r)?days(r[8]):'<span class="muted">—</span>'}</td></tr>`).join("");
+  document.getElementById("itemcards").innerHTML=list.map(r=>`<div data-no="${r[0]}" class="mc clickable ${r._flash?"flash":""} ${grpCls(r)}"><div class="top"><span class="muted">${inStock(r)?`<input type="checkbox" class="pick" data-no="${r[0]}"${picked.has(r[0])?" checked":""}> `:""}${r[0]}・${r[2]}</span><span class="tag ${st[r[6]][1]}">${st[r[6]][0]}</span></div><div class="name"><span class="nm">${r[1]}</span>${qtyTag(r)}</div><div class="meta"><span>原価 ${yen(r[4])} / 予想 ${yen(r[5])}</span><span>${inStock(r)&&r[8]!=null?r[8]+"日":""}</span></div><div style="margin-top:6px">${chips(r[7])}</div></div>`).join("");
+  document.querySelectorAll(".pick").forEach(cb=>cb.addEventListener("change",()=>{cb.checked?picked.add(cb.dataset.no):picked.delete(cb.dataset.no);
+    document.querySelectorAll(`.pick[data-no="${cb.dataset.no}"]`).forEach(x=>x.checked=cb.checked);drawPickBar()}));
+  const n=items.filter(inStock).length;document.querySelector("#items .lead").firstChild.textContent=`全 1,284 点（在庫 ${400+n} 点）。`;
+}
+// ---- 商品名・管理番号で探す ----
+const norm=s=>String(s).normalize("NFKC").toLowerCase().replace(/[ァ-ヶ]/g,c=>String.fromCharCode(c.charCodeAt(0)-0x60)).replace(/\s+/g,"");
+renderItems();
+document.getElementById("invGo").onclick=()=>{invQ=document.getElementById("invQ").value;renderItems()};
+document.getElementById("invQ").addEventListener("keydown",e=>{if(e.key==="Enter"){invQ=e.target.value;renderItems()}});
+document.getElementById("invQ").addEventListener("input",e=>{if(!e.target.value){invQ="";renderItems()}});
+const sugg=document.createElement("div");sugg.className="sugg";document.body.appendChild(sugg);
+let suggFor=null,suggHi=0,suggList=[];
+function searchItems(q){const k=norm(q);if(!k)return [];
+  return items.filter(r=>inStock(r)).map(r=>{const name=norm(r[1]),no=norm(r[0]);let score=no.startsWith(k)?3:name.startsWith(k)?2:(name.includes(k)||no.includes(k))?1:0;
+    if(!score){const words=String(q).normalize("NFKC").toLowerCase().split(/\s+/).filter(Boolean).map(norm);if(words.length>1&&words.every(w=>name.includes(w)||no.includes(w)))score=1}
+    return [score,r]}).filter(x=>x[0]).sort((a,b)=>b[0]-a[0]).slice(0,8).map(x=>x[1])}
+const hl=(text,q)=>{const t=String(text);const k=String(q).normalize("NFKC").trim();if(!k)return t;const i=norm(t).indexOf(norm(k));if(i<0)return t;
+  // ひらがな・カタカナ・全角半角を区別せずに太字にする（簡易）
+  let pos=0,start=-1,end=-1;for(let j=0;j<t.length;j++){const n=norm(t.slice(0,j+1)).length;if(start<0&&n>i){start=j}if(n>=i+norm(k).length){end=j+1;break}}
+  return start<0?t:t.slice(0,start)+"<b>"+t.slice(start,end)+"</b>"+t.slice(end)};
+function showSugg(input,onPick){
+  suggFor={input,onPick};suggList=searchItems(input.value);suggHi=0;
+  if(!input.value.trim()){sugg.style.display="none";return}
+  const rc=input.getBoundingClientRect();
+  sugg.style.cssText=`display:block;left:${Math.max(8,rc.left)}px;top:${rc.bottom+4}px;width:${Math.max(rc.width,340)}px`;
+  sugg.innerHTML=suggList.length?suggList.map((r,i)=>`<div class="sg${i===suggHi?" on":""}" data-i="${i}">
+      <div><span class="muted">${hl(r[0],input.value)}</span>　${hl(r[1],input.value)}</div>
+      <div class="muted" style="font-size:12px">原価 ${yen(r[4])}・<span class="tag ${st[r[6]][1]}">${st[r[6]][0]}</span> ${r[7].map(c=>`<span class="chip">${c}</span>`).join("")}</div></div>`).join("")
+    :`<div class="sg none">「${input.value}」に当てはまる在庫がありません<br><span class="muted">売却済みの商品は出てきません</span></div>`;
+  sugg.querySelectorAll(".sg[data-i]").forEach(el=>el.addEventListener("mousedown",e=>{e.preventDefault();pick(+el.dataset.i)}));
+}
+function pick(i){const r=suggList[i];if(!r||!suggFor)return;sugg.style.display="none";suggFor.onPick(r)}
+function attachSearch(input,onPick){
+  input.addEventListener("input",()=>showSugg(input,onPick));
+  input.addEventListener("focus",()=>input.value&&showSugg(input,onPick));
+  input.addEventListener("blur",()=>setTimeout(()=>{if(suggFor&&suggFor.input===input)sugg.style.display="none"},150));
+  input.addEventListener("keydown",e=>{if(sugg.style.display!=="block")return;
+    if(e.key==="ArrowDown"){e.preventDefault();suggHi=Math.min(suggList.length-1,suggHi+1);showSuggKeep()}
+    else if(e.key==="ArrowUp"){e.preventDefault();suggHi=Math.max(0,suggHi-1);showSuggKeep()}
+    else if(e.key==="Enter"){e.preventDefault();pick(suggHi)}
+    else if(e.key==="Escape"){sugg.style.display="none"}});
+}
+function showSuggKeep(){sugg.querySelectorAll(".sg[data-i]").forEach(el=>el.classList.toggle("on",+el.dataset.i===suggHi))}
+window.addEventListener("scroll",()=>{sugg.style.display="none"},true);
+
+// 計算（すべての販路で共通の式）
+function calcSale({ch,price,ship,fee,real,cost,feeTouched}){
+  const c=CH[ch];const rate=RATES[c.cur];
+  const priceY=(num(price)||0)*rate, shipY=c.ship?(num(ship)||0)*rate:0;
+  let feeIn=num(fee), feeY, feeAuto=false;
+  if(c.fee==="auto"&&!feeTouched){feeIn=(num(price)||0)*c.rate;feeAuto=true}
+  if(c.fee==="none"){feeIn=0;feeAuto=true}
+  feeY=(feeIn||0)*rate;
+  const realY=num(real)||0;
+  const profit=priceY+shipY-realY-feeY-(cost||0);
+  let warn="";
+  if(c.fee==="manual"&&c.avg&&num(price)>0&&feeIn!=null){const pct=feeIn/num(price);if(Math.abs(pct-c.avg)>c.avg*0.4)warn=`いつもの手数料率（約${(c.avg*100).toFixed(1)}%）と違います（今回 ${(pct*100).toFixed(1)}%）。打ち間違いがないか確認してください`}
+  return {rate,priceY,shipY,feeIn,feeY,realY,profit,feeAuto,warn};
+}
+
+// ---- 記録と取り消し ----
+const saleLog=[]; // 記録した販売（新しい順）
+let batchSeq=0;
+function applySale(rec){
+  const r=findItem(rec.no)[3];
+  rec.prev={status:r[6],chips:[...r[7]]};
+  if(STOCKQ[rec.no]&&!SPECIAL[rec.ch]){const q=STOCKQ[rec.no];q.sold+=rec.qty||1;rec.left=q.total-q.sold;
+    if(rec.left>0){r._flash=true;setTimeout(()=>{r._flash=false},2500);saleLog.unshift(rec);return}} // まだ残りがある：出品中のまま、取り下げも不要
+  if(rec.ch==="廃棄")r[6]="disposed";else if(rec.ch==="備品にした")r[6]="fixture";
+  else{r[6]="sold";rec.others=r[7].map(c=>c.replace("*","")).filter(c=>c!==rec.ch);r[7]=[rec.ch+"*"]} // ほかの出品先は外して、取り下げを知らせる
+  r._flash=true;setTimeout(()=>{r._flash=false},2500);
+  saleLog.unshift(rec);
+}
+function undoSale(rec){
+  if(rec.kids){rec.kids.forEach(k=>{const r=items.find(x=>x[0]===k.no);r[6]=k.prev.status;r[7]=k.prev.chips;r._flash=true;setTimeout(()=>{r._flash=false},2500)});rec.undone=true;return}
+  const r=findItem(rec.no)[3];r[6]=rec.prev.status;r[7]=rec.prev.chips;rec.undone=true;
+  if(STOCKQ[rec.no]&&rec.left!=null)STOCKQ[rec.no].sold-=rec.qty||1;
+  r._flash=true;setTimeout(()=>{r._flash=false},2500);
+}
+function afterChange(){renderItems();drawToday();drawOne();drawMany()}
+// 同時出品：ほかに出品中の販路があれば、取り下げを知らせる
+function delistMsg(recs){
+  const l=recs.filter(h=>h.others&&h.others.length);if(!l.length)return"";
+  return `<br><span class="delist">⚠ ほかに出品中：${l.map(h=>`${h.no} → <b>${h.others.join("・")}</b>`).join("、")} の出品を取り下げてください</span>`;
+}
+let toastTimer=null;
+function toast(msg,undoFn,undoMsg){
+  let t=document.getElementById("toast");if(!t){t=document.createElement("div");t.id="toast";document.body.appendChild(t)}
+  t.innerHTML=`<span>${msg}</span>${undoFn?'<button class="btn" id="toastUndo">元に戻す</button>':""}<button class="x" id="toastX">×</button><i class="bar"></i>`;
+  t.className="show";clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.className="",10000);
+  t.querySelector("#toastX").onclick=()=>t.className="";
+  if(undoFn)t.querySelector("#toastUndo").onclick=()=>{undoFn();t.className="";toast(undoMsg||"取り消しました。商品は元の状態（在庫・出品中）に戻りました",null)};
+}
+function drawToday(){
+  const list=saleLog.filter(h=>!h.undone);
+  sEl("sToday").innerHTML=list.length?list.map(h=>`<li><span>${h.no} ${h.name}<br><span class="muted">${h.ch}${h.qty>1?`・${h.qty}個`:""}${h.profit!=null?"・売値 "+yen(r0(h.priceY)):""}${h.left>0?`・残り${h.left}個`:""}${h.batch?"・まとめて入力":""}</span>${h.others&&h.others.length?`<br><span class="delist">⚠ ${h.others.join("・")} の出品を取り下げてください</span>`:""}</span>
+     <span style="text-align:right">${h.profit!=null?`<span class="n ${h.profit>=0?"up":"down"}">${yen(r0(h.profit))}</span><br>`:""}<button class="linkbtn" data-id="${h.id}">取り消す</button></span></li>`).join("")
+    :'<li class="muted">まだありません</li>';
+  sEl("sToday").querySelectorAll(".linkbtn").forEach(b=>b.addEventListener("click",()=>{
+    const h=saleLog.find(x=>x.id===+b.dataset.id);
+    if(!confirm(`${h.no} ${h.name} の「${h.ch}」の記録を取り消しますか？\n商品は元の状態に戻ります。`))return;
+    undoSale(h);afterChange();toast(`${h.no} の記録を取り消しました`,null)}));
+}
+let recId=1;
+
+// ---- 1件ずつ ----
+let sCh="Catawiki", sFeeTouched=false, sSel=null;
+const sEl=id=>document.getElementById(id);
+function drawChips(){
+  sEl("sCh").innerHTML=Object.keys(CH).map(k=>`<button class="chipbtn${k===sCh?" on":""}" data-c="${k}">${k}${CH[k].tbd?' <small>未定</small>':""}</button>`).join("")+
+    Object.keys(SPECIAL).map(k=>`<button class="chipbtn sp${k===sCh?" on":""}" data-c="${k}">${k}</button>`).join("");
+  sEl("sCh").querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>{sCh=b.dataset.c;sFeeTouched=false;sEl("sFee").value="";drawChips();drawOne()}));
+}
+function selectOne(r){sSel=r?r[0]:null;sEl("sQ").value="";sEl("sQ").style.display=r?"none":"";drawOne();if(!r)sEl("sQ").focus()}
+attachSearch(sEl("sQ"),r=>selectOne(r));
+function drawOne(){
+  const it=sSel?findItem(sSel):null;
+  if(it&&!inStock(it[3])){sSel=null;return drawOne()}
+  sEl("sItem").innerHTML=it?`<div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start"><div><span class="muted">${it[0]}</span><br><b>${it[1]}</b><br>原価 ${yen(it[2])}${STOCKQ[it[0]]?`（1個あたり）・<b>在庫 残り${qLeft(it[0])}個</b>／${STOCKQ[it[0]].total}個`:""}${it[3][7].length?"・出品先 "+it[3][7].join("・"):""}</div><button class="linkbtn" id="sChange">変更</button></div>`:"商品名か管理番号の一部を入れると、候補が出ます";
+  sEl("sItem").className="itembox"+(it?" picked":" muted");
+  if(it)sEl("sChange").onclick=()=>selectOne(null);
+  const multi=it&&STOCKQ[it[0]];sEl("qtyWrap").style.display=multi?"":"none";
+  let qty=1;if(multi){qty=Math.max(1,Math.min(qLeft(it[0]),Math.floor(num(sEl("sQty").value)||1)));sEl("qtyLeft").textContent=`（在庫 残り${qLeft(it[0])}個）`}
+  sEl("priceLbl").textContent=multi&&qty>1?`売値（${qty}個の合計）`:"売値";
+  const cost=it?it[2]*qty:0;
+  if(SPECIAL[sCh]){
+    sEl("sPriceArea").style.display="none";
+    const loss=sCh==="廃棄";
+    sEl("sCalc").innerHTML=`<tr><td>原価</td><td class="n">${yen(cost)}</td></tr><tr class="tot"><td>${loss?"損失":"売上・粗利"}</td><td class="n ${loss?"down":""}">${loss?"−"+yen(cost):"集計に入れません"}</td></tr>`;
+    sEl("sCalcNote").textContent=SPECIAL[sCh];sEl("sSave").textContent=`「${sCh}」として記録する`;return;
+  }
+  sEl("sPriceArea").style.display="";sEl("sSave").textContent="記録する";
+  const c=CH[sCh],sign=CUR_SIGN[c.cur];
+  ["curPrice","curShip","curFee"].forEach(id=>sEl(id).textContent=`（${sign}）`);
+  sEl("shipWrap").style.display=c.ship?"":"none";
+  const r=calcSale({ch:sCh,price:sEl("sPrice").value,ship:sEl("sShip").value,fee:sEl("sFee").value,real:sEl("sReal").value,cost,feeTouched:sFeeTouched});
+  const feeBox=sEl("sFee");
+  if(r.feeAuto){feeBox.value=c.fee==="none"?"0":(r.feeIn?+r.feeIn.toFixed(2):"");feeBox.classList.add("auto-in")}else feeBox.classList.remove("auto-in");
+  feeBox.readOnly=c.fee==="none";
+  const hint=c.fee==="auto"?`売値の${c.rate*100}%で自動で入れました（手で直せます）`:c.fee==="none"?"この販路は手数料なし":c.tbd?"eBayの手数料の決まりはまだ決めていません":`毎回入力。目安：いつもは売値の約${(c.avg*100).toFixed(1)}%${num(sEl("sPrice").value)?`（${sign}${(num(sEl("sPrice").value)*c.avg).toFixed(c.cur==="JPY"?0:2)}前後）`:""}`;
+  sEl("feeHint").innerHTML=r.warn?`<span class="down">⚠ ${r.warn}</span>`:hint;
+  const fx=c.cur!=="JPY";
+  const line=(l,v,raw)=>`<tr><td>${l}${fx&&raw!=null?`<br><small class="muted">${sign}${raw} × ${r.rate}円</small>`:""}</td><td class="n">${v}</td></tr>`;
+  sEl("sCalc").innerHTML=
+    line("売値（円）",yen(r0(r.priceY)),num(sEl("sPrice").value)||0)+
+    (c.ship?line("＋ 設定送料（円）",yen(r0(r.shipY)),num(sEl("sShip").value)||0):"")+
+    `<tr><td>− 実送料${sEl("sShipTbd").checked?' <span class="tag t-temp">仮</span>':""}</td><td class="n">${yen(r0(r.realY))}</td></tr>`+
+    line("− 手数料（円）",yen(r0(r.feeY)),r.feeIn!=null?+(+r.feeIn).toFixed(2):0)+
+    `<tr><td>− 原価${qty>1?`<br><small class="muted">${yen(it[2])} × ${qty}個</small>`:""}</td><td class="n">${yen(cost)}</td></tr>`+
+    `<tr class="tot"><td>粗利</td><td class="n ${r.profit>=0?"up":"down"}">${r.profit<0?"−":""}${yen(Math.abs(r0(r.profit)))}</td></tr>`;
+  sEl("sCalcNote").innerHTML=fx?`為替は11月の仮レートです。月末に11月の平均TTMで自動で計算し直します。`:"";
+}
+["sPrice","sShip","sReal","sShipTbd","sQty"].forEach(id=>sEl(id).addEventListener("input",drawOne));
+function setShipTbd(on){
+  sEl("sShipTbd").checked=on;sEl("sTbdBtn").classList.toggle("on",on);
+  const r=sEl("sReal");r.classList.toggle("tmp-in",on);r.placeholder=on?"仮の送料（だいたいの金額）":"0";
+  sEl("sTbdBtn").textContent=on?"✓ 未定":"未定";
+  sEl("realLabel").textContent=on?"実送料（仮の金額・円）":"実送料（実際にかかった送料・円）";
+  sEl("realHint").textContent=on?"だいたいの送料を仮に入れておくと、その金額で粗利を計算します。本当の送料が分かったら「送料未定」タブで直します":"まだ分からないときは「未定」を押して、仮の金額を入れます。あとで「送料未定」タブで直せます";
+  if(on)r.focus();
+  drawOne();
+}
+sEl("sTbdBtn").addEventListener("click",()=>{setShipTbd(!sEl("sShipTbd").checked);sEl("sReal").focus()});
+sEl("sFee").addEventListener("input",()=>{sFeeTouched=true;drawOne()});
+sEl("sSave").addEventListener("click",()=>{
+  const it=sSel?findItem(sSel):null;if(!it){alert("売れた商品を選んでください");sEl("sQ").focus();return}
+  const qty=STOCKQ[it[0]]?Math.max(1,Math.min(qLeft(it[0]),Math.floor(num(sEl("sQty").value)||1))):1;
+  const rec={id:recId++,no:it[0],name:it[1],ch:sCh,qty,tbd:sEl("sShipTbd").checked&&!SPECIAL[sCh]};
+  if(!SPECIAL[sCh]){const r=calcSale({ch:sCh,price:sEl("sPrice").value,ship:sEl("sShip").value,fee:sEl("sFee").value,real:sEl("sReal").value,cost:it[2]*qty,feeTouched:sFeeTouched});rec.profit=r.profit;rec.priceY=r.priceY;rec.calc=r}
+  applySale(rec);
+  ["sPrice","sShip","sFee","sReal"].forEach(id=>sEl(id).value="");sEl("sSent").checked=false;sEl("sQty").value="1";setShipTbd(false);sFeeTouched=false;sSel=null;sEl("sQ").style.display="";
+  afterChange();
+  toast(rec.left>0?`${rec.no} ${rec.name} を ${rec.qty}個 記録しました。在庫は 残り${rec.left}個 です（出品はそのまま）`
+    :`${rec.no} ${rec.name} を記録しました。商品一覧で「${SPECIAL[rec.ch]?(rec.ch==="廃棄"?"廃棄":"備品"):STOCKQ[rec.no]?"売り切れ（売却済み）":"売却済み"}」になりました${delistMsg([rec])}`,()=>{undoSale(rec);afterChange()});
+});
+drawChips();sSel="0120-3";sEl("sQ").style.display="none";sEl("sPrice").value="120";sEl("sShip").value="30";sEl("sFee").value="18.6";sEl("sReal").value="5200";sFeeTouched=true;drawOne();drawToday();
+
+// ---- まとめて入力 ----
+const newRow=()=>({no:"",q:"",ch:"メルカリ",date:"2026/11/12",price:"",ship:"",fee:"",real:"",ft:false});
+let mRows=[
+  {no:"0042-3",ch:"メルカリ",date:"2026/11/12",price:"9800",ship:"",fee:"",real:"750",ft:false},
+  {no:"0120-4",ch:"ヤフオク",date:"2026/11/12",price:"16500",ship:"",fee:"1500",real:"1100",ft:true},
+  {no:"0352",ch:"Catawiki",date:"2026/11/11",price:"560",ship:"45",fee:"78",real:"9800",ft:true},
+  {no:"0058-0",ch:"古物市場",date:"2026/11/11",price:"3000",ship:"",fee:"30",real:"800",tbd:true,ft:true},
+  newRow(),newRow(),
+];
+function drawMany(){
+  const t=document.getElementById("mTable");
+  // 売れてしまった（ほかで記録した）商品は外す
+  mRows.forEach(m=>{const it=findItem(m.no);if(m.no&&it&&!inStock(it[3])){m.no="";m.q=""}});
+  t.innerHTML=`<thead><tr><th class="rn"></th><th>商品（商品名・管理番号で探す）</th><th>売り先</th><th>売却日</th><th class="n">売値</th><th class="n">設定送料</th><th class="n">手数料</th><th class="n">実送料（円）</th><th class="n">粗利（円）</th></tr></thead><tbody>`+
+  mRows.map((m,i)=>{
+    const it=findItem(m.no),c=CH[m.ch],sign=CUR_SIGN[c.cur];
+    const r=calcSale({ch:m.ch,price:m.price,ship:m.ship,fee:m.fee,real:m.real,cost:it?it[2]:0,feeTouched:m.ft});
+    const feeVal=r.feeAuto?(c.fee==="none"?"0":(r.feeIn?+r.feeIn.toFixed(2):"")):m.fee;
+    return `<tr>
+      <td class="rn">${i+1}</td>
+      <td style="min-width:300px">${it?`<div class="picked-cell"><span class="muted">${it[0]}</span> ${it[1]}<button class="linkbtn" data-clear="${i}">変更</button></div>`:`<input data-i="${i}" data-k="q" class="mq" value="${m.q||""}" placeholder="例：オリンパス、0120">`}</td>
+      <td><select data-i="${i}" data-k="ch">${Object.keys(CH).map(k=>`<option${k===m.ch?" selected":""}>${k}</option>`).join("")}</select></td>
+      <td><input data-i="${i}" data-k="date" value="${m.date}" style="width:100px"></td>
+      <td><div class="cin"><input data-i="${i}" data-k="price" value="${m.price}" class="n"><i>${sign}</i></div></td>
+      <td>${c.ship?`<div class="cin"><input data-i="${i}" data-k="ship" value="${m.ship}" class="n"><i>${sign}</i></div>`:'<span class="muted" style="padding:0 8px">なし</span>'}</td>
+      <td class="${r.warn?"warn2":""}" title="${r.warn}"><div class="cin"><input data-i="${i}" data-k="fee" value="${feeVal}" class="n${r.feeAuto?" auto-in":""}"><i>${sign}</i></div></td>
+      <td>${m.tbd?`<div class="tbdcell"><span class="tag t-temp" title="送料未定。仮の金額で計算します">仮</span><input data-i="${i}" data-k="real" value="${m.real}" class="n tmp-in" placeholder="仮の金額"><button class="mini" data-untbd="${i}" title="未定をやめる（この金額で確定）">確定</button></div>`
+        :`<div class="tbdcell"><input data-i="${i}" data-k="real" value="${m.real}" class="n" placeholder="0"><button class="mini" data-tbd="${i}" title="送料がまだ分からない">未定</button></div>`}</td>
+      <td class="n ${r.profit>=0?"up":"down"}" style="padding:0 8px;font-weight:600">${m.price&&it?(r.profit<0?"−":"")+yen(Math.abs(r0(r.profit))):'<span class="muted">—</span>'}</td>
+    </tr>`}).join("")+"</tbody>";
+  t.querySelectorAll("[data-tbd]").forEach(b=>b.addEventListener("click",()=>{const i=+b.dataset.tbd;mRows[i].tbd=true;drawMany();document.querySelector(`#mTable [data-i="${i}"][data-k="real"]`)?.focus()}));
+  t.querySelectorAll("[data-untbd]").forEach(b=>b.addEventListener("click",()=>{const i=+b.dataset.untbd;mRows[i].tbd=false;drawMany();document.querySelector(`#mTable [data-i="${i}"][data-k="real"]`)?.focus()}));
+  t.querySelectorAll("input:not(.mq),select").forEach(el=>el.addEventListener("change",()=>{const m=mRows[+el.dataset.i];
+    if(el.dataset.k==="real"&&/^\s*(未定|仮)/.test(el.value)){m.tbd=true;m.real=el.value.replace(/^\s*(未定|仮)[\s:：]*/,"");drawMany();return} // 「未定」と打っても（貼り付けても）未定にする
+    m[el.dataset.k]=el.value;if(el.dataset.k==="fee")m.ft=el.value!=="";if(el.dataset.k==="ch"){m.ft=false;m.fee=""}drawMany()}));
+  t.querySelectorAll(".mq").forEach(el=>{const i=+el.dataset.i;attachSearch(el,r=>{
+      if(mRows.some((m,j)=>j!==i&&m.no===r[0])){alert(`${r[0]} はほかの行ですでに選んでいます`);return}
+      mRows[i].no=r[0];mRows[i].q="";drawMany();
+      const nx=document.querySelector(`#mTable [data-i="${i}"][data-k="price"]`);nx&&nx.focus()});
+    el.addEventListener("input",()=>{mRows[i].q=el.value})});
+  t.querySelectorAll("[data-clear]").forEach(b=>b.addEventListener("click",()=>{mRows[+b.dataset.clear].no="";drawMany();document.querySelector(`#mTable .mq[data-i="${b.dataset.clear}"]`)?.focus()}));
+  const valid=mRows.filter(m=>findItem(m.no)&&m.price);const tot=valid.reduce((a,m)=>{const it=findItem(m.no);return a+calcSale({ch:m.ch,price:m.price,ship:m.ship,fee:m.fee,real:m.real,cost:it[2],feeTouched:m.ft}).profit},0);
+  document.getElementById("mSum").innerHTML=`${valid.length}件　粗利の合計 <span class="${tot>=0?"up":"down"}">${yen(r0(tot))}</span>`;
+}
+document.getElementById("mAdd").addEventListener("click",()=>{for(let k=0;k<5;k++)mRows.push(newRow());drawMany()});
+document.getElementById("mSave").addEventListener("click",()=>{
+  const valid=mRows.filter(m=>findItem(m.no)&&m.price);if(!valid.length){alert("記録できる行がありません（商品と売値を入れてください）");return}
+  const b=++batchSeq,recs=[];
+  valid.forEach(m=>{const it=findItem(m.no);const r=calcSale({ch:m.ch,price:m.price,ship:m.ship,fee:m.fee,real:m.real,cost:it[2],feeTouched:m.ft});
+    const rec={id:recId++,no:it[0],name:it[1],ch:m.ch,profit:r.profit,priceY:r.priceY,calc:r,batch:b,tbd:!!m.tbd};applySale(rec);recs.push(rec)});
+  mRows=mRows.filter(m=>!valid.includes(m));while(mRows.length<6)mRows.push(newRow());
+  afterChange();
+  toast(`${recs.length}件を記録しました。商品一覧で「売却済み」になりました${delistMsg(recs)}`,()=>{recs.forEach(undoSale);afterChange()});
+});
+drawMany();
+
+// ---- 販路の設定 ----
+function drawCh(){
+  const t=document.getElementById("chTable");
+  t.innerHTML=`<thead><tr><th>販路</th><th>通貨</th><th>為替レート</th><th>手数料</th><th class="n">率</th><th>設定送料</th><th>実送料の払い方</th><th>一部返金のふだんの返し方</th></tr></thead><tbody>`+
+  Object.entries(CH).map(([k,c])=>`<tr>
+    <td><b>${k}</b>${c.tbd?' <span class="tag t-temp">未定</span>':""}</td>
+    <td><select data-k="${k}" data-f="cur">${["JPY","EUR","USD"].map(x=>`<option value="${x}"${x===c.cur?" selected":""}>${{JPY:"円",EUR:"ユーロ",USD:"ドル"}[x]}</option>`).join("")}</select></td>
+    <td class="muted">${c.cur==="JPY"?"—":`売れた月の平均TTM（${c.cur==="EUR"?"ユーロ円":"ドル円"}）`}</td>
+    <td><select data-k="${k}" data-f="fee"><option value="auto"${c.fee==="auto"?" selected":""}>売値の○%で自動</option><option value="manual"${c.fee==="manual"?" selected":""}>毎回入力</option><option value="none"${c.fee==="none"?" selected":""}>なし</option></select></td>
+    <td class="n">${c.fee==="auto"?`<input data-k="${k}" data-f="rate" value="${+(c.rate*100).toFixed(2)}" style="width:60px" class="n">%`:c.fee==="manual"&&c.avg?`<span class="muted">目安 ${(c.avg*100).toFixed(1)}%</span>`:'<span class="muted">—</span>'}</td>
+    <td><select data-k="${k}" data-f="ship"><option value="1"${c.ship?" selected":""}>使う</option><option value="0"${!c.ship?" selected":""}>使わない</option></select></td>
+    <td><select data-k="${k}" data-f="shipDeduct"><option value="1"${c.shipDeduct?" selected":""}>販路の振込から引かれる</option><option value="0"${!c.shipDeduct?" selected":""}>法人口座から払う</option></select></td>
+    <td><select data-k="${k}" data-f="refundVia"><option value="mall"${c.refundVia!=="bank"?" selected":""}>販路の振込から引かれる</option><option value="bank"${c.refundVia==="bank"?" selected":""}>法人口座から振り込む</option></select></td>
+  </tr>`).join("")+"</tbody>";
+  t.querySelectorAll("select,input").forEach(el=>el.addEventListener("change",()=>{const c=CH[el.dataset.k],f=el.dataset.f;
+    if(f==="cur")c.cur=el.value;else if(f==="fee"){c.fee=el.value;if(el.value==="auto"&&!c.rate)c.rate=0.1}else if(f==="rate")c.rate=(num(el.value)||0)/100;else if(f==="ship")c.ship=el.value==="1";else if(f==="shipDeduct")c.shipDeduct=el.value==="1";else if(f==="refundVia")c.refundVia=el.value;
+    drawCh();drawOne();drawMany();if(window.repRefresh)repRefresh();toast(`${el.dataset.k} の設定を変えました`,null)}));
+}
+drawCh();
+document.querySelectorAll("#salesTabs .pill").forEach(p=>p.addEventListener("click",()=>{
+  document.querySelectorAll("#salesTabs .pill").forEach(x=>x.classList.toggle("on",x===p));
+  ["one","many","tbd","ch"].forEach(k=>document.getElementById("st-"+k).style.display=p.dataset.st===k?"":"none");
+}));
+
+// ---- 商品の詳細（商品一覧で商品を押すと、利益が見られる） ----
+const SOLD_INFO={ // 見本：スプレッドシートの実際の行と同じ計算
+  "0237-0":{ch:"Catawiki",date:"2026/11/11",price:370,ship:60,fee:54.18,real:10850},
+  "0303-0":{ch:"メルカリ",date:"2026/11/11",price:6500,ship:0,fee:650,real:160},
+};
+const dd=document.createElement("dialog");dd.id="itemDlg";dd.className="itemdlg";document.body.appendChild(dd);
+document.querySelectorAll("dialog").forEach(d=>document.body.appendChild(d)); // どの画面からでも開けるように
+function saleCalcFor(r){
+  const log=saleLog.find(h=>h.no===r[0]&&!h.undone);
+  if(log&&log.calc)return {ch:log.ch,date:"2026/11/12",...log.calc,fromLog:true,tbd:log.tbd};
+  const s=SOLD_INFO[r[0]];if(!s)return null;
+  const c=CH[s.ch],rate=RATES[c.cur];
+  const priceY=s.price*rate,shipY=c.ship?s.ship*rate:0,feeY=s.fee*rate,realY=s.real||0;
+  return {ch:s.ch,date:s.date,rate,priceY,shipY,feeY,realY,feeIn:s.fee,profit:priceY+shipY-realY-feeY-r[4],raw:s,tbd:!!s.tbd};
+}
+function openItem(no){
+  const r=items.find(x=>x[0]===no);if(!r)return;
+  const lot=no.includes("-")?no.split("-")[0]:null,isLotHead=/-0$/.test(no);
+  let body="";
+  if(r[6]==="sold"){
+    const c=saleCalcFor(r);
+    if(c){if(REFUND[r[0]])c.profit-=REFUND[r[0]].amt;
+      const cfg=CH[c.ch],sign=CUR_SIGN[cfg.cur],fx=cfg.cur!=="JPY";
+      const sub=(v)=>fx&&v!=null?`<br><small class="muted">${sign}${+(+v).toFixed(2)} × ${c.rate}円</small>`:"";
+      body=`<div class="profitbig ${c.profit>=0?"up":"down"}"><span>粗利</span><b>${c.profit<0?"−":""}${yen(Math.abs(r0(c.profit)))}</b><small>粗利率 ${c.priceY?Math.round(c.profit/c.priceY*100):0}%</small></div>
+        <p class="muted" style="margin:0 0 6px">${c.date} に <b>${c.ch}</b> で売れました${fx?'　<span class="tag t-temp">為替 11月・仮</span>':""}</p>
+        <table class="calc">
+          <tr><td>売値（円）${sub(c.raw?c.raw.price:null)}</td><td class="n">${yen(r0(c.priceY))}</td></tr>
+          ${cfg.ship?`<tr><td>＋ 設定送料（円）${sub(c.raw?c.raw.ship:null)}</td><td class="n">${yen(r0(c.shipY))}</td></tr>`:""}
+          <tr><td>− 実送料${c.tbd?' <span class="tag t-temp">仮</span>':""}</td><td class="n">${yen(r0(c.realY))}${c.tbd?'<br><button class="linkbtn" id="toTbd">本当の送料を入れる</button>':""}</td></tr>
+          <tr><td>− 手数料（円）${sub(c.raw?c.raw.fee:null)}</td><td class="n">${yen(r0(c.feeY))}</td></tr>
+          <tr><td>− 原価</td><td class="n">${yen(r[4])}</td></tr>
+          ${REFUND[r[0]]?`<tr><td>− 一部返金 <span class="tag t-warn">${REFUND[r[0]].date.slice(5)}</span><br><small class="muted">${REFUND[r[0]].via==="bank"?"法人口座から振込（freeeのCSVには入れない）":"販路の振込から引かれる"}</small></td><td class="n">${yen(REFUND[r[0]].amt)}</td></tr>`:""}
+          <tr class="tot"><td>粗利</td><td class="n ${c.profit>=0?"up":"down"}">${c.profit<0?"−":""}${yen(Math.abs(r0(c.profit)))}</td></tr>
+        </table>
+        <div style="text-align:right;margin-top:10px"><button class="btn" id="toRet">返品・返金があった</button></div>`;
+    } else body=`<p class="muted">売れた記録の詳しい内訳は、この見本にはありません。</p>`;
+  } else if(r[6]==="disposed"){
+    body=`<div class="profitbig down"><span>損失</span><b>−${yen(r[4])}</b><small>廃棄</small></div>`;
+  } else if(r[6]==="fixture"){
+    body=`<div class="profitbig"><span>備品にした</span><b>—</b><small>売上・粗利に入れません</small></div>`;
+  } else {
+    // まだ売れていない：予想の利益
+    const exp=r[5]||0,chans=r[7].length?r[7]:["メルカリ"];
+    const rows=chans.map(ch=>{const cfg=CH[ch]||CH["メルカリ"];const rate=cfg.fee==="auto"?cfg.rate:cfg.fee==="none"?0:(cfg.avg||0.1);const fee=exp*rate;return [ch,rate,fee,exp-fee-r[4],cfg.fee]});
+    const best=rows.reduce((a,b)=>b[3]>a[3]?b:a,rows[0]);
+    body=`<div class="profitbig ${best[3]>=0?"up":"down"}"><span>予想の粗利</span><b>${yen(r0(best[3]))}</b><small>まだ売れていません（予想売価で計算）</small></div>
+      <table class="calc">
+        <tr><td>予想売価</td><td class="n">${yen(exp)}</td></tr>
+        <tr><td>− 原価</td><td class="n">${yen(r[4])}</td></tr>
+        <tr class="tot"><td>手数料を引く前</td><td class="n">${yen(exp-r[4])}</td></tr>
+      </table>
+      <div class="sec" style="margin-top:14px">${r[7].length?"出品先ごとの予想":"メルカリで売った場合の予想"}（送料は含みません）</div>
+      <table class="calc small">${rows.map(x=>`<tr><td>${x[0]}<br><small class="muted">手数料 ${x[4]==="auto"?"":"目安 "}${+(x[1]*100).toFixed(1)}%</small></td><td class="n">− ${yen(r0(x[2]))}</td><td class="n ${x[3]>=0?"up":"down"}"><b>${yen(r0(x[3]))}</b></td></tr>`).join("")}</table>`;
+  }
+  const ls=lot&&LOTS[lot]?lotStats(lot):null;
+  const lotBox=ls&&!isLotHead?`<div class="lotbox"><div><b>山${lot}（${LOTS[lot].name}）全体</b><br><span class="muted">仕入額 ${yen(LOTS[lot].cost)}・売上 ${yen(ls.sales)}・売れた ${ls.sold}/${ls.total}点</span><br><span class="muted">この商品の原価は、山の仕入額を予想売価の比率で割り振ったものです</span></div><div style="text-align:right">${ls.sold?`<span class="up"><b>粗利 ${yen(ls.profit)}</b></span><br>`:""}<button class="linkbtn" id="toLot">山の画面へ</button></div></div>`
+    :lot&&!isLotHead?`<div class="lotbox"><span class="muted">この商品は山${lot}の枝番です。山全体の利益は山の画面で見られます。</span></div>`:"";
+  dd.innerHTML=`<div class="dlghead"><div><div class="muted">${r[0]}・${r[2]}</div><h2 style="margin:2px 0 0">${r[1]}</h2></div><button class="x" id="idClose" title="閉じる">×</button></div>
+    <div class="infogrid">
+      <div><span>状態</span><b><span class="tag ${st[r[6]][1]}">${st[r[6]][0]}</span></b></div>
+      <div><span>仕入日</span><b>${r[3]}</b></div>
+      <div><span>原価${STOCKQ[r[0]]?"（1個）":""}</span><b>${yen(r[4])}</b></div>
+      ${STOCKQ[r[0]]?`<div><span>在庫</span><b>残り${qLeft(r[0])}個／${STOCKQ[r[0]].total}個</b></div>`:""}
+      <div><span>${inStock(r)?"滞留日数":"出品先"}</span><b>${inStock(r)?(r[8]!=null?r[8]+"日":"—"):chips(r[7])}</b></div>
+    </div>
+    ${(RETURNS[r[0]]||[]).map(x=>`<div class="rethist">↩ ${x.date.slice(5)} に <b>${x.ch}</b> から返品で戻りました（同じ番号で売り直せます）。この返品の損：<b>${yen(r0(x.loss))}</b></div>`).join("")}
+    ${inStock(r)?listBox(r):""}
+    ${body}${lotBox}`;
+  dd.showModal();
+  dd.querySelector("#idClose").onclick=()=>dd.close();
+  const tr=dd.querySelector("#toRet");if(tr)tr.onclick=()=>openReturn(r);
+  const tt=dd.querySelector("#toTbd");if(tt)tt.onclick=()=>{dd.close();goTbd()};
+  const tl=dd.querySelector("#toLot");if(tl)tl.onclick=()=>{dd.close();openLot(lot)};
+  dd.querySelectorAll("#lbChips .chipbtn").forEach(b=>b.onclick=()=>{
+    const ch=b.dataset.ch,on=r[7].includes(ch),prev=snapList([r]);
+    setChannels(r,on?r[7].filter(c=>c!==ch):[...r[7],ch]);renderItems();openItem(r[0]);
+    toast(on?`${r[0]} の <b>${ch}</b> を取り下げにしました${r[6]==="stock"?"（出品先がなくなったので未出品）":""}`:`${r[0]} を <b>${ch}</b> に出品中にしました`,()=>{restoreList(prev);renderItems();if(dd.open)openItem(r[0])},"取り消しました。出品先は元に戻りました")});
+}
+// ---- 出品先を変える（状態は出品先から自動で決まる） ----
+// 出品先が1つ以上 → 出品中、ひとつもない → 未出品。売却済みは販売の記録でだけ変わる
+const LIST_CH=Object.keys(CH).filter(k=>!CH[k].tbd);
+function setChannels(r,arr){r[7]=LIST_CH.filter(c=>arr.includes(c)).concat(arr.filter(c=>!LIST_CH.includes(c)));if(inStock(r))r[6]=r[7].length?"list":"stock";r._flash=true;setTimeout(()=>{r._flash=false},2500)}
+const snapList=rs=>rs.map(r=>[r,r[6],[...r[7]]]);
+const restoreList=sn=>sn.forEach(([r,s,c])=>{r[6]=s;r[7]=c});
+const listBox=r=>`<div class="listbox"><b>出品先</b> <span class="muted">押すと出品中、もう一度押すと取り下げ。状態は自動で変わります</span>
+  <div class="chips" id="lbChips">${LIST_CH.map(c=>`<button class="chipbtn${r[7].includes(c)?" on":""}" data-ch="${c}">${r[7].includes(c)?"✓ ":""}${c}</button>`).join("")}</div></div>`;
+function openListBulk(){
+  const rs=items.filter(r=>picked.has(r[0])&&inStock(r));if(!rs.length)return;
+  let ch="メルカリ";
+  const dlg=document.getElementById("listDlg")||Object.assign(document.body.appendChild(document.createElement("dialog")),{id:"listDlg"});
+  const draw=()=>{
+    const has=rs.filter(r=>r[7].includes(ch)).length;
+    dlg.innerHTML=`<div class="dlghead"><div><div class="muted">${rs.length}点を選んでいます</div><h2 style="margin:2px 0 0">出品先をまとめて変える</h2></div><button class="x" id="ldClose" title="閉じる">×</button></div>
+      <div class="f"><span>販路</span><div class="chips" id="ldCh">${LIST_CH.map(c=>`<button class="chipbtn${c===ch?" on":""}" data-ch="${c}">${c}</button>`).join("")}</div></div>
+      <p class="muted" style="margin:10px 0">選んだ${rs.length}点のうち、<b>${ch}</b> に出品中は ${has}点、まだは ${rs.length-has}点です。</p>
+      <ul class="muted" style="margin:0 0 12px;padding-left:18px;max-height:160px;overflow:auto">${rs.map(r=>`<li>${r[0]} ${r[1]}（${r[7].length?r[7].join("・"):"未出品"}）</li>`).join("")}</ul>
+      <div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap"><button class="btn" id="ldOff"${has?"":" disabled"}>${ch} を取り下げる</button><button class="btn primary" id="ldOn"${has===rs.length?" disabled":""}>${ch} に出品した</button></div>`;
+    dlg.querySelector("#ldClose").onclick=()=>dlg.close();
+    dlg.querySelectorAll("#ldCh .chipbtn").forEach(b=>b.onclick=()=>{ch=b.dataset.ch;draw()});
+    const go=on=>{const tg=rs.filter(r=>r[7].includes(ch)!==on),prev=snapList(tg);
+      tg.forEach(r=>setChannels(r,on?[...r[7],ch]:r[7].filter(c=>c!==ch)));dlg.close();renderItems();
+      const toStock=!on?tg.filter(r=>r[6]==="stock").length:0;
+      toast(on?`${tg.length}点を <b>${ch}</b> に出品中にしました`:`${tg.length}点の <b>${ch}</b> を取り下げにしました${toStock?`（${toStock}点は出品先がなくなったので未出品）`:""}`,()=>{restoreList(prev);renderItems()},"取り消しました。出品先は元に戻りました")};
+    dlg.querySelector("#ldOn").onclick=()=>go(true);dlg.querySelector("#ldOff").onclick=()=>go(false);
+  };
+  draw();dlg.showModal();
+}
+// ---- 返品・返金（たまにある） ----
+const RETURNS={}; // 管理番号 → 返品の記録（売上は0円、かかった送料と戻らない手数料を損として残す）
+const REFUND={};  // 管理番号 → 一部返金
+const TODAY="2026/11/12";
+const REFUND_VIA=new Proxy({},{get:(_,ch)=>CH[ch]&&CH[ch].refundVia}); // 販路の設定「一部返金のふだんの返し方」から読む（記録のときに変えられる）
+function openReturn(r){
+  const c=saleCalcFor(r);let kind="ret",via=REFUND_VIA[c.ch]||"mall";
+  const box=document.createElement("div");box.className="retbox";
+  dd.querySelector("#toRet").parentElement.replaceWith(box);
+  const draw=()=>{
+    box.innerHTML=`<b>返品・返金の記録</b>
+      <div class="seg" id="rtKind"><button data-k="cancel">発送前のキャンセル</button><button data-k="ret">返品（商品が戻る）</button><button data-k="part">一部だけ返金</button></div>
+      ${kind==="cancel"?`<p class="hint" style="margin:0">お金も送料もまだ動いていないときです。販売の記録を消して、商品を元の状態に戻します。</p>`
+      :kind==="ret"?`<div class="f">返品の送料（返送用封筒など・円）<input id="rtShip" inputmode="numeric" placeholder="0"><span class="hint">お客様に送った返送用封筒の代金など、戻すためにかかった送料</span></div>
+        <div class="f">戻ってこない手数料（円）<input id="rtFee" inputmode="numeric" value="${r0(c.feeY)}"><span class="hint">販路が手数料を返してくれたときは 0 にします</span></div>
+        <div class="sumline" id="rtSum"></div>
+        <p class="hint" style="margin:0">売値は0円になり、商品は在庫に戻ります（同じ管理番号のまま）。確定済みの月のレポートは書き換えず、返品した月のレポートにマイナスの行として載せます。</p>`
+      :`<div class="f">返金した金額（円）<input id="rtAmt" inputmode="numeric" placeholder="例：1000"><span class="hint">傷があったので少し値引きした、などのとき。商品は売却済みのままです</span></div>
+        <div class="f">返金のしかた<div class="seg" id="rtVia"><button data-v="mall">販路の振込から引かれる</button><button data-v="bank">法人口座から振り込む</button></div>
+          <span class="hint">${via==="mall"?"freeeの取込用CSVに、返金としてマイナスで入れます":"freeeでは銀行の明細から登録するので、取込用CSVには入れません（二重にならないように）"}</span></div>
+        <div class="sumline" id="rtSum"></div>`}
+      <div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn" id="rtCancel">やめる</button><button class="btn primary" id="rtSave">記録する</button></div>`;
+    box.querySelectorAll("#rtVia button").forEach(b=>{b.classList.toggle("on",b.dataset.v===via);b.onclick=()=>{const a=box.querySelector("#rtAmt").value;via=b.dataset.v;draw();box.querySelector("#rtAmt").value=a;box.querySelector("#rtAmt").dispatchEvent(new Event("input"))}});
+    box.querySelectorAll("#rtKind button").forEach(b=>{b.classList.toggle("on",b.dataset.k===kind);b.onclick=()=>{kind=b.dataset.k;draw()}});
+    const v=id=>num((box.querySelector(id)||{}).value)||0;
+    const sum=()=>{const el=box.querySelector("#rtSum");if(!el)return;
+      if(kind==="ret"){const loss=c.realY+v("#rtShip")+v("#rtFee");el.innerHTML=`この返品の損：行きの送料 ${yen(r0(c.realY))} ＋ 返品の送料 ${yen(v("#rtShip"))} ＋ 手数料 ${yen(v("#rtFee"))} ＝ <b>${yen(r0(loss))}</b>`}
+      else el.innerHTML=`粗利 ${yen(r0(c.profit))} → <b>${yen(r0(c.profit-v("#rtAmt")))}</b>（−${yen(v("#rtAmt"))}）`};
+    box.querySelectorAll("input").forEach(i=>i.oninput=sum);sum();
+    box.querySelector("#rtCancel").onclick=()=>openItem(r[0]);
+    box.querySelector("#rtSave").onclick=()=>{
+      const prev={status:r[6],chips:[...r[7]]};
+      if(kind==="cancel"){
+        if(!confirm(`${r[0]} ${r[1]} の販売を取り消して、元の状態に戻しますか？`))return;
+        const log=saleLog.find(h=>h.no===r[0]&&!h.undone);if(log)undoSale(log);else{r[6]="list";r[7]=r[7].map(x=>x.replace("*",""))}
+        dd.close();afterChange();toast(`${r[0]} の販売を取り消しました（発送前のキャンセル）`,null);return}
+      if(kind==="ret"){
+        const loss=c.realY+v("#rtShip")+v("#rtFee");
+        (RETURNS[r[0]]=RETURNS[r[0]]||[]).push({date:TODAY,ch:c.ch,loss});
+        const log=saleLog.find(h=>h.no===r[0]&&!h.undone);if(log)log.undone=true;
+        const ref=REFUND[r[0]];delete REFUND[r[0]];r[6]="stock";r[7]=[];afterChange();openItem(r[0]);
+        toast(`${r[0]} を返品として記録しました。在庫に戻りました（損 ${yen(r0(loss))}）`,()=>{RETURNS[r[0]].pop();if(ref)REFUND[r[0]]=ref;if(log)log.undone=false;r[6]=prev.status;r[7]=prev.chips;afterChange();if(dd.open)openItem(r[0])},`取り消しました。${r[0]} は売却済みに戻りました`);return}
+      const amt=v("#rtAmt");if(!amt){box.querySelector("#rtAmt").focus();return}
+      REFUND[r[0]]={amt,date:TODAY,via};openItem(r[0]);
+      toast(`${r[0]} の一部返金 ${yen(amt)} を記録しました`,()=>{delete REFUND[r[0]];if(dd.open)openItem(r[0])},`取り消しました。${r[0]} の返金はなくなりました`);
+    };
+  };
+  draw();
+}
+dd.addEventListener("click",e=>{if(e.target===dd)dd.close()}); // 外側を押すと閉じる
+const onItemClick=e=>{if(e.target.closest("input"))return;const el=e.target.closest("[data-no]");if(!el)return;isLotLeft(el.dataset.no)?openLot(el.dataset.no.split("-")[0]):openItem(el.dataset.no)};
+document.getElementById("itemrows").addEventListener("click",onItemClick);
+document.getElementById("itemcards").addEventListener("click",onItemClick);
+
+// ---- スマホ表示の切り替え（スマホの幅の画面を、枠の中に表示する） ----
+(function(){
+  const inPhone=new URLSearchParams(location.search).has("phone");
+  const btn=document.getElementById("phoneBtn");
+  if(inPhone){btn.remove();document.querySelector(".note").style.display="none";return}
+  btn.addEventListener("click",()=>{
+    const ov=document.createElement("div");ov.id="phoneOv";
+    ov.innerHTML=`<div class="phonebar"><b>スマホ表示（iPhone の幅）</b><button class="btn" id="phoneBack">💻 パソコン表示に戻る</button></div>
+      <div class="phone"><iframe src="${location.pathname}?phone=1&t=${Date.now()}" title="スマホ表示"></iframe></div>`;
+    document.body.appendChild(ov);document.body.style.overflow="hidden";
+    ov.querySelector("#phoneBack").onclick=()=>{ov.remove();document.body.style.overflow=""};
+  });
+})();
+// ---- 送料未定（あとで実送料を入れる） ----
+// 見本：送料がまだ入っていない販売
+items.push(["0298-0","Nikon AF-S 50mm f/1.8G","カメラ","2026/10/03",3500,12000,"sold",["ヤフオク*"],null]);
+items.push(["0315","SEIKO プレザージュ 自動巻き","時計","2026/10/15",9000,26000,"sold",["Catawiki*","メルカリ"],null]);
+SOLD_INFO["0298-0"]={ch:"ヤフオク",date:"2026/11/10",price:14800,ship:1200,fee:1347,real:1000,tbd:true};
+SOLD_INFO["0315"]={ch:"Catawiki",date:"2026/11/09",price:180,ship:35,fee:27.9,real:5000,tbd:true};
+renderItems();
+function tbdList(){
+  const out=[];
+  items.filter(r=>r[6]==="sold").forEach(r=>{
+    const log=saleLog.find(h=>h.no===r[0]&&!h.undone);
+    if(log){if(log.tbd)out.push({r,src:"log",log,ch:log.ch,date:"2026/11/12"});return}
+    const s=SOLD_INFO[r[0]];if(s&&s.tbd)out.push({r,src:"static",s,ch:s.ch,date:s.date});
+  });
+  return out;
+}
+function setRealShip(x,val){
+  const before=saleCalcFor(x.r).profit;
+  if(x.src==="log"){const c=x.log.calc;c.profit=c.profit+c.realY-val;c.realY=val;x.log.profit=c.profit;x.log.tbd=false}
+  else{x.s.real=val;x.s.tbd=false}
+  return [before,saleCalcFor(x.r).profit];
+}
+function unsetRealShip(x,oldReal){ // 元の仮の金額に戻す
+  if(x.src==="log"){const c=x.log.calc;c.profit=c.profit+c.realY-oldReal;c.realY=oldReal;x.log.profit=c.profit;x.log.tbd=true}
+  else{x.s.real=oldReal;x.s.tbd=true}
+}
+function drawTbd(){
+  const list=tbdList();
+  document.getElementById("tbdCount").textContent=list.length;
+  document.getElementById("tbdTab").style.display="";
+  const banner=document.getElementById("tbdBanner");
+  banner.style.display=list.length?"flex":"none";
+  banner.querySelector("b").textContent=`送料が仮のままの販売が ${list.length}件 あります`;
+  const box=document.getElementById("tbdRows");
+  box.innerHTML=list.length?list.map((x,i)=>{const c=saleCalcFor(x.r);return `<div class="tbdrow">
+      <div class="tbdinfo"><span class="muted">${x.r[0]}・${x.ch}・${x.date}</span><b>${x.r[1]}</b>
+        <span class="muted">仮の送料 <b>${c.realY?yen(r0(c.realY)):"なし（0円）"}</b>　仮の粗利 <b class="${c.profit>=0?"up":"down"}">${yen(r0(c.profit))}</b></span></div>
+      <div class="tbdin"><input data-i="${i}" inputmode="numeric" placeholder="本当の送料（円）"><button class="btn primary" data-i="${i}">確定</button></div>
+    </div>`}).join("")
+    :'<div class="card" style="text-align:center"><b class="up">送料未定の販売はありません</b><p class="muted" style="margin:4px 0 0">すべての販売に実送料が入っています。</p></div>';
+  box.querySelectorAll("button[data-i]").forEach(b=>b.addEventListener("click",()=>{
+    const i=+b.dataset.i,inp=box.querySelector(`input[data-i="${i}"]`),v=num(inp.value);
+    if(v==null||Number.isNaN(v)){inp.focus();inp.classList.add("errin");return}
+    const x=list[i],old=saleCalcFor(x.r).realY,[b4,af]=setRealShip(x,v);
+    drawTbd();
+    toast(`${x.r[0]} の送料を ${yen(v)} で確定しました（仮 ${yen(r0(old))}）。粗利 ${yen(r0(b4))} → ${yen(r0(af))}`,()=>{unsetRealShip(x,old);drawTbd()},`取り消しました。${x.r[0]} の送料は仮 ${yen(r0(old))} に戻りました`);
+  }));
+  box.querySelectorAll("input[data-i]").forEach(inp=>inp.addEventListener("keydown",e=>{if(e.key==="Enter")box.querySelector(`button[data-i="${inp.dataset.i}"]`).click()}));
+}
+function goTbd(){document.querySelector('.hright [data-go="sales"]').click();document.querySelector('#salesTabs [data-st="tbd"]').click()}
+document.getElementById("tbdBanner").querySelector("button").addEventListener("click",goTbd);
+drawTbd();
+// 記録・取り消しのたびに数を更新
+const _afterChange=afterChange;afterChange=function(){_afterChange();drawTbd()};
+
+document.querySelectorAll("#items .pill").forEach(p=>p.addEventListener("click",()=>{document.querySelectorAll("#items .pill").forEach(x=>x.classList.remove("on"));p.classList.add("on")}));
+
+// ---- スマホ用：1件ずつ入れやすい登録 ----
+(function(){
+  const g=id=>document.getElementById(id);
+  const m={kind:"単品",kindAuto:true,genre:"",genreAuto:true,qty:1,kids:[],list:[]};
+  const d=new Date();g("mDate").value=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+  // 山の仕入額を、中身に予想売価の比率で全部割り振る（端数は予想売価がいちばん高い商品へ）。-0（山の残り）は原価0円
+  function alloc(){
+    const cost=num(g("mCost").value)||0,exps=m.kids.map(k=>num(k.exp)||0),tot=exps.reduce((a,b)=>a+b,0);
+    if(!cost||!tot)return {al:exps.map(()=>0)};
+    const al=exps.map(e=>Math.floor(cost*e/tot));al[exps.indexOf(Math.max(...exps))]+=cost-al.reduce((x,y)=>x+y,0);return {al};
+  }
+  function leftText(){const base=no(m.list.length),has=m.kids.some(k=>(num(k.exp)||0)>0);
+    return has?`${base}-0（山の残り）は原価0円になります`:"中身を入れないときは、原価はまるごと山（-0）に入ります"}
+  const no=i=>pad(NEXT_NO+i);
+  function drawKind(){
+    g("mKind").querySelectorAll("button").forEach(b=>b.classList.toggle("on",b.dataset.k===m.kind));
+    const yama=m.kind==="山";
+    g("mKidsBox").style.display=yama?"":"none";g("mQtyRow").style.display=g("mQtyBox").style.display=yama?"none":"";
+    g("mNo").textContent=no(m.list.length)+(yama?"-0":"");
+  }
+  function drawGenres(){
+    g("mGenres").innerHTML=GENRES.map(x=>`<button class="chipbtn${x===m.genre?" on":""}" data-g="${x}">${x}</button>`).join("");
+    g("mGAuto").textContent=m.genre&&m.genreAuto?"商品名から推測しました（違えば押して選び直し）":"";
+  }
+  function drawKids(){
+    const {al}=alloc(), base=no(m.list.length);
+    g("mKids").innerHTML=m.kids.map((k,i)=>`<div class="kid"><input data-i="${i}" data-f="name" placeholder="中身の商品名" value="${esc(k.name)}"><input data-i="${i}" data-f="exp" inputmode="numeric" placeholder="予想売価" value="${esc(k.exp)}"><button class="x" data-del="${i}">×</button>
+      <div class="al">${base}-${i+1}　原価 ${yen(al[i])}</div></div>`).join("")+`<div class="muted" id="mLeft" style="font-size:12px;margin-top:4px">${leftText()}</div>`;
+  }
+  function drawList(){
+    g("mList").innerHTML=m.list.length?m.list.map((r,i)=>`<div class="mitem"><div><div class="muted" style="font-size:12px">${no(i)}${r.kind==="山"?"-0":""}・${r.genre||"ジャンル未設定"}${r.kind==="山"?'　<span class="tag t-yama">山</span>':""}</div>
+      <div class="name">${esc(r.name)}</div><div class="meta">原価 ${yen(r.cost)} / 予想 ${yen(r.exp)}${r.kind==="山"?`・中身 ${r.kids.length}点`:`・${r.qty}個`}　${esc(r.sup||"")}</div></div><button class="x" data-rm="${i}" title="外す">×</button></div>`).join("")
+      :'<div class="muted" style="padding:4px 0 8px">まだありません。上で入力して「リストに追加」を押してください。</div>';
+    g("mCount").textContent=m.list.length?`${m.list.length}件・原価の合計 ${yen(m.list.reduce((a,r)=>a+r.cost,0))}`:"";
+    g("mReg").disabled=!m.list.length;g("mReg").parentNode.style.display=m.list.length?"":"none";g("mReg").textContent=m.list.length?`${m.list.length}件を登録する`:"登録する";
+    drawKind();
+  }
+  g("mKind").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;m.kind=b.dataset.k;m.kindAuto=false;if(m.kind==="山"&&!m.kids.length)m.kids.push({name:"",exp:""});drawKind();drawKids()});
+  g("mName").addEventListener("input",()=>{
+    const v=g("mName").value;
+    if(m.genreAuto){m.genre=guessGenre(v);drawGenres()}
+    if(m.kindAuto){const k=YAMA_WORDS.test(v)?"山":"単品";if(k!==m.kind){m.kind=k;if(k==="山"&&!m.kids.length)m.kids.push({name:"",exp:""});drawKind();drawKids()}}
+  });
+  g("mGenres").addEventListener("click",e=>{const b=e.target.closest("[data-g]");if(!b)return;m.genre=m.genre===b.dataset.g&&!m.genreAuto?"":b.dataset.g;m.genreAuto=false;drawGenres()});
+  g("mMinus").onclick=()=>{m.qty=Math.max(1,m.qty-1);g("mQty").textContent=m.qty};
+  g("mPlus").onclick=()=>{m.qty++;g("mQty").textContent=m.qty};
+  g("mCost").addEventListener("input",drawKids);
+  g("mAddKid").onclick=()=>{m.kids.push({name:"",exp:""});drawKids();g("mKids").querySelector(`[data-i="${m.kids.length-1}"]`).focus()};
+  g("mKids").addEventListener("input",e=>{const t=e.target;if(t.dataset.i==null)return;m.kids[+t.dataset.i][t.dataset.f]=t.value;
+    if(t.dataset.f==="exp"){const {al}=alloc(),base=no(m.list.length);
+      g("mKids").querySelectorAll(".al").forEach((el,i)=>el.textContent=`${base}-${i+1}　原価 ${yen(al[i])}`);g("mLeft").innerHTML=leftText()}});
+  g("mKids").addEventListener("click",e=>{const b=e.target.closest("[data-del]");if(!b)return;m.kids.splice(+b.dataset.del,1);drawKids()});
+  g("mList").addEventListener("click",e=>{const b=e.target.closest("[data-rm]");if(!b)return;const r=m.list.splice(+b.dataset.rm,1)[0];drawList();toast(`「${esc(r.name)}」をリストから外しました`,null)});
+  g("rAdd").onclick=()=>{
+    const name=g("mName").value.trim(),cost=num(g("mCost").value),exp=num(g("mExp").value);
+    const errs=[];if(!name)errs.push("商品名を入れてください");if(cost==null||Number.isNaN(cost))errs.push("原価を数字で入れてください（0円でもOK）");if(exp!=null&&Number.isNaN(exp))errs.push("予想売価は数字で入れてください");
+    g("mErr").textContent=errs.join("　");if(errs.length)return;
+    const kids=m.kind==="山"?m.kids.filter(k=>k.name.trim()):[];
+    m.list.push({kind:m.kind,name,genre:m.genre,cost,exp:exp||0,qty:m.qty,kids,sup:g("mSup").value.trim(),date:g("mDate").value});
+    const added=no(m.list.length-1)+(m.kind==="山"?"-0":"");
+    g("mName").value=g("mCost").value=g("mExp").value="";Object.assign(m,{kind:"単品",kindAuto:true,genre:"",genreAuto:true,qty:1,kids:[]});g("mQty").textContent=1;
+    drawGenres();drawKids();drawList();g("mName").focus();
+    toast(`${added} を追加しました`,null);
+  };
+  g("mReg").onclick=()=>alert("これは画面イメージなので、登録はされません。");
+  drawGenres();drawKids();drawList();
+})();
+
+// ---- 月次レポート（販路ごとの販売のまとめ・PDF） ----
+(function(){
+  const g=id=>document.getElementById(id);
+  // 見本：10月の販売（本物のアプリでは販売の記録から自動で集める）
+  // [管理番号, 商品名, 販路, 売却日, 売値(販路の通貨), 設定送料(販路の通貨), 手数料(販路の通貨・nullは自動), 実送料(円), 原価, 仮の送料か]
+  const OCT=[
+    ["0237-0","Canon ビデオカメラ","Catawiki","2026/10/04",420,45,65.1,6800,10588],
+    ["0281-2","ミノルタ レンズ 50mm","Catawiki","2026/10/12",95,30,14.7,4200,1800],
+    ["0290","SEIKO ダイバー 自動巻き","Catawiki","2026/10/27",260,35,40.3,5100,8500],
+    ["0303-0","ドリームキャスト 本体","メルカリ","2026/10/02",6800,0,null,1050,0],
+    ["0266-1","オリンパス PEN EE-3","メルカリ","2026/10/09",12800,0,null,750,3000],
+    ["0274","LEVI'S 501 デニム","メルカリ","2026/10/18",5400,0,null,750,1200],
+    ["0288-3","竹細工 花かご","メルカリ","2026/10/25",3200,0,null,1050,500,true],
+    ["0259","ORIENT 腕時計","ヤフオク","2026/10/07",18500,1200,1683,1100,4000],
+    ["0277-0","茶碗 楽焼","ヤフオク","2026/10/21",9800,1000,892,1200,2500],
+    ["0283","CASIO G-SHOCK DW-6900","JOOM","2026/10/15",88,18,null,2900,2000],
+    ["0262","SEIKO グランドセイコー","Chrono24","2026/10/11",168000,2000,null,2400,95000],
+    ["0270-0","レトロ 家具 まとめ","古物市場","2026/10/30",22000,0,2200,0,8000],
+    ["0279","スツール 木製","ジモティー","2026/10/19",2500,0,0,0,600],
+  ];
+  const OCT_RATE={EUR:176.80,USD:151.90}; // 見本：10月の平均TTM（確定）
+  // 振込から送料が引かれる販路（販路の設定に「送料が振込から引かれる」を足すイメージ）
+  const SHIP_DEDUCT=new Proxy({},{get:(_,ch)=>!!(CH[ch]&&CH[ch].shipDeduct)}); // 販路の設定「実送料の払い方」から読む
+  // 外貨の販路（税区分・為替の差は税理士に確認中）
+  const isFx=ch=>CH[ch].cur!=="JPY";
+  const MONTHS=[
+    {key:"2026-11",label:"2026年11月",state:"open"},
+    {key:"2026-10",label:"2026年10月",state:"draft",made:"2026/11/01 9:00",rows:OCT,rate:OCT_RATE,
+      paid:{"Catawiki":135101,"ヤフオク":25625,"JOOM":14051,"Chrono24":149000,"古物市場":19800,"ジモティー":2500}},
+    {key:"2026-09",label:"2026年9月",state:"done",made:"2026/10/01 9:00",fixed:"2026/10/08 15:20",ver:1,sample:true},
+    {key:"2026-08",label:"2026年8月",state:"done",made:"2026/09/01 9:00",fixed:"2026/09/09 11:05",ver:1,sample:true},
+  ];
+  const fmtY=v=>(v<0?"−":"")+"¥"+Math.abs(Math.round(v)).toLocaleString();
+  const fmtC=(v,cur)=>cur==="JPY"?Math.round(v).toLocaleString():(cur==="EUR"?"€":"$")+(+v).toFixed(2);
+  const R=Math.round;
+  function calc(r,rate){
+    const [no,name,ch,date,price,ship,fee,real,cost,tmp]=r,c=CH[ch],k=c.cur==="JPY"?1:rate[c.cur];
+    const feeC=fee==null?(c.fee==="auto"?price*c.rate:0):fee;
+    const priceY=price*k,shipY=c.ship?ship*k:0,feeY=feeC*k,profit=priceY+shipY-real-feeY-cost;
+    return {r,no,name,ch,date,cur:c.cur,price,ship:c.ship?ship:null,feeC,priceY,shipY,feeY,real,cost,profit,tmp:!!tmp};
+  }
+  function sum(list){return list.reduce((a,x)=>({n:a.n+1,priceY:a.priceY+x.priceY,shipY:a.shipY+x.shipY,real:a.real+x.real,feeY:a.feeY+x.feeY,cost:a.cost+x.cost,profit:a.profit+x.profit}),{n:0,priceY:0,shipY:0,real:0,feeY:0,cost:0,profit:0})}
+  // freeeに登録する3つの行と振込予定額（販路ごと）
+  function freeeOf(ch,list){
+    const t=sum(list),sales=R(t.priceY+t.shipY),fee=R(t.feeY),ship=SHIP_DEDUCT[ch]?R(t.real):0;
+    return {ch,n:t.n,sales,fee,ship,expect:sales-fee-ship,tmp:list.filter(x=>x.tmp).length};
+  }
+  function chsOf(rows){return [...new Set(rows.map(x=>x.ch))]}
+  function build(m,only){
+    let rows=m.rows.map(r=>calc(r,m.rate));if(only)rows=rows.filter(x=>x.ch===only);
+    const chs=chsOf(rows),all=sum(rows),tmpN=rows.filter(x=>x.tmp).length,paid=m.paid||{};
+    const pct=(a,b)=>b?(a/b*100).toFixed(1)+"%":"—";
+    const sumRow=(label,t,cls="")=>`<tr class="${cls}"><td>${label}</td><td class="n">${t.n}</td><td class="n">${fmtY(t.priceY)}</td><td class="n">${fmtY(t.shipY)}</td><td class="n">${fmtY(t.real)}</td><td class="n">${fmtY(t.feeY)}</td><td class="n">${fmtY(t.cost)}</td><td class="n${t.profit<0?" neg":""}">${fmtY(t.profit)}</td><td class="n">${pct(t.profit,t.priceY+t.shipY)}</td></tr>`;
+    const fr=chs.map(ch=>freeeOf(ch,rows.filter(x=>x.ch===ch)));
+    const frRow=f=>{const p=paid[f.ch],d=p==null?null:p-f.expect;
+      return `<tr><td>${f.ch}${isFx(f.ch)?' <span class="fxq">外貨</span>':""}</td><td class="n">${fmtY(f.sales)}</td><td class="n">${fmtY(f.fee)}</td><td class="n">${SHIP_DEDUCT[f.ch]?fmtY(f.ship):"—"}${f.tmp?' <span class="tmp">仮</span>':""}</td><td class="n"><b>${fmtY(f.expect)}</b></td><td class="n">${p==null?"未入力":fmtY(p)}</td><td class="n${d?" neg":""}">${d==null?"—":d===0?"0（一致）":(d>0?"+":"")+fmtY(d).replace("¥","¥")}</td></tr>`};
+    const draft=m.state==="draft";
+    const title=only?`${m.label}　${only}`:m.label;
+    return `${draft?'<div class="wmark">下書き（まだ確定していません）</div>':""}
+      <div class="rhead"><div><img src="joynt-logo.png" alt="JOYNT"><h2>月次販売レポート　${title}</h2></div>
+      <div class="rmeta">対象：${m.label.replace("年","/").replace("月","")}/01 〜 末日に売れた商品<br>為替：1€ = ${m.rate.EUR.toFixed(2)}円 / 1$ = ${m.rate.USD.toFixed(2)}円（${m.label.slice(5)}の平均TTM・確定）<br>作成：${m.made}${m.fixed?`　確定：${m.fixed}（第${m.ver}版）`:"　（下書き）"}</div></div>
+      <h3>振込との突き合わせ（freee登録用）</h3>
+      <table><thead><tr><th>販路</th><th class="n">売上高</th><th class="n">販売手数料</th><th class="n">荷造運賃（振込から引かれる送料）</th><th class="n">振込予定額</th><th class="n">実際の振込額</th><th class="n">差額</th></tr></thead><tbody>
+      ${fr.map(frRow).join("")}
+      ${fr.length>1?(()=>{const s=k=>fr.reduce((a,f)=>a+f[k],0),pp=fr.reduce((a,f)=>a+(paid[f.ch]||0),0);return `<tr class="tot"><td>合計</td><td class="n">${fmtY(s("sales"))}</td><td class="n">${fmtY(s("fee"))}</td><td class="n">${fmtY(s("ship"))}</td><td class="n">${fmtY(s("expect"))}</td><td class="n">${fmtY(pp)}</td><td class="n"></td></tr>`})():""}
+      </tbody></table>
+      <div class="kp"><div><span>売上（売値＋設定送料）</span><b>${fmtY(all.priceY+all.shipY)}</b></div><div><span>粗利</span><b>${fmtY(all.profit)}</b></div><div><span>粗利率</span><b>${pct(all.profit,all.priceY+all.shipY)}</b></div><div><span>販売件数</span><b>${all.n}件</b></div></div>
+      ${only?"":`<h3>販路ごとのまとめ</h3>
+      <table><thead><tr><th>販路</th><th class="n">件数</th><th class="n">売値（円）</th><th class="n">設定送料</th><th class="n">実送料</th><th class="n">手数料</th><th class="n">原価</th><th class="n">粗利</th><th class="n">粗利率</th></tr></thead><tbody>
+      ${chs.map(ch=>sumRow(ch,sum(rows.filter(x=>x.ch===ch)))).join("")}${sumRow("合計",all,"tot")}</tbody></table>`}
+      ${chs.map(ch=>{const list=rows.filter(x=>x.ch===ch),t=sum(list),cur=CH[ch].cur,fx=cur!=="JPY";
+        return `<h3>${ch}<small>${t.n}件・粗利 ${fmtY(t.profit)}${fx?`・${cur==="EUR"?"ユーロ":"ドル"}は ${m.rate[cur].toFixed(2)}円で換算`:""}</small></h3>
+        <table><thead><tr><th>売却日</th><th>管理番号</th><th>商品名</th>${fx?`<th class="n">売値（${cur==="EUR"?"€":"$"}）</th>`:""}<th class="n">売値（円）</th><th class="n">設定送料</th><th class="n">実送料</th><th class="n">手数料</th><th class="n">原価</th><th class="n">粗利</th></tr></thead><tbody>
+        ${list.map(x=>`<tr><td>${x.date.slice(5)}</td><td>${x.no}</td><td>${x.name}</td>${fx?`<td class="n">${fmtC(x.price,cur)}</td>`:""}<td class="n">${fmtY(x.priceY)}</td><td class="n">${x.ship==null?"—":fmtY(x.shipY)}</td><td class="n">${fmtY(x.real)}${x.tmp?' <span class="tmp">仮</span>':""}</td><td class="n">${fmtY(x.feeY)}</td><td class="n">${fmtY(x.cost)}</td><td class="n${x.profit<0?" neg":""}">${fmtY(x.profit)}</td></tr>`).join("")}
+        <tr class="tot"><td colspan="${fx?4:3}">${ch} 合計</td><td class="n">${fmtY(t.priceY)}</td><td class="n">${fmtY(t.shipY)}</td><td class="n">${fmtY(t.real)}</td><td class="n">${fmtY(t.feeY)}</td><td class="n">${fmtY(t.cost)}</td><td class="n">${fmtY(t.profit)}</td></tr></tbody></table>`}).join("")}
+      <div class="rnote">売上高 ＝ 売値（円）＋ 設定送料（円）。振込予定額 ＝ 売上高 − 販売手数料 − 振込から引かれる送料（販路の設定で「販路の振込から引かれる」にした販路）。原価は仕入先の請求書で登録済みのため、振込の計算には入れません。<br>
+      粗利 ＝ 売値（円）＋ 設定送料（円）− 実送料 − 手数料（円）− 原価。外貨の販路は${m.label.slice(5)}の平均TTMで円に換算しています。<br>
+      ${tmpN?`<span class="tmp">仮</span> の印は、送料がまだ仮の金額の販売です（${tmpN}件）。確定する前に本当の送料を入れてください。<br>`:""}
+      廃棄・備品にした商品は売上に入れていません。</div>`;
+  }
+  let cur="2026-10";
+  function dataOf(m){return m.rows?m:{...m,rows:OCT,rate:OCT_RATE,paid:null}} // 9月・8月は見本として10月の中身を使う
+  function drawList(){
+    g("repList").innerHTML=MONTHS.map(m=>m.state==="open"
+      ?`<div class="reprow"><span class="m">${m.label}</span><span class="info">集計中。<b>12/1に下書きを自動で作ります</b>（11月の平均TTMが確定してから）。<br>今のところ 送料が仮のままの販売が <b>${typeof tbdList==="function"?tbdList().length:0}件</b> あります。</span><button class="btn" data-pre="1">途中経過を見る</button></div>`
+      :m.state==="draft"
+      ?`<div class="reprow${m.key===cur?" on":""}"><span class="m">${m.label}</span><span class="info"><span class="tag t-warn">下書き</span>　<b>${m.label.slice(5).replace("月","")==="10"?"11/10":"翌月10日"}までに</b>振込額を入れて確定してください</span>
+        <button class="btn primary" data-view="${m.key}">振込を確認する</button></div>`
+      :`<div class="reprow${m.key===cur?" on":""}"><span class="m">${m.label}</span><span class="info"><span class="tag t-sold">確定済み</span>　確定 ${m.fixed}（第${m.ver}版）</span>
+        <button class="btn" data-view="${m.key}">見る</button><button class="btn" data-dl="${m.key}">⬇ PDF</button></div>`).join("");
+    g("repList").querySelectorAll("[data-view]").forEach(b=>b.onclick=()=>show(b.dataset.view));
+    g("repList").querySelectorAll("[data-dl]").forEach(b=>b.onclick=()=>{show(b.dataset.dl);printDoc()});
+    g("repList").querySelectorAll("[data-pre]").forEach(b=>b.onclick=()=>alert("本物のアプリでは、11月の途中までの数字（為替は仮のレート）で同じ形のレポートを見られます。"));
+  }
+  function printDoc(only){
+    const m=MONTHS.find(x=>x.key===cur);
+    if(only){g("repDoc").innerHTML=build(dataOf(m),only)}
+    setTimeout(()=>{window.print();if(only)g("repDoc").innerHTML=build(dataOf(m))},50);
+  }
+  // 画面だけに出す「振込の確認」パネル（PDFには入らない）
+  function drawRecon(m){
+    const d=dataOf(m),rows=d.rows.map(r=>calc(r,d.rate)),draft=m.state==="draft",paid=d.paid||{};
+    const fr=chsOf(rows).map(ch=>freeeOf(ch,rows.filter(x=>x.ch===ch)));
+    const tmps=rows.filter(x=>x.tmp);
+    const left=fr.filter(f=>paid[f.ch]==null).length;
+    g("repRecon").innerHTML=`
+      <div class="rc-head"><b>${draft?"振込を確認して確定する":"振込の確認（確定済み）"}</b>
+        <span class="muted">販路ごとに、PDFとfreeeの取込ファイルを出せます。振込のあった取引に、その販路のPDFを貼ってください。</span></div>
+      ${draft&&tmps.length?`<div class="rc-warn">送料が仮のままの販売が <b>${tmps.length}件</b> あります。本当の送料を入れてください。
+        ${tmps.map(x=>`<div class="rc-tmp">${x.no} ${x.name}（${x.ch}）仮 ${fmtY(x.real)} → <input class="n" data-real="${x.no}" inputmode="numeric" placeholder="本当の送料"><button class="btn" data-fixreal="${x.no}">確定</button></div>`).join("")}</div>`:""}
+      <div class="tablewrap"><table class="rc-t"><thead><tr><th>販路</th><th class="n">振込予定額</th><th class="n">実際の振込額</th><th class="n">差額</th><th></th></tr></thead><tbody>
+      ${fr.map(f=>{const p=paid[f.ch],df=p==null?null:p-f.expect;
+        return `<tr><td>${f.ch}${isFx(f.ch)?' <span class="fxq" title="税区分・為替の差の扱いは税理士に確認中">外貨・確認中</span>':""}<div class="muted" style="font-size:11px">売上 ${fmtY(f.sales)} − 手数料 ${fmtY(f.fee)}${SHIP_DEDUCT[f.ch]?` − 送料 ${fmtY(f.ship)}${f.tmp?' <span class="tmp">仮</span>':""}`:""}</div></td>
+        <td class="n"><b>${fmtY(f.expect)}</b></td>
+        <td class="n">${draft?`<input class="n" data-paid="${f.ch}" inputmode="numeric" value="${p==null?"":p}" placeholder="通帳の金額">`:fmtY(p??f.expect)}</td>
+        <td class="n">${df==null?'<span class="muted">未入力</span>':df===0?'<span class="ok">✓ 一致</span>':`<span class="neg">${df>0?"+":""}${fmtY(df)}</span>`}</td>
+        <td class="nowrap"><button class="btn mini" data-chpdf="${f.ch}">⬇ PDF</button> <button class="btn mini" data-chcsv="${f.ch}">⬇ CSV</button></td></tr>`}).join("")}
+      </tbody></table></div>
+      <div class="rc-foot">
+        <button class="btn" data-allcsv="1">⬇ freee取込用CSV（全販路）</button>
+        ${draft?`<button class="btn primary" id="repFix">確定して保存（第1版）</button>
+        <span class="muted">${left?`あと ${left}販路 の振込額が未入力です`:tmps.length?`仮の送料が ${tmps.length}件 残っています`:"確定できます"}</span>`:""}
+      </div>`;
+    const R2=g("repRecon");
+    R2.querySelectorAll("[data-paid]").forEach(i=>i.onchange=()=>{const v=i.value.replace(/[^\d-]/g,"");if(v==="")delete m.paid[i.dataset.paid];else m.paid[i.dataset.paid]=+v;refresh()});
+    R2.querySelectorAll("[data-fixreal]").forEach(b=>b.onclick=()=>{const no=b.dataset.fixreal,inp=R2.querySelector(`[data-real="${no}"]`),v=inp.value.replace(/\D/g,"");
+      if(v===""){inp.focus();return}const r=m.rows.find(r=>r[0]===no);r[7]=+v;r[9]=false;toast(`${no} の送料を ${fmtY(+v)} で確定しました`);refresh()});
+    R2.querySelectorAll("[data-chpdf]").forEach(b=>b.onclick=()=>printDoc(b.dataset.chpdf));
+    R2.querySelectorAll("[data-chcsv]").forEach(b=>b.onclick=()=>csv(m,[b.dataset.chcsv]));
+    R2.querySelector("[data-allcsv]").onclick=()=>csv(m,fr.map(f=>f.ch));
+    const fx=g("repFix");if(fx)fx.onclick=()=>{
+      if(left){alert(`まだ振込額が入っていない販路があります（${fr.filter(f=>paid[f.ch]==null).map(f=>f.ch).join("・")}）。`);return}
+      if(tmps.length){alert("仮の送料が残っています。本当の送料を入れてから確定してください。");return}
+      const diff=fr.filter(f=>paid[f.ch]!==f.expect);
+      if(diff.length&&!confirm(`差額がある販路があります（${diff.map(f=>f.ch).join("・")}）。このまま確定しますか？\n差額はPDFにそのまま残ります。`))return;
+      m.state="done";m.ver=1;m.fixed="2026/11/12 "+new Date().toTimeString().slice(0,5);toast(`${m.label}を確定して保存しました（第1版）`);refresh()};
+  }
+  // freeeに取り込むCSV（見本の形。本物は freee の取込画面の形式に合わせる）
+  function csv(m,chs){
+    const d=dataOf(m),rows=d.rows.map(r=>calc(r,d.rate)),mon=m.label.slice(5);
+    const [y,mm]=m.key.split("-"),last=new Date(+y,+mm,0).getDate(),date=`${y}-${mm}-${last}`;
+    const lines=[["発生日","取引先","勘定科目","税区分","金額","備考"]];
+    chs.forEach(ch=>{const f=freeeOf(ch,rows.filter(x=>x.ch===ch)),tax=isFx(ch)?"（税理士に確認）":null;
+      lines.push([date,ch,"売上高",tax||"課税売上10%",f.sales,`${ch}　${mon}売上`]);
+      if(f.fee)lines.push([date,ch,"販売手数料",tax||"課対仕入10%",-f.fee,`${ch}　${mon}販売手数料`]);
+      if(f.ship)lines.push([date,ch,"荷造運賃","課対仕入10%",-f.ship,`${ch}　${mon}送料`]);});
+    const text="﻿"+lines.map(l=>l.join(",")).join("\r\n");
+    const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([text],{type:"text/csv"}));
+    a.download=`JOYNT_freee取込_${m.key}${chs.length===1?"_"+chs[0]:""}.csv`;a.click();
+    toast(`freee取込用のCSVを作りました（${chs.length===1?chs[0]:"全販路"}・${lines.length-1}行）`);
+  }
+  function refresh(){show(cur)}
+  window.repRefresh=refresh;
+  function show(key){
+    cur=key;const m=MONTHS.find(x=>x.key===key);
+    g("repTitle").textContent=m.state==="draft"?`${m.label}のレポート（下書き）`:`${m.label}のレポート（第${m.ver}版）`;
+    g("repDoc").innerHTML=build(dataOf(m));drawRecon(m);drawList();
+  }
+  g("repPrint").onclick=()=>printDoc();
+  show("2026-10");
+  const only=decodeURIComponent(location.hash).match(/^#report:(.+)$/);if(only)g("repDoc").innerHTML=build(dataOf(MONTHS[1]),only[1]); // 例：#report:メルカリ で販路1つだけ
+  if(location.hash.startsWith("#report"))document.querySelector('nav.top [data-go="report"]').click(); // アドレスの最後が #report なら最初から開く
+})();
+</script>
+</body>
+</html>

@@ -4,15 +4,21 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:real": "npm run migrate:real && DATABASE_URL=file:./real.db next dev",
     "build": "next build",
     "start": "next start",
-    "db:push": "prisma db push",
+    "backup": "DATABASE_URL=file:./real.db tsx scripts/backup.ts",
+    "backup:dev": "tsx scripts/backup.ts",
+    "db:migrate": "tsx scripts/backup.ts before-migrate && prisma migrate dev",
+    "migrate:real": "DATABASE_URL=file:./real.db tsx scripts/backup.ts before-migrate && DATABASE_URL=file:./real.db prisma migrate deploy",
     "db:seed": "tsx prisma/seed.ts",
-    "setup": "prisma db push && tsx prisma/seed.ts"
+    "setup": "prisma migrate deploy && tsx prisma/seed.ts",
+    "import:sheet": "DATABASE_URL=file:./real.db prisma migrate deploy && DATABASE_URL=file:./real.db tsx scripts/import-sheet.ts import/sheet.json --reset"
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",
     "next": "^15.5.29",
+    "pdfjs-dist": "^4.10.38",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "zod": "^3.25.76"

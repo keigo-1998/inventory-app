@@ -1,30 +1,20 @@
+// 商品を登録（データベースから、今ある管理番号とジャンルを読んで画面に渡す）
 import { db } from "@/lib/db";
-import { createItem } from "@/lib/actions";
-import { ActionForm } from "@/components/ActionForm";
-import { ItemFields } from "@/components/ItemFields";
+import { RegisterView } from "./RegisterView";
+import type { SlipFormat } from "@/lib/slip";
 
 export const dynamic = "force-dynamic";
 
-export default async function NewItemPage() {
-  const categories = await db.category.findMany({ orderBy: { name: "asc" } });
-  return (
-    <>
-      <h1>品目を登録</h1>
-      <section className="card">
-        <ActionForm action={createItem} submitLabel="登録する">
-          <ItemFields categories={categories} />
-          <div className="grid-2">
-            <label>
-              初期在庫数
-              <input name="quantity" type="number" min={0} defaultValue={0} required />
-            </label>
-            <label>
-              担当者
-              <input name="operator" />
-            </label>
-          </div>
-        </ActionForm>
-      </section>
-    </>
-  );
+export default async function NewItemsPage() {
+  const [items, genres, formats] = await Promise.all([
+    // 取り消した商品の番号も使えないので、消した印の付いた商品も含める
+    db.item.findMany({ select: { code: true } }),
+    db.genre.findMany({ where: { deletedAt: null }, orderBy: { sortOrder: "asc" } }),
+    db.slipFormat.findMany({ where: { deletedAt: null }, orderBy: { updatedAt: "desc" } }),
+  ]);
+  const fm: SlipFormat[] = formats.map((f) => ({
+    id: f.id, name: f.name, signature: f.signature, nameCol: f.nameCol, costCols: JSON.parse(f.costCols) as number[],
+    qtyCol: f.qtyCol, expCol: f.expCol, dateCol: f.dateCol, supplier: f.supplier,
+  }));
+  return <RegisterView codes={items.map((i) => i.code)} genres={genres.map((g) => g.name)} formats={fm} />;
 }

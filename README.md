@@ -1,45 +1,40 @@
-# 在庫・備品管理システム
+# 物販管理（JOYNT）
 
-Next.js (App Router) + Prisma + SQLite で作った在庫・備品管理 Web アプリです。
+物販の商品（在庫）・山・販売・販路・粗利を管理する Web アプリです。
+いまは「2. 本物のアプリを作る」の途中で、このMacの中だけで動かしています。
 
-## 機能
+- 進め方: [docs/roadmap.md](docs/roadmap.md)
+- データの決まり: [docs/data-design.md](docs/data-design.md)
+- 粗利の計算式: [docs/profit-formulas.md](docs/profit-formulas.md)
+- 画面イメージ（見本）: `python3 docs/mockup/serve.py` → http://127.0.0.1:8765/
 
-- **ダッシュボード**: 登録品目数、要発注品目、貸出中、返却期限超過、最近の入出庫を表示
-- **品目管理**: 登録・編集・削除、品名/品番/保管場所での検索、カテゴリ・在庫状態での絞り込み、CSV出力（Excel対応）
-- **入出庫**: 入庫・出庫・棚卸調整（実数に合わせる）。在庫がマイナスになる出庫はエラーで防止
-- **貸出管理**: 借用者・数量・返却期限を登録、返却処理、期限超過の強調表示
-- **履歴**: 全ての在庫変動（入庫/出庫/調整/貸出/返却）を処理後在庫数とともに記録
-- **カテゴリ管理**
+## 使っている道具
 
-## セットアップ
+- **Next.js**: 画面とサーバー（裏で計算する部分）
+- **Prisma**: データベースの入れ物を作る・読み書きする道具（設計図は `prisma/schema.prisma`）
+- **SQLite**: このMacで作る間のデータベース（`prisma/dev.db`）。公開するときに PostgreSQL に切り替える
+
+## 動かし方
 
 Node.js 20 以上が必要です。
 
 ```bash
 npm install
 cp .env.example .env
-npm run setup      # DB作成 + サンプルデータ投入
+npm run setup      # データベースを作って、見本データを入れる
 npm run dev        # http://localhost:3000
 ```
 
-本番起動:
+`npm run setup` は見本データを入れ直します（データベースの中身は消えます）。本物のデータを入れたあとは使わないでください。
 
-```bash
-npm run build && npm start
-```
-
-## 構成
+## フォルダの中身
 
 ```
-prisma/schema.prisma      DBスキーマ（Category / Item / StockMovement / Loan）
-prisma/seed.ts            サンプルデータ
-src/lib/actions.ts        サーバーアクション（在庫更新はトランザクション内で実行）
-src/app/                  各画面（/, /items, /items/[id], /loans, /movements, /categories）
-src/app/api/items/export  CSV出力
+prisma/schema.prisma   データの入れ物の設計図（商品・山・出品先・販売・販路・為替・変更の履歴）
+prisma/seed.ts         見本データ（実際の商品ではありません）
+src/lib/db.ts          データベースにつなぐ部品
+src/lib/history.ts     変更の履歴を残す部品（削除は印を付けるだけ）
+src/lib/format.ts      日付・金額・状態の表示
+src/app/               画面
+docs/                  設計メモと画面イメージ
 ```
-
-## 今後の拡張候補
-
-- ログイン・権限管理（現状は認証なし。社内ネットワーク内での利用を想定）
-- PostgreSQL への切り替え（`schema.prisma` の `provider` と `DATABASE_URL` を変更）
-- バーコード/QRコード読み取り、発注点到達時のメール通知
