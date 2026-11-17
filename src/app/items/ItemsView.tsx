@@ -137,7 +137,7 @@ function ColTh({ c, sorts, onSort, onResize }: { c: (typeof COLS)[number]; sorts
     </th>
   );
 }
-const Days = ({ d }: { d: number | null }) => (d == null ? <span className="muted">—</span> : d >= 90 ? <span className="tag t-warn">{d}日</span> : <>{d}日</>);
+const Days = ({ d }: { d: number | null }) => (d == null ? <span className="muted">—</span> : d >= 90 ? <span className="days-old" title="90日以上たっています">{d}日</span> : <>{d}日</>);
 
 type Toast = { msg: React.ReactNode; undo?: () => Promise<void> } | null;
 /** 返品・返金の記録の入力 */
@@ -161,6 +161,16 @@ export function ItemsView({ rows, channels, lots, genres, suppliers, removed }: 
     if (add) setSorts(i >= 0 ? sorts.map((x, j) => (j === i ? { ...x, desc: !x.desc } : x)) : [...sorts, { key, desc: SORT_KEYS[key][1] }]);
     else setSorts(i === 0 ? [{ ...sorts[0], desc: !sorts[0].desc }, ...sorts.slice(1)] : [{ key, desc: SORT_KEYS[key][1] }]);
   };
+  const [help, setHelp] = useState(false);
+  // 並び順のパネル（外を押すと閉じる）
+  const [sortOpen, setSortOpen] = useState(false);
+  const sortRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!sortOpen) return;
+    const close = (e: MouseEvent) => { if (!sortRef.current?.contains(e.target as Node)) setSortOpen(false); };
+    document.addEventListener("mousedown", close);
+    return () => document.removeEventListener("mousedown", close);
+  }, [sortOpen]);
   // 列の幅（null ＝ 中身に合わせる）
   const [colW, setColWState] = useState<Record<string, number> | null>(null);
   const setColW = (w: Record<string, number> | null) => { setColWState(w); try { if (w) localStorage.setItem(COLW_STORE, JSON.stringify(w)); else localStorage.removeItem(COLW_STORE); } catch {} };
@@ -434,12 +444,19 @@ export function ItemsView({ rows, channels, lots, genres, suppliers, removed }: 
 
   return (
     <section>
-      <h1>商品一覧</h1>
-      <p className="lead">
-        全 {rows.length.toLocaleString()} 点（在庫 {inStockCount.toLocaleString()} 点）。出品先を変えたいときは、商品にチェックを入れて「出品先を変える」を押します。
-        <br />
-        <span className="muted">商品を押すと、いくら利益が出ているかが見られます。<span className="tag t-yama">山 ▸</span> の行を押すと山の画面が開き、枝番を追加できます。売れ残りをまとめて山売りしたいときは、チェックを入れて「まとめて売る」を押します。縦積在庫は「縦積」を押すと出ます。表の見出しを押すと並び替わり、Shift を押しながら押すと「次の並び順」が足せます（表の上の「＋ 次の並び順を足す」からも）。見出しの右のふちをドラッグすると、列の幅が変わります。</span>
-      </p>
+      <div className="pagehead">
+        <h1>商品一覧 <span className="headcount">全 {rows.length.toLocaleString()} 点・在庫 {inStockCount.toLocaleString()} 点</span></h1>
+        <button className="linkbtn" onClick={() => setHelp(!help)} aria-expanded={help}>{help ? "使い方を閉じる" : "？ 使い方"}</button>
+      </div>
+      {help && (
+        <ul className="helpcard">
+          <li><b>商品を押す</b>と、利益・出品先が見られます。直す・廃棄・取り消しもここから。</li>
+          <li><b>出品先を変える・まとめて売る</b>：商品にチェックを入れて、下に出るボタンを押します。</li>
+          <li><span className="tag t-yama">山 ▸</span> の行を押すと山の画面が開き、枝番を追加できます。縦積在庫は「縦積」で出ます。</li>
+          <li><b>並び替え</b>：見出しを押す（もう一度で逆）。Shift を押しながら押すと「次の並び順」を足せます。右上の「並び順」からも。</li>
+          <li><b>列の幅</b>：見出しの右のふちをドラッグ（ダブルクリックで元に戻す）。</li>
+        </ul>
+      )}
       {error && <p className="err">{error}</p>}
       <div className="filters">
         <span className="searchbox">
@@ -467,31 +484,41 @@ export function ItemsView({ rows, channels, lots, genres, suppliers, removed }: 
           <button className="linkbtn" onClick={clearChanged}>色を消す</button>
         </p>
       )}
-      <div className="pills">
-        {FILTERS.map(([k, l]) => (
-          <button key={k} className={`pill${k === invF ? " on" : ""}`} onClick={() => setInvF(k)}>{l} <span className="pc-n">{pillCount[k]}</span></button>
-        ))}
-      </div>
-
-      <div className="sortbar">
-        <span className="muted">並び順</span>
-        {sorts.map((x, i) => (
-          <span key={x.key} className="sortchip">
-            {sorts.length > 1 && <b>{"①②③④⑤⑥⑦⑧⑨⑩⑪"[i]}</b>}
-            <button className="linkbtn" onClick={() => setSorts(sorts.map((y, j) => (j === i ? { ...y, desc: !y.desc } : y)))} title="押すと逆の順になります">
-              {SORT_KEYS[x.key][0]}（{SORT_KEYS[x.key][2][x.desc ? 1 : 0]}）{x.desc ? "▼" : "▲"}
-            </button>
-            {(sorts.length > 1 || x.key !== "added") && <button className="x" onClick={() => setSorts(sorts.filter((_, j) => j !== i))} title="この並び順を外す" aria-label="外す">×</button>}
-          </span>
-        ))}
-        {sorts.length < Object.keys(SORT_KEYS).length && (
-          <select value="" onChange={(e) => { const k = e.target.value as SortKey; if (k) setSorts([...sorts, { key: k, desc: SORT_KEYS[k][1] }]); }} aria-label="並び順を足す">
-            <option value="">＋ 次の並び順を足す</option>
-            {(Object.keys(SORT_KEYS) as SortKey[]).filter((k) => !sorts.some((x) => x.key === k)).map((k) => <option key={k} value={k}>{SORT_KEYS[k][0]}</option>)}
-          </select>
-        )}
-        {(sorts.length > 1 || sorts[0].key !== "added" || !sorts[0].desc) && <button className="linkbtn" onClick={() => setSorts(SORT_DEFAULT)}>はじめの並び順（新しく登録した順）に戻す</button>}
-        {colW && <button className="linkbtn pc-only" onClick={() => setColW(null)} style={{ marginLeft: "auto" }}>列の幅を元に戻す</button>}
+      <div className="toolbar">
+        <div className="pills">
+          {FILTERS.map(([k, l]) => (
+            <button key={k} className={`pill${k === invF ? " on" : ""}`} onClick={() => setInvF(k)}>{l} <span className="pc-n">{pillCount[k]}</span></button>
+          ))}
+        </div>
+        <div className="sortpop" ref={sortRef}>
+          <button className={`btn small${sortOpen ? " on" : ""}`} onClick={() => setSortOpen(!sortOpen)} aria-expanded={sortOpen}>
+            ⇅ {SORT_KEYS[sorts[0].key][0]}（{SORT_KEYS[sorts[0].key][2][sorts[0].desc ? 1 : 0]}）{sorts.length > 1 ? ` ほか${sorts.length - 1}つ` : ""} ▾
+          </button>
+          {sortOpen && (
+            <div className="sortpanel">
+              <div className="muted" style={{ fontSize: 12, marginBottom: 6 }}>上から順に並べます。項目を押すと逆の順になります。</div>
+              {sorts.map((x, i) => (
+                <div key={x.key} className="sortrow">
+                  <b>{i + 1}</b>
+                  <button className="linkbtn" onClick={() => setSorts(sorts.map((y, j) => (j === i ? { ...y, desc: !y.desc } : y)))} title="押すと逆の順になります">
+                    {SORT_KEYS[x.key][0]}（{SORT_KEYS[x.key][2][x.desc ? 1 : 0]}）{x.desc ? "▼" : "▲"}
+                  </button>
+                  {sorts.length > 1 && <button className="x" onClick={() => setSorts(sorts.filter((_, j) => j !== i))} title="この並び順を外す" aria-label="外す">×</button>}
+                </div>
+              ))}
+              {sorts.length < Object.keys(SORT_KEYS).length && (
+                <select value="" onChange={(e) => { const k = e.target.value as SortKey; if (k) setSorts([...sorts, { key: k, desc: SORT_KEYS[k][1] }]); }} aria-label="並び順を足す">
+                  <option value="">＋ 次の並び順を足す</option>
+                  {(Object.keys(SORT_KEYS) as SortKey[]).filter((k) => !sorts.some((x) => x.key === k)).map((k) => <option key={k} value={k}>{SORT_KEYS[k][0]}</option>)}
+                </select>
+              )}
+              <div className="sortfoot">
+                {(sorts.length > 1 || sorts[0].key !== "added" || !sorts[0].desc) && <button className="linkbtn" onClick={() => setSorts(SORT_DEFAULT)}>新しく登録した順に戻す</button>}
+                {colW && <button className="linkbtn pc-only" onClick={() => setColW(null)}>列の幅を元に戻す</button>}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="card tablewrap pc" style={{ padding: "4px 8px" }}>
