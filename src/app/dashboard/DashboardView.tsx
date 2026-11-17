@@ -3,6 +3,7 @@
 // グラフの色：売上＝青、粗利＝オレンジ（色の見分けにくい人でも区別できる組み合わせを確かめ済み）。目標は点線
 import { useEffect, useRef, useState, useTransition } from "react";
 import Link from "next/link";
+import { PageHead } from "@/components/PageHead";
 import { useRouter } from "next/navigation";
 import { setTarget, type TargetKind } from "@/lib/target-actions";
 import { toast, esc } from "@/lib/toast";
@@ -81,8 +82,15 @@ export function DashboardView({ data }: { data: DashData }) {
 
   return (
     <section>
-      <h1>ダッシュボード</h1>
-      <p className="lead">ECの売上・粗利と、目標の進み具合です。売上 ＝ 売値＋設定送料（月次レポートと同じ計算。返品・返金はあった日に引きます）。経費・固定費はfreeeで見ます。</p>
+      <PageHead
+        title="ダッシュボード"
+        help={[
+          <>ECの売上・粗利と、目標の進み具合です。</>,
+          <><b>売上</b> ＝ 売値＋設定送料（月次レポートと同じ計算）。返品・返金は、あった日に引きます。</>,
+          <>目標は「目標を入れる・直す」から入れます。グラフの点線が目標のペースです。</>,
+          <>経費・固定費は freee で見ます。</>,
+        ]}
+      />
 
       {alerts.length > 0 && (
         <div className="dash-alerts">

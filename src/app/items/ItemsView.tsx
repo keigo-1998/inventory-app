@@ -3,6 +3,7 @@
 import { useDeferredValue, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { PageHead } from "@/components/PageHead";
 import { changeListings, undoListings, type ListingUndo } from "@/lib/listing-actions";
 import { recordBundle, recordSales, cancelSales } from "@/lib/sale-actions";
 import { recordReturn, recordRefund, cancelAdjustment } from "@/lib/adjust-actions";
@@ -161,7 +162,6 @@ export function ItemsView({ rows, channels, lots, genres, suppliers, removed }: 
     if (add) setSorts(i >= 0 ? sorts.map((x, j) => (j === i ? { ...x, desc: !x.desc } : x)) : [...sorts, { key, desc: SORT_KEYS[key][1] }]);
     else setSorts(i === 0 ? [{ ...sorts[0], desc: !sorts[0].desc }, ...sorts.slice(1)] : [{ key, desc: SORT_KEYS[key][1] }]);
   };
-  const [help, setHelp] = useState(false);
   // 並び順のパネル（外を押すと閉じる）
   const [sortOpen, setSortOpen] = useState(false);
   const sortRef = useRef<HTMLDivElement>(null);
@@ -444,19 +444,17 @@ export function ItemsView({ rows, channels, lots, genres, suppliers, removed }: 
 
   return (
     <section>
-      <div className="pagehead">
-        <h1>商品一覧 <span className="headcount">全 {rows.length.toLocaleString()} 点・在庫 {inStockCount.toLocaleString()} 点</span></h1>
-        <button className="linkbtn" onClick={() => setHelp(!help)} aria-expanded={help}>{help ? "使い方を閉じる" : "？ 使い方"}</button>
-      </div>
-      {help && (
-        <ul className="helpcard">
-          <li><b>商品を押す</b>と、利益・出品先が見られます。直す・廃棄・取り消しもここから。</li>
-          <li><b>出品先を変える・まとめて売る</b>：商品にチェックを入れて、下に出るボタンを押します。</li>
-          <li><span className="tag t-yama">山 ▸</span> の行を押すと山の画面が開き、枝番を追加できます。縦積在庫は「縦積」で出ます。</li>
-          <li><b>並び替え</b>：見出しを押す（もう一度で逆）。Shift を押しながら押すと「次の並び順」を足せます。右上の「並び順」からも。</li>
-          <li><b>列の幅</b>：見出しの右のふちをドラッグ（ダブルクリックで元に戻す）。</li>
-        </ul>
-      )}
+      <PageHead
+        title="商品一覧"
+        sub={<>全 {rows.length.toLocaleString()} 点・在庫 {inStockCount.toLocaleString()} 点</>}
+        help={[
+          <><b>商品を押す</b>と、利益・出品先が見られます。直す・廃棄・取り消しもここから。</>,
+          <><b>出品先を変える・まとめて売る</b>：商品にチェックを入れて、下に出るボタンを押します。</>,
+          <><span className="tag t-yama">山 ▸</span> の行を押すと山の画面が開き、枝番を追加できます。縦積在庫は「縦積」で出ます。</>,
+          <><b>並び替え</b>：見出しを押す（もう一度で逆）。Shift を押しながら押すと「次の並び順」を足せます。右上の「並び順」からも。</>,
+          <><b>列の幅</b>：見出しの右のふちをドラッグ（ダブルクリックで元に戻す）。</>,
+        ]}
+      />
       {error && <p className="err">{error}</p>}
       <div className="filters">
         <span className="searchbox">

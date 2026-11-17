@@ -91,8 +91,11 @@ export function MobileForm({ genres, nextNo, nextStack, onRegister }: { genres: 
       <div className="card">
         <div className="seg">
           {(["単品", "山", "縦積"] as const).map((k) => (
-            <button key={k} className={kind === k ? "on" : ""} onClick={() => { setKindAuto(false); changeKind(k); }}>{k === "山" ? "山（まとめて仕入れ）" : k === "縦積" ? "縦積（同じ型番が複数）" : "単品"}</button>
+            <button key={k} className={kind === k ? "on" : ""} onClick={() => { setKindAuto(false); changeKind(k); }}>{k}</button>
           ))}
+        </div>
+        <div className="muted" style={{ fontSize: 12, margin: "-4px 0 8px" }}>
+          {kind === "山" ? "山：まとめて仕入れたもの（中身は枝番にできます）" : kind === "縦積" ? "縦積：同じ型番の商品が複数あるとき（番号は L から）" : "単品：1点ずつの商品"}
         </div>
         <label>商品名<input ref={nameRef} value={name} onChange={(e) => onName(e.target.value)} placeholder="例：CASIO G-SHOCK" autoComplete="off" /></label>
         <div className="flabel">ジャンル <span className="auto-txt">{genre && genreAuto ? "商品名から推測しました（違えば押して選び直し）" : ""}</span></div>

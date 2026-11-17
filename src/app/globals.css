@@ -477,3 +477,5 @@ body.colresizing, body.colresizing * { cursor: col-resize !important; user-selec
 table.fixedw { table-layout: fixed; }
 table.fixedw th, table.fixedw td { overflow: hidden; text-overflow: ellipsis; }
 @media (max-width: 760px) { .pc-only { display: none; } }
+.pagehead-r { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+@media (max-width: 760px) { .headcount { display: block; margin: 2px 0 0; } }

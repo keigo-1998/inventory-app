@@ -12,6 +12,7 @@ import { forgetSlipFormat } from "@/lib/slip-actions";
 import type { SlipFormat } from "@/lib/slip";
 import { ask } from "@/lib/ask";
 import { markChanged } from "@/lib/recent";
+import { PageHead } from "@/components/PageHead";
 
 export function RegisterView({ codes, genres, formats }: { codes: string[]; genres: string[]; formats: SlipFormat[] }) {
   const [unknown, setUnknown] = useState<{ rows: string[][]; fileName: string } | null>(null);
@@ -58,22 +59,19 @@ export function RegisterView({ codes, genres, formats }: { codes: string[]; genr
 
   return (
     <section ref={rootRef}>
-      <h1>商品を登録</h1>
+      <PageHead
+        title="商品を登録"
+        sub={<>次の番号 {padNo(nextNo)}・縦積 {stackNo(nextStack)}</>}
+        help={[
+          <>伝票のCSV・PDFを入れるか、スプレッドシートからコピーして貼り付けます。山・縦積・単品が混ざっていて大丈夫です。</>,
+          <><b>管理番号</b>は空けておけば、今ある番号の続きが自動で付きます（縦積は L の続き）。</>,
+          <><b>種類</b>のマスを押すと 単品→山→縦積 と切り替わります。個数を2個以上にすると、自動で縦積になります。</>,
+          <><b>表の操作</b>：ドラッグで複数のマスを選ぶ・⌘C／⌘V でコピー・貼り付け・右下の■をドラッグで下にコピー・⌘D でいちばん上の行を下にコピー・Delete でまとめて消す・ダブルクリックか文字を打ってマスを編集。</>,
+          <>青い文字は自動で入れたマス、赤は直すところ、オレンジは一覧にないジャンルです。</>,
+        ]}
+      />
       <MobileForm genres={genres} nextNo={nextNo} nextStack={nextStack} onRegister={onRegister} />
 
-      <p className="lead pconly">
-        伝票のCSV（またはPDF）を入れるか、スプレッドシートからコピーして貼り付けます。山・縦積・単品が混ざっていて大丈夫です。種類は「種類」のマスを押すと切り替わります（個数を2個以上にすると、自動で縦積になります）。
-        <br />
-        <b style={{ color: "var(--text)" }}>管理番号は空けておけば、今ある番号の続き（次は {padNo(nextNo)}。縦積は {stackNo(nextStack)}）から自動で付きます。</b>
-      </p>
-      <div className="howto pconly">
-        <span><b>ドラッグ</b> 複数のマスを選ぶ</span>
-        <span><b>⌘+C / ⌘+V</b> コピー・貼り付け（スプレッドシートからもOK）</span>
-        <span><b>右下の■をドラッグ</b> 下にコピー</span>
-        <span><b>⌘+D</b> いちばん上の行を下にコピー</span>
-        <span><b>Delete</b> まとめて消す</span>
-        <span><b>ダブルクリック / 文字を打つ</b> マスを編集</span>
-      </div>
       <div className="slipgrid pconly">
         <label className="drop" id="drop">
           <input type="file" id="slipFile" accept=".csv,text/csv,.pdf,application/pdf" hidden />

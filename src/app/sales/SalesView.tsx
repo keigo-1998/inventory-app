@@ -3,6 +3,7 @@
 // 1件ずつ（スマホ向け）・まとめて入力（パソコン向け）・送料未定（本当の送料を入れて確定）・販路の設定
 import { useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { PageHead } from "@/components/PageHead";
 import { recordSales, cancelSales, fixShipping, unfixShipping, type SaleDone } from "@/lib/sale-actions";
 import { calcSale, toNum, CUR_SIGN, type ChannelRule } from "@/lib/sale-calc";
 import { yen } from "@/lib/format";
@@ -127,14 +128,20 @@ export function SalesView({ items, channels, rates, today, todayList, tbdList, s
 
   return (
     <section>
-      <h1>販売を記録</h1>
-      <p className="lead">
-        売れた商品の売値・手数料・送料を入れると、粗利が自動で出ます。為替レート：<b>1€ = {rates.EUR ?? "—"}円</b>、<b>1$ = {rates.USD?.toFixed(2) ?? "—"}円</b>{" "}
-        <span className="tag t-temp">今月・仮</span> <span className="muted">（月初のTTM。月末に平均TTMで確定）</span>
-      </p>
+      <PageHead
+        title="販売を記録"
+        sub={<>為替 1€ = {rates.EUR ?? "—"}円・1$ = {rates.USD?.toFixed(2) ?? "—"}円 <span className="tag t-temp">今月・仮</span></>}
+        help={[
+          <>売れた商品の売値・手数料・送料を入れると、粗利が自動で出ます。右の「計算の内訳」で確かめられます。</>,
+          <><b>1件ずつ</b>はスマホ向け、<b>まとめて入力</b>はパソコンで何件も入れるとき向けです。</>,
+          <>送料がまだ分からないときは「未定」にして、あとで<b>送料未定</b>のタブで本当の送料を入れます。</>,
+          <>外貨の販売は、今月は月初のレート（仮）で計算します。月が終わったら<b>為替レート</b>のタブで、その月の平均TTMに確定します。</>,
+          <>手数料の率や送料の払い方は<b>販路の設定</b>で変えられます。</>,
+        ]}
+      />
       <div className="pills">
-        <button className={`pill${tab === "one" ? " on" : ""}`} onClick={() => setTab("one")}>1件ずつ（スマホ向け）</button>
-        <button className={`pill${tab === "many" ? " on" : ""}`} onClick={() => setTab("many")}>まとめて入力（パソコン向け）</button>
+        <button className={`pill${tab === "one" ? " on" : ""}`} onClick={() => setTab("one")}>1件ずつ</button>
+        <button className={`pill${tab === "many" ? " on" : ""}`} onClick={() => setTab("many")}>まとめて入力</button>
         <button className={`pill${tab === "tbd" ? " on" : ""}`} onClick={() => setTab("tbd")}>送料未定 <span className="countbadge">{tbdList.length}</span></button>
         <button className={`pill${tab === "fx" ? " on" : ""}`} onClick={() => setTab("fx")}>為替レート{fxMonths.some((m) => m.ended && m.finalCount < m.sales) && <> <span className="countbadge">!</span></>}</button>
         <button className={`pill${tab === "ch" ? " on" : ""}`} onClick={() => setTab("ch")}>販路の設定</button>
@@ -243,7 +250,7 @@ export function SalesView({ items, channels, rates, today, todayList, tbdList, s
                   ) : null}
                 </tbody>
               </table>
-              <p className="muted" style={{ margin: "8px 0 0" }}>{special ? SPECIAL[ch] : fx ? "為替は今月の仮レートです。月末に平均TTMで計算し直します（月末の確定はこれから作ります）。" : ""}</p>
+              <p className="muted" style={{ margin: "8px 0 0" }}>{special ? SPECIAL[ch] : fx ? "為替は今月の仮レートです。月が終わったら、平均TTMで計算し直します。" : ""}</p>
             </div>
             <div className="card" style={{ marginTop: 12 }}>
               <h2>今日記録した販売</h2>

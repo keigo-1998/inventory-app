@@ -11,6 +11,7 @@ import { fixShipping } from "@/lib/sale-actions";
 import type { ReportData, ReportLine, ReportChannel } from "@/lib/report";
 import { toast, esc } from "@/lib/toast";
 import { ask } from "@/lib/ask";
+import { PageHead } from "@/components/PageHead";
 
 export type MonthRow = {
   month: string; state: "open" | "draft" | "fixed"; version: number; fixedAt: string; changed: boolean;
@@ -101,14 +102,20 @@ export function ReportView({ list, month, version, fixedAt, data, paid, changed 
   const tmps = data.lines.filter((l) => l.tentative);
   const left = data.channels.filter((f) => paid[f.name] == null).length;
 
+  const firstDraft = list.find((m) => m.state === "draft")?.month; // いちばん新しい下書き（いま確定する月）
   return (
     <section id="report">
-      <h1>月次レポート</h1>
-      <p className="lead">
-        月が終わると、その月の販売を販路ごとにまとめた<b>下書き</b>ができます。<b>翌月10日までに</b>仮の送料を確定し、通帳の振込額を入れて「確定して保存」すると、freeeに貼る根拠のPDFになります。販路ごとのPDFと、freeeに取り込むCSVも出せます。
-      </p>
+      <PageHead
+        title="月次レポート"
+        help={[
+          <>月が終わると、その月の販売を販路ごとにまとめた<b>下書き</b>ができます。</>,
+          <><b>翌月10日までに</b>、仮の送料を確定し、通帳の振込額を入れて「確定して保存」します。freeeに貼る根拠のPDFになります。</>,
+          <>販路ごとのPDFと、freeeに取り込むCSVも出せます。</>,
+        ]}
+      />
 
       <div className="replist">
+        {/* 青いボタンは、いま確定する月（いちばん新しい下書き）だけ */}
         {list.slice(0, 6).map((m) => (
           <div key={m.month} className={`reprow${m.month === month ? " on" : ""}`}>
             <span className="m">{label(m.month)}</span>
@@ -117,7 +124,7 @@ export function ReportView({ list, month, version, fixedAt, data, paid, changed 
                 <button className="btn" onClick={() => go(m.month)}>途中経過を見る</button></>
             ) : m.state === "draft" ? (
               <><span className="info"><span className="tag t-warn">下書き</span>　<b>{due(m.month)}までに</b>振込額を入れて確定してください</span>
-                <button className="btn primary" onClick={() => go(m.month)}>振込を確認する</button></>
+                <button className={`btn${m.month === firstDraft ? " primary" : ""}`} onClick={() => go(m.month)}>振込を確認する</button></>
             ) : (
               <><span className="info"><span className="tag t-sold">確定済み</span>　確定 {m.fixedAt}（第{m.version}版）{m.changed && <> <span className="tag t-temp">確定後に変更あり</span></>}</span>
                 <button className="btn" onClick={() => go(m.month)}>見る</button></>
