@@ -60,25 +60,52 @@ const FILTERS: [string, string, (r: ItemRow) => boolean][] = [
   ["stack", "縦積", isStack],
 ];
 
-// 並び順（選んだものは次に開いたときも覚えておく）
-type SortKey = "added" | "code" | "name" | "genre" | "date" | "cost" | "exp" | "status" | "days";
+// 並び順（いくつでも重ねられる。①で並べて、同じものは②で…。選んだものは次に開いたときも覚えておく）
+type SortKey = "added" | "code" | "name" | "genre" | "supplier" | "date" | "cost" | "exp" | "status" | "channel" | "days";
 type Sort = { key: SortKey; desc: boolean };
-const SORTS: [string, string, Sort][] = [
-  ["added-d", "新しく登録した順", { key: "added", desc: true }],
-  ["added-a", "古く登録した順", { key: "added", desc: false }],
-  ["code-a", "管理番号順", { key: "code", desc: false }],
-  ["date-d", "仕入日の新しい順", { key: "date", desc: true }],
-  ["days-d", "滞留の長い順", { key: "days", desc: true }],
-  ["cost-d", "原価の高い順", { key: "cost", desc: true }],
-  ["exp-d", "予想売価の高い順", { key: "exp", desc: true }],
-  ["genre-a", "ジャンル順", { key: "genre", desc: false }],
-];
-const SORT_DEFAULT: Sort = { key: "added", desc: true };
+/** 並べられる項目：名前・はじめの向き（true＝大きい順・新しい順）・向きの言い方 */
+const SORT_KEYS: Record<SortKey, [string, boolean, [string, string]]> = {
+  added: ["登録した順", true, ["古い順", "新しい順"]],
+  code: ["管理番号", false, ["小さい順", "大きい順"]],
+  name: ["商品名", false, ["あいうえお順", "逆順"]],
+  genre: ["ジャンル", false, ["あいうえお順", "逆順"]],
+  supplier: ["仕入先", false, ["あいうえお順", "逆順"]],
+  date: ["仕入日", true, ["古い順", "新しい順"]],
+  cost: ["原価", true, ["安い順", "高い順"]],
+  exp: ["予想売価", true, ["安い順", "高い順"]],
+  status: ["状態", false, ["未出品→出品中→売却済み", "逆順"]],
+  channel: ["出品先", false, ["あいうえお順", "逆順"]],
+  days: ["滞留", true, ["短い順", "長い順"]],
+};
+const SORT_DEFAULT: Sort[] = [{ key: "added", desc: true }];
 const SORT_STORE = "items-sort";
 const STATUS_ORDER = ["stock", "list", "sold", "closed", "disposed", "fixture"];
-const loadSort = (): Sort => {
-  try { const v = JSON.parse(localStorage.getItem(SORT_STORE) ?? "null"); if (v && typeof v.key === "string") return v; } catch {}
+const loadSort = (): Sort[] => {
+  try {
+    const v = JSON.parse(localStorage.getItem(SORT_STORE) ?? "null");
+    const arr = (Array.isArray(v) ? v : v ? [v] : []).filter((x) => x && x.key in SORT_KEYS);
+    if (arr.length) return arr;
+  } catch {}
   return SORT_DEFAULT;
+};
+// 表の列（幅を変えられる。変えた幅は覚えておく）
+type ColKey = "pick" | "code" | "name" | "genre" | "date" | "cost" | "exp" | "status" | "channel" | "days";
+const COLS: { k: ColKey; label: string; sort?: SortKey; n?: boolean }[] = [
+  { k: "pick", label: "" },
+  { k: "code", label: "管理番号", sort: "code" },
+  { k: "name", label: "商品名", sort: "name" },
+  { k: "genre", label: "ジャンル", sort: "genre" },
+  { k: "date", label: "仕入日", sort: "date" },
+  { k: "cost", label: "原価", sort: "cost", n: true },
+  { k: "exp", label: "予想売価", sort: "exp", n: true },
+  { k: "status", label: "状態", sort: "status" },
+  { k: "channel", label: "出品先", sort: "channel" },
+  { k: "days", label: "滞留", sort: "days", n: true },
+];
+const COLW_STORE = "items-colw";
+const loadColW = (): Record<string, number> | null => {
+  try { const v = JSON.parse(localStorage.getItem(COLW_STORE) ?? "null"); if (v && typeof v === "object" && COLS.every((c) => typeof v[c.k] === "number")) return v; } catch {}
+  return null;
 };
 
 function Chips({ r }: { r: ItemRow }) {
@@ -90,12 +117,23 @@ function Chips({ r }: { r: ItemRow }) {
     </>
   );
 }
-/** 押すと並び替わる表の見出し */
-function SortTh({ k, sort, onSort, n, children }: { k: SortKey; sort: Sort; onSort: (k: SortKey) => void; n?: boolean; children: React.ReactNode }) {
-  const on = sort.key === k;
+/** 表の見出し：押すと並び替わる（Shift を押しながらだと「次の並び順」に足す）。右のふちをドラッグすると幅が変わる */
+function ColTh({ c, sorts, onSort, onResize }: { c: (typeof COLS)[number]; sorts: Sort[]; onSort: (k: SortKey, add: boolean) => void; onResize: (k: ColKey, e: React.MouseEvent) => void }) {
+  const idx = c.sort ? sorts.findIndex((x) => x.key === c.sort) : -1;
+  const on = idx >= 0;
+  const grip = c.k === "pick" ? null : (
+    <span className="colgrip" title="ドラッグで幅を変える（ダブルクリックで元に戻す）" onMouseDown={(e) => { e.stopPropagation(); e.preventDefault(); onResize(c.k, e); }} onClick={(e) => e.stopPropagation()} />
+  );
+  if (!c.sort) return <th className={c.n ? "n" : ""} style={c.k === "pick" ? { width: 28 } : undefined}>{c.label}{grip}</th>;
+  const s = on ? sorts[idx] : null;
   return (
-    <th className={`sortth${n ? " n" : ""}${on ? " on" : ""}`} onClick={() => onSort(k)} title="押すと、この順に並び替えます" aria-sort={on ? (sort.desc ? "descending" : "ascending") : "none"}>
-      {children}<span className="sortmark">{on ? (sort.desc ? " ▼" : " ▲") : " ↕"}</span>
+    <th
+      className={`sortth${c.n ? " n" : ""}${on ? " on" : ""}`}
+      onClick={(e) => onSort(c.sort!, e.shiftKey)}
+      title={`押すと、${c.label}の順に並び替えます（もう一度押すと逆の順）。Shift を押しながら押すと、今の並び順に「次の並び順」として足します`}
+      aria-sort={s ? (s.desc ? "descending" : "ascending") : "none"}
+    >
+      {c.label}<span className="sortmark">{s ? (s.desc ? " ▼" : " ▲") : " ↕"}{s && sorts.length > 1 && <sup>{idx + 1}</sup>}</span>{grip}
     </th>
   );
 }
@@ -114,11 +152,32 @@ export function ItemsView({ rows, channels, lots, genres, suppliers, removed }: 
   const [invF, setInvF] = useState("now");
   const [qInput, setQInput] = useState("");
   const q = useDeferredValue(qInput); // 打ったそばから絞り込む（打つのが重くならないように少し遅らせる）
-  const [sort, setSortState] = useState<Sort>(SORT_DEFAULT);
-  useEffect(() => { setSortState(loadSort()); }, []);
-  const setSort = (s: Sort) => { setSortState(s); try { localStorage.setItem(SORT_STORE, JSON.stringify(s)); } catch {} };
-  /** 表の見出しを押したとき：同じ見出しなら向きを逆に、違う見出しならその見出しで並べる */
-  const sortBy = (key: SortKey) => setSort(sort.key === key ? { key, desc: !sort.desc } : { key, desc: ["date", "cost", "exp", "days", "added"].includes(key) });
+  const [sorts, setSortsState] = useState<Sort[]>(SORT_DEFAULT);
+  useEffect(() => { setSortsState(loadSort()); setColW(loadColW()); }, []);
+  const setSorts = (s: Sort[]) => { const v = s.length ? s : SORT_DEFAULT; setSortsState(v); try { localStorage.setItem(SORT_STORE, JSON.stringify(v)); } catch {} };
+  /** 表の見出しを押したとき：①と同じ見出しなら向きを逆に、違う見出しならその見出しだけで並べる。add（Shift）なら次の並び順に足す */
+  const sortBy = (key: SortKey, add: boolean) => {
+    const i = sorts.findIndex((x) => x.key === key);
+    if (add) setSorts(i >= 0 ? sorts.map((x, j) => (j === i ? { ...x, desc: !x.desc } : x)) : [...sorts, { key, desc: SORT_KEYS[key][1] }]);
+    else setSorts(i === 0 ? [{ ...sorts[0], desc: !sorts[0].desc }, ...sorts.slice(1)] : [{ key, desc: SORT_KEYS[key][1] }]);
+  };
+  // 列の幅（null ＝ 中身に合わせる）
+  const [colW, setColWState] = useState<Record<string, number> | null>(null);
+  const setColW = (w: Record<string, number> | null) => { setColWState(w); try { if (w) localStorage.setItem(COLW_STORE, JSON.stringify(w)); else localStorage.removeItem(COLW_STORE); } catch {} };
+  const headRef = useRef<HTMLTableRowElement>(null);
+  const startResize = (k: ColKey, e: React.MouseEvent) => {
+    if (e.detail >= 2) { setColW(null); return; } // ダブルクリックで元に戻す
+    // はじめて変えるときは、今の幅を測って、そこから変える
+    const base = colW ?? Object.fromEntries(COLS.map((c, i) => [c.k, (headRef.current?.children[i] as HTMLElement | undefined)?.offsetWidth ?? 80]));
+    const x0 = e.clientX, w0 = base[k];
+    let cur = base;
+    const move = (ev: MouseEvent) => { cur = { ...base, [k]: Math.max(40, Math.round(w0 + ev.clientX - x0)) }; setColWState(cur); };
+    const up = () => { window.removeEventListener("mousemove", move); window.removeEventListener("mouseup", up); document.body.classList.remove("colresizing"); setColW(cur); };
+    document.body.classList.add("colresizing");
+    setColWState(base);
+    window.addEventListener("mousemove", move);
+    window.addEventListener("mouseup", up);
+  };
   const [genre, setGenre] = useState("");
   const [chFilter, setChFilter] = useState("");
   const [picked, setPicked] = useState<Set<string>>(new Set());
@@ -169,30 +228,32 @@ export function ItemsView({ rows, channels, lots, genres, suppliers, removed }: 
   };
   const list = useMemo(() => {
     const units = build(invF);
-    const val = (u: ItemRow[]): number | string => {
+    const val = (u: ItemRow[], key: SortKey): number | string => {
       const h = u[0];
       const sum = (g: (r: ItemRow) => number) => u.reduce((a, r) => a + g(r), 0);
-      switch (sort.key) {
+      switch (key) {
         case "added": return Math.min(...u.map((r) => r.id)); // 山は、中でいちばん先に登録した商品で並べる
         case "code": return h.code;
         case "name": return norm(h.name);
-        case "genre": return h.genre || "\uffff"; // ジャンルなしは最後
+        case "genre": return h.genre || "\uffff"; // 空いているものは最後
+        case "supplier": return h.supplier || "\uffff";
         case "date": return h.purchasedAt;
         case "cost": return sum((r) => r.unitCost);
         case "exp": return sum((r) => r.expectedPrice ?? 0);
         case "status": return STATUS_ORDER.indexOf(h.status);
+        case "channel": return h.soldChannels[0] ?? h.channels[0] ?? "\uffff";
         case "days": return Math.max(-1, ...u.map((r) => r.days ?? -1));
       }
     };
-    const dir = sort.desc ? -1 : 1;
-    const keyed = units.map((u) => ({ u, v: val(u) }));
+    const keyed = units.map((u) => ({ u, v: sorts.map((x) => val(u, x.key)) }));
+    const cmp = (a: number | string, b: number | string) => (typeof a === "number" && typeof b === "number" ? a - b : String(a).localeCompare(String(b), "ja"));
     keyed.sort((a, b) => {
-      const c = typeof a.v === "number" && typeof b.v === "number" ? a.v - b.v : String(a.v).localeCompare(String(b.v), "ja");
-      return c * dir || a.u[0].code.localeCompare(b.u[0].code) * (sort.key === "added" ? dir : 1) || a.u[0].id - b.u[0].id;
+      for (let i = 0; i < sorts.length; i++) { const c = cmp(a.v[i], b.v[i]) * (sorts[i].desc ? -1 : 1); if (c) return c; }
+      return a.u[0].code.localeCompare(b.u[0].code) || a.u[0].id - b.u[0].id;
     });
     return keyed.flatMap((x) => x.u);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rows, invF, q, genre, chFilter, sort]);
+  }, [rows, invF, q, genre, chFilter, sorts]);
   // 検索して見つからないとき、「すべて」なら何件あるか
   const elsewhere = useMemo(() => (q && invF !== "all" && !list.length ? build("all").flat().length : 0),
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -377,7 +438,7 @@ export function ItemsView({ rows, channels, lots, genres, suppliers, removed }: 
       <p className="lead">
         全 {rows.length.toLocaleString()} 点（在庫 {inStockCount.toLocaleString()} 点）。出品先を変えたいときは、商品にチェックを入れて「出品先を変える」を押します。
         <br />
-        <span className="muted">商品を押すと、いくら利益が出ているかが見られます。<span className="tag t-yama">山 ▸</span> の行を押すと山の画面が開き、枝番を追加できます。売れ残りをまとめて山売りしたいときは、チェックを入れて「まとめて売る」を押します。縦積在庫は「縦積」を押すと出ます。表の見出しを押すと並び替わります。</span>
+        <span className="muted">商品を押すと、いくら利益が出ているかが見られます。<span className="tag t-yama">山 ▸</span> の行を押すと山の画面が開き、枝番を追加できます。売れ残りをまとめて山売りしたいときは、チェックを入れて「まとめて売る」を押します。縦積在庫は「縦積」を押すと出ます。表の見出しを押すと並び替わり、Shift を押しながら押すと「次の並び順」が足せます（表の上の「＋ 次の並び順を足す」からも）。見出しの右のふちをドラッグすると、列の幅が変わります。</span>
       </p>
       {error && <p className="err">{error}</p>}
       <div className="filters">
@@ -399,10 +460,6 @@ export function ItemsView({ rows, channels, lots, genres, suppliers, removed }: 
           <option value="">出品先：すべて</option>
           {channels.map((c) => <option key={c.id}>{c.name}</option>)}
         </select>
-        <select value={SORTS.find(([, , v]) => v.key === sort.key && v.desc === sort.desc)?.[0] ?? ""} onChange={(e) => setSort(SORTS.find(([k]) => k === e.target.value)![2])} aria-label="並び順">
-          {!SORTS.some(([, , v]) => v.key === sort.key && v.desc === sort.desc) && <option value="">並び順：表の見出しで選んだ順</option>}
-          {SORTS.map(([k, l]) => <option key={k} value={k}>並び順：{l}</option>)}
-        </select>
       </div>
       {recentCount > 0 && (
         <p className="recentnote">
@@ -416,15 +473,33 @@ export function ItemsView({ rows, channels, lots, genres, suppliers, removed }: 
         ))}
       </div>
 
+      <div className="sortbar">
+        <span className="muted">並び順</span>
+        {sorts.map((x, i) => (
+          <span key={x.key} className="sortchip">
+            {sorts.length > 1 && <b>{"①②③④⑤⑥⑦⑧⑨⑩⑪"[i]}</b>}
+            <button className="linkbtn" onClick={() => setSorts(sorts.map((y, j) => (j === i ? { ...y, desc: !y.desc } : y)))} title="押すと逆の順になります">
+              {SORT_KEYS[x.key][0]}（{SORT_KEYS[x.key][2][x.desc ? 1 : 0]}）{x.desc ? "▼" : "▲"}
+            </button>
+            {(sorts.length > 1 || x.key !== "added") && <button className="x" onClick={() => setSorts(sorts.filter((_, j) => j !== i))} title="この並び順を外す" aria-label="外す">×</button>}
+          </span>
+        ))}
+        {sorts.length < Object.keys(SORT_KEYS).length && (
+          <select value="" onChange={(e) => { const k = e.target.value as SortKey; if (k) setSorts([...sorts, { key: k, desc: SORT_KEYS[k][1] }]); }} aria-label="並び順を足す">
+            <option value="">＋ 次の並び順を足す</option>
+            {(Object.keys(SORT_KEYS) as SortKey[]).filter((k) => !sorts.some((x) => x.key === k)).map((k) => <option key={k} value={k}>{SORT_KEYS[k][0]}</option>)}
+          </select>
+        )}
+        {(sorts.length > 1 || sorts[0].key !== "added" || !sorts[0].desc) && <button className="linkbtn" onClick={() => setSorts(SORT_DEFAULT)}>はじめの並び順（新しく登録した順）に戻す</button>}
+        {colW && <button className="linkbtn pc-only" onClick={() => setColW(null)} style={{ marginLeft: "auto" }}>列の幅を元に戻す</button>}
+      </div>
+
       <div className="card tablewrap pc" style={{ padding: "4px 8px" }}>
-        <table>
+        <table className={colW ? "fixedw" : ""} style={colW ? { width: COLS.reduce((a, c) => a + colW[c.k], 0) } : undefined}>
+          {colW && <colgroup>{COLS.map((c) => <col key={c.k} style={{ width: colW[c.k] }} />)}</colgroup>}
           <thead>
-            <tr>
-              <th style={{ width: 28 }}></th>
-              <SortTh k="code" sort={sort} onSort={sortBy}>管理番号</SortTh><SortTh k="name" sort={sort} onSort={sortBy}>商品名</SortTh>
-              <SortTh k="genre" sort={sort} onSort={sortBy}>ジャンル</SortTh><SortTh k="date" sort={sort} onSort={sortBy}>仕入日</SortTh>
-              <SortTh k="cost" sort={sort} onSort={sortBy} n>原価</SortTh><SortTh k="exp" sort={sort} onSort={sortBy} n>予想売価</SortTh>
-              <SortTh k="status" sort={sort} onSort={sortBy}>状態</SortTh><th>出品先</th><SortTh k="days" sort={sort} onSort={sortBy} n>滞留</SortTh>
+            <tr ref={headRef}>
+              {COLS.map((c) => <ColTh key={c.k} c={c} sorts={sorts} onSort={sortBy} onResize={startResize} />)}
             </tr>
           </thead>
           <tbody id="itemrows">
@@ -435,7 +510,7 @@ export function ItemsView({ rows, channels, lots, genres, suppliers, removed }: 
                   {inStock(r) && <input type="checkbox" checked={picked.has(r.code)} onChange={(e) => togglePick(r.code, e.target.checked)} />}
                 </td>
                 <td>{r.code}</td>
-                <td><span className="nm">{r.name}</span><QtyTag r={r} /></td>
+                <td title={r.name}><span className="nm">{r.name}</span><QtyTag r={r} /></td>
                 <td>{r.genre}</td>
                 <td>{r.purchasedAt}</td>
                 <td className="n">{yen(r.unitCost)}</td>

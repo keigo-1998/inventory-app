@@ -444,3 +444,21 @@ th.sortth:hover { color: var(--ink, inherit); background: rgba(127, 127, 127, 0.
 th.sortth .sortmark { opacity: 0.35; font-size: 0.85em; }
 th.sortth.on .sortmark { opacity: 1; }
 .pill .pc-n { opacity: 0.6; font-size: 0.85em; margin-left: 2px; }
+
+/* 商品一覧：並び順の帯（いくつでも重ねられる） */
+.sortbar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin: 2px 0 8px; font-size: 13px; }
+.sortchip { display: inline-flex; align-items: center; gap: 2px; background: var(--card); border: 1px solid var(--line); border-radius: 999px; padding: 2px 4px 2px 10px; }
+.sortchip b { color: var(--accent); margin-right: 2px; }
+.sortchip .x { border: 0; background: none; color: var(--sub); cursor: pointer; font-size: 14px; padding: 0 6px; }
+.sortbar select { font-size: 13px; padding: 4px 6px; }
+th.sortth sup { font-size: 9px; margin-left: 1px; }
+/* 列の幅を変えるつまみ（見出しの右のふち） */
+.tablewrap.pc table th { position: relative; }
+.colgrip { position: absolute; top: 0; right: -4px; width: 9px; height: 100%; cursor: col-resize; z-index: 2; }
+.colgrip::after { content: ""; position: absolute; top: 25%; bottom: 25%; left: 4px; width: 1px; background: var(--line); }
+th:hover .colgrip::after, .colgrip:hover::after { background: var(--accent); width: 2px; }
+body.colresizing, body.colresizing * { cursor: col-resize !important; user-select: none !important; }
+/* 幅を決めた表は、はみ出す文字を「…」にする（商品名は押すと全部見られる・マウスを乗せても出る） */
+table.fixedw { table-layout: fixed; }
+table.fixedw th, table.fixedw td { overflow: hidden; text-overflow: ellipsis; }
+@media (max-width: 760px) { .pc-only { display: none; } }
