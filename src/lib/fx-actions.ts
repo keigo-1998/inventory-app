@@ -74,8 +74,9 @@ export async function saveRateByHand(raw: { kind: "day" | "month"; key: string; 
 /** 外貨の販売1件を、あるレートで計算し直す（外貨の金額から円をもう一度出す） */
 async function reprice(tx: Tx, saleId: number, rate: number, final: boolean, note: string) {
   const s = await tx.sale.findUniqueOrThrow({ where: { id: saleId }, include: { lines: true } });
-  const yen = (cents: number | null) => Math.round(((cents ?? 0) / 100) * rate);
-  const after = { fxRate: rate, fxRateFinal: final, priceJpy: yen(s.priceForeign), shippingFeeJpy: yen(s.shippingForeign), feeJpy: yen(s.feeForeign) };
+  // 外貨の金額がない項目（円だけで入れたもの）は、円の金額をそのまま残す（0円にしない）
+  const yen = (cents: number | null, keep: number) => (cents == null ? keep : Math.round((cents / 100) * rate));
+  const after = { fxRate: rate, fxRateFinal: final, priceJpy: yen(s.priceForeign, s.priceJpy), shippingFeeJpy: yen(s.shippingForeign, s.shippingFeeJpy), feeJpy: yen(s.feeForeign, s.feeJpy) };
   await tx.sale.update({ where: { id: saleId }, data: after });
   // 1点だけの販売なら、その商品の分＝売値
   if (s.lines.length === 1) await tx.saleLine.update({ where: { id: s.lines[0].id }, data: { amountJpy: after.priceJpy } });

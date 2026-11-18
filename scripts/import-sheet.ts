@@ -224,12 +224,16 @@ async function main() {
     const kind = r.channel === "廃棄" ? "disposed" : r.channel === "備品" ? "fixture" : ch && (r.price || r.priceF || r.fee || r.real) ? "sale" : "closed";
     if (kind === "closed" && r.sheet === "①") closed.push(`${r.code} ${r.name}（${r.channel ?? "売り先なし"}・シートの粗利 ${Math.round(r.profit ?? 0)}円）`);
     const fx = ch && ch.currency !== "JPY";
+    // 外貨の販売：シートの円は手で入れたもので間違っている可能性があるので「仮」にしておく。
+    // 為替レートのタブで月ごとに「確定する」と、平均TTMで計算し直される（手数料・送料が円だけのときは、シートのレートで外貨に直しておく）
+    const sheetRate = fx && r.priceF ? r.price / (r.priceF / 100) : null;
+    const toCents = (jpy: number, f: number | null) => (f != null ? f : sheetRate && jpy > 0 ? Math.round((jpy / sheetRate) * 100) : null);
     const sale = await db.sale.create({
       data: {
         soldAt, kind, channelId: kind === "sale" ? ch!.id : null, currency: kind === "sale" ? ch!.currency : "JPY",
-        priceForeign: fx ? r.priceF : null, shippingForeign: fx ? r.shipF : null, feeForeign: fx ? r.feeF : null,
+        priceForeign: fx ? r.priceF : null, shippingForeign: fx ? toCents(r.ship, r.shipF) : null, feeForeign: fx ? toCents(r.fee, r.feeF) : null,
         priceJpy: kind === "sale" ? r.price : 0, shippingFeeJpy: kind === "sale" ? r.ship : 0, feeJpy: kind === "sale" ? r.fee : 0, actualShippingJpy: kind === "sale" ? r.real : 0,
-        shippingTentative: kind === "sale" && r.tentative, fxRate: fx && r.priceF ? r.price / (r.priceF / 100) : null, fxRateFinal: true,
+        shippingTentative: kind === "sale" && r.tentative, fxRate: sheetRate, fxRateFinal: !fx,
         note: `スプレッドシートから取り込み（${r.sheet}の${r.row}行目）`,
         lines: { create: [{ itemId: item.id, quantity: r.qty, costJpy: r.cost * r.qty, amountJpy: kind === "sale" ? r.price : 0 }] },
       },
