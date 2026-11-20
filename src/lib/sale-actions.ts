@@ -74,6 +74,8 @@ export async function recordSales(raw: SaleEntry[], note = "販売を記録"): P
           const ch = await tx.channel.findFirst({ where: { name: e.channel, deletedAt: null } });
           if (!ch) throw new Error(`販路「${e.channel}」が見つかりません`);
           channelName = ch.name;
+          // 実送料は必ず入れる（空のまま0円で記録すると、入れ忘れに気づけないため）。かからなかったときは 0、分からないときは「未定」
+          if (e.real == null && !e.tentative) throw new Error(`${item.code} の実送料を入れてください（かからなかったときは 0、まだ分からないときは「未定」）`);
           const fxr = await saleRate(tx, ch.currency, soldAt);
           if (fxr == null) throw new Error(`${ch.currency} の為替レートがまだありません。販売を記録 →「為替レート」で取り込んでください`);
           const rate = fxr.rate;
@@ -199,7 +201,8 @@ const bundleInput = z.object({
   date: z.string(),
   total: z.number().int().min(0),
   fee: z.number().int().min(0),
-  real: z.number().int().min(0).default(0),
+  real: z.number().int().min(0), // 実送料は必ず入れる（かからなかったときは 0）
+  tentative: z.boolean().default(false), // 送料未定（仮の金額）
   parts: z.array(z.object({ itemId: z.number().int().positive(), amount: z.number().int().min(0) })).min(1).max(200),
 });
 export type BundleInput = z.input<typeof bundleInput>;
@@ -229,7 +232,7 @@ export async function recordBundle(raw: BundleInput): Promise<BundleResult> {
       const cost = lines.reduce((a, l) => a + l.cost, 0);
       const sale = await tx.sale.create({
         data: {
-          soldAt, kind: "sale", channelId: ch.id, currency: "JPY", priceJpy: b.total, feeJpy: b.fee, actualShippingJpy: b.real, fxRateFinal: true,
+          soldAt, kind: "sale", channelId: ch.id, currency: "JPY", priceJpy: b.total, feeJpy: b.fee, actualShippingJpy: b.real, shippingTentative: b.tentative, fxRateFinal: true,
           note: "まとめて売る",
           lines: { create: lines.map((l) => ({ itemId: l.it.id, quantity: l.qty, costJpy: l.cost, amountJpy: l.amount })) },
         },

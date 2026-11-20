@@ -88,6 +88,7 @@ export function SalesView({ items, channels, rates, today, todayList, tbdList, s
   const save = () => {
     if (!sel) { toast("売れた商品を選んでください"); qRef.current?.focus(); return; }
     if (bad) { toast("数字でないところがあります"); return; }
+    if (!special && real.trim() === "" && !tentative) { toast("実送料を入れてください。かからなかったときは 0、まだ分からないときは「未定」を押します"); realRef.current?.focus(); return; }
     start(async () => {
       const res = await recordSales([{
         itemId: sel.id, channel: ch, date, qty: n, price: toNum(price), ship: toNum(ship), fee: toNum(fee), feeTouched,
@@ -217,10 +218,10 @@ export function SalesView({ items, channels, rates, today, todayList, tbdList, s
                 <div className="f">
                   <span>{tentative ? "実送料（仮の金額・円）" : "実送料（実際にかかった送料・円）"}</span>
                   <div className="realrow">
-                    <input ref={realRef} inputMode="numeric" placeholder={tentative ? "仮の送料（だいたいの金額）" : "0"} className={tentative ? "tmp-in" : ""} value={real} onChange={(e) => setReal(e.target.value)} />
+                    <input ref={realRef} inputMode="numeric" placeholder={tentative ? "仮の送料（だいたいの金額）" : "必ず入れる（なければ 0）"} className={tentative ? "tmp-in" : ""} value={real} onChange={(e) => setReal(e.target.value)} />
                     <button type="button" className={`chipbtn tbdbtn${tentative ? " on" : ""}`} onClick={() => { setTentative((t) => !t); realRef.current?.focus(); }}>{tentative ? "✓ 未定" : "未定"}</button>
                   </div>
-                  <small className="hint">{tentative ? "だいたいの送料を仮に入れておくと、その金額で粗利を計算します。本当の送料が分かったら「送料未定」タブで直します" : "まだ分からないときは「未定」を押して、仮の金額を入れます。あとで「送料未定」タブで直せます"}</small>
+                  <small className="hint">{tentative ? "だいたいの送料を仮に入れておくと、その金額で粗利を計算します。本当の送料が分かったら「送料未定」タブで直します" : "必ず入れます。かからなかったときは 0。まだ分からないときは「未定」を押して仮の金額を入れ、あとで「送料未定」タブで直します"}</small>
                 </div>
                 <label className="chk"><input type="checkbox" checked={shipped} onChange={(e) => setShipped(e.target.checked)} /> 発送済み</label>
               </>
@@ -332,6 +333,8 @@ function BatchEntry({ items, channels, rates, today }: { items: StockItem[]; cha
 
   const save = () => {
     if (!valid.length) { toast("記録できる行がありません（商品と売値を入れてください）"); return; }
+    const noReal = rows.map((m, i) => (valid.includes(m) && m.real.trim() === "" && !m.tbd ? i + 1 : 0)).filter(Boolean);
+    if (noReal.length) { toast(`${noReal.join("・")}行目の実送料が空です。かからなかったときは 0、まだ分からないときは「未定」を押します`); return; }
     start(async () => {
       const res = await recordSales(valid.map((m) => ({
         itemId: m.itemId!, channel: m.ch, date: m.date, qty: 1, price: toNum(m.price), ship: toNum(m.ship), fee: toNum(m.fee), feeTouched: m.ft,
@@ -352,7 +355,7 @@ function BatchEntry({ items, channels, rates, today }: { items: StockItem[]; cha
   return (
     <div>
       <p className="muted" style={{ margin: "0 0 8px" }}>
-        通知を見ながら1行ずつ入れていきます。商品名の一部（例：「オリン」）や管理番号で探せます。実送料がまだ分からないときは「未定」を押して仮の金額を入れます（「未定 800」「仮 800」と打ってもOK）。あとで「送料未定」タブで直せます。
+        通知を見ながら1行ずつ入れていきます。商品名の一部（例：「オリン」）や管理番号で探せます。実送料は必ず入れます（かからなかったときは 0）。まだ分からないときは「未定」を押して仮の金額を入れます（「未定 800」「仮 800」と打ってもOK）。あとで「送料未定」タブで直せます。
       </p>
       <div className="card tablewrap" style={{ padding: "4px 8px" }}>
         <table>
@@ -400,7 +403,7 @@ function BatchEntry({ items, channels, rates, today }: { items: StockItem[]; cha
                   <td>
                     <div className="tbdcell">
                       {m.tbd && <span className="tag t-temp" title="送料未定。仮の金額で計算します">仮</span>}
-                      <input {...inp({ width: 90, textAlign: "right" })} className={m.tbd ? "tmp-in" : ""} value={m.real} placeholder={m.tbd ? "仮の金額" : "0"}
+                      <input {...inp({ width: 90, textAlign: "right" })} className={m.tbd ? "tmp-in" : ""} value={m.real} placeholder={m.tbd ? "仮の金額" : "必須"}
                         onChange={(e) => {
                           const v = e.target.value;
                           if (/^\s*(未定|仮)/.test(v)) set(m.key, { tbd: true, real: v.replace(/^\s*(未定|仮)[\s:：]*/, "") }); // 「未定」と打っても（貼り付けても）未定にする

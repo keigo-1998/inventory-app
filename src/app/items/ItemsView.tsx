@@ -1009,7 +1009,7 @@ function BulkDialog({ rows, listChannels, pending, onClose, onRun }: {
 /** まとめて売る（山売り・合わせ売り）。販売の記録は1件。売れた金額は予想売価の比率で中身に分ける（手で直せる） */
 function BundleDialog({ rows, all, channels, pending, onClose, onSave }: {
   rows: ItemRow[]; all: ItemRow[]; channels: ChannelInfo[]; pending: boolean; onClose: () => void;
-  onSave: (input: { channel: string; date: string; total: number; fee: number; real: number; parts: { itemId: number; amount: number }[] }) => void;
+  onSave: (input: { channel: string; date: string; total: number; fee: number; real: number; tentative: boolean; parts: { itemId: number; amount: number }[] }) => void;
 }) {
   const num = (s: string) => { const v = s.normalize("NFKC").replace(/[¥,円\s]/g, ""); return v === "" || Number.isNaN(+v) ? 0 : Math.max(0, Math.floor(+v)); };
   const [ch, setCh] = useState((channels.find((c) => c.name === "ヤフオク") ?? channels[0]).name);
@@ -1017,6 +1017,7 @@ function BundleDialog({ rows, all, channels, pending, onClose, onSave }: {
   const [total, setTotal] = useState("");
   const [fee, setFee] = useState("");
   const [real, setReal] = useState("");
+  const [tbd, setTbd] = useState(false);
   const [manual, setManual] = useState<Record<number, string>>({});
   // 選んだ枝番の山に、まだ山の残り（-0）があれば「一緒に入れる」を出す
   const lotHeads = [...new Set(rows.filter((r) => r.lotCode && !r.code.endsWith("-0")).map((r) => r.lotCode!))]
@@ -1040,7 +1041,8 @@ function BundleDialog({ rows, all, channels, pending, onClose, onSave }: {
   const costOf = (b: ItemRow) => b.unitCost * b.left;
   const cost = list.reduce((a, b) => a + costOf(b), 0);
   const profit = t - f - rl - cost;
-  const ok = sum === t && t > 0;
+  const realOk = real.trim() !== "" || tbd; // 実送料は必ず入れる（なければ 0）か「未定」
+  const ok = sum === t && t > 0 && realOk;
 
   return (
     <Modal onClose={onClose}>
@@ -1053,7 +1055,8 @@ function BundleDialog({ rows, all, channels, pending, onClose, onSave }: {
         <input value={date} onChange={(e) => setDate(e.target.value)} style={{ flex: "0 1 130px", minWidth: 120 }} />
         <label className="muted" style={{ display: "flex", gap: 6, alignItems: "center" }}>売れた金額<input value={total} onChange={(e) => setTotal(e.target.value)} inputMode="numeric" placeholder="0" style={{ width: 110 }} className="n" /></label>
         <label className="muted" style={{ display: "flex", gap: 6, alignItems: "center" }}>手数料<input value={fee} onChange={(e) => setFee(e.target.value)} inputMode="numeric" placeholder="0" style={{ width: 90 }} className="n" /></label>
-        <label className="muted" style={{ display: "flex", gap: 6, alignItems: "center" }}>実送料<input value={real} onChange={(e) => setReal(e.target.value)} inputMode="numeric" placeholder="0" style={{ width: 90 }} className="n" /></label>
+        <label className="muted" style={{ display: "flex", gap: 6, alignItems: "center" }}>{tbd ? "実送料（仮）" : "実送料"}<input value={real} onChange={(e) => setReal(e.target.value)} inputMode="numeric" placeholder={tbd ? "仮の金額" : "必須"} style={{ width: 90 }} className={`n${tbd ? " tmp-in" : ""}`} /></label>
+        <button type="button" className={`chipbtn${tbd ? " on" : ""}`} onClick={() => setTbd(!tbd)}>{tbd ? "✓ 未定" : "未定"}</button>
       </div>
       <div style={{ marginBottom: 10 }}>
         {lotHeads.map((h) => (
@@ -1083,12 +1086,13 @@ function BundleDialog({ rows, all, channels, pending, onClose, onSave }: {
         {ok ? <span className="up">分けた額の合計 {yen(sum)} ＝ 売れた金額 {yen(t)}</span>
           : t ? <span className="down">分けた額の合計 {yen(sum)} が、売れた金額 {yen(t)} と合っていません</span>
           : <span className="muted">売れた金額を入れてください</span>}
+        {ok || !t || sum !== t ? null : <><br /><span className="down">実送料を入れてください（かからなかったときは 0、まだ分からないときは「未定」）</span></>}
         <br />粗利 ＝ 売れた金額 {yen(t)} − 手数料 {yen(f)}{rl ? ` − 実送料 ${yen(rl)}` : ""} − 原価 {yen(cost)} ＝ <b className={profit >= 0 ? "up" : "down"}>{yen(profit)}</b>
       </p>
       <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", flexWrap: "wrap" }}>
         <button className="btn" onClick={() => setManual({})}>自動の割り振りに戻す</button>
         <button className="btn" onClick={onClose}>閉じる</button>
-        <button className="btn primary" disabled={!ok || pending} onClick={() => onSave({ channel: ch, date, total: t, fee: f, real: rl, parts: list.map((b) => ({ itemId: b.id, amount: amt(b) })) })}>記録する</button>
+        <button className="btn primary" disabled={!ok || pending} onClick={() => onSave({ channel: ch, date, total: t, fee: f, real: rl, tentative: tbd, parts: list.map((b) => ({ itemId: b.id, amount: amt(b) })) })}>記録する</button>
       </div>
     </Modal>
   );
