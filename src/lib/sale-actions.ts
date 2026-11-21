@@ -11,7 +11,7 @@ import { db } from "@/lib/db";
 import { LIVE_SALE } from "@/lib/sale-live";
 import { logChange } from "@/lib/history";
 import { calcSale, type ChannelRule } from "@/lib/sale-calc";
-import { saleRate } from "@/lib/fx";
+import { saleRate, monthOf } from "@/lib/fx";
 
 const SPECIAL = { 廃棄: "disposed", 備品にした: "fixture" } as const;
 
@@ -265,5 +265,121 @@ export async function recordBundle(raw: BundleInput): Promise<BundleResult> {
     return { ok: true, ...res };
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : "記録できませんでした" };
+  }
+}
+
+// ---------- 販売を直す（売れた後の打ち間違い：売り先・売却日・売値・送料・手数料） ----------
+// docs/data-design.md「販売を直す」
+// - 金額は記録するときと同じ計算（calcSale）で作り直す。外貨は直した売却日の月のレートで計算し直す
+// - 売り先を変えたときは、商品の「売れた販路」（緑の印）も付け替える
+// - 月次レポートを確定した月の販売を直すときは、画面で「本当に直しますか」と確かめてから直す（force）
+const editInput = z.object({
+  saleId: z.number().int().positive(),
+  channel: z.string().min(1),
+  date: z.string(),
+  price: z.number().min(0).nullable(), // まとめて売った販売は null（売れた金額は変えない）
+  ship: z.number().min(0).nullable(),
+  fee: z.number().min(0).nullable(),
+  feeTouched: z.boolean(),
+  real: z.number().int().min(0).nullable(),
+  tentative: z.boolean(),
+});
+export type SaleEdit = z.input<typeof editInput>;
+export type SaleEditResult =
+  | { ok: true; changed: string[]; before: SaleEdit; profit: number }
+  | { ok: false; error: string; confirm?: string };
+
+/** 直す前の中身を、画面の入力と同じ形で返す（「元に戻す」に使う） */
+function editOf(s: { id: number; currency: string; priceForeign: number | null; shippingForeign: number | null; feeForeign: number | null; priceJpy: number; shippingFeeJpy: number; feeJpy: number; actualShippingJpy: number; shippingTentative: boolean; soldAt: Date; lines: unknown[] }, channel: string): SaleEdit {
+  const fx = s.currency !== "JPY";
+  const ymd = new Date(s.soldAt.getTime() + 9 * 3600 * 1000).toISOString().slice(0, 10).replace(/-/g, "/");
+  return {
+    saleId: s.id, channel, date: ymd,
+    price: s.lines.length > 1 ? null : fx ? (s.priceForeign ?? 0) / 100 : s.priceJpy,
+    ship: fx ? (s.shippingForeign ?? 0) / 100 : s.shippingFeeJpy,
+    fee: fx ? (s.feeForeign ?? 0) / 100 : s.feeJpy,
+    feeTouched: true, real: s.actualShippingJpy, tentative: s.shippingTentative,
+  };
+}
+
+export async function updateSale(raw: SaleEdit, force = false): Promise<SaleEditResult> {
+  const p = editInput.safeParse(raw);
+  if (!p.success) return { ok: false, error: "入力の形が正しくありません" };
+  const e = p.data;
+  const soldAt = parseDate(e.date);
+  if (!soldAt) return { ok: false, error: `売却日「${e.date}」を 2026/11/12 の形で入れてください` };
+  if (e.real == null && !e.tentative) return { ok: false, error: "実送料を入れてください（かからなかったときは 0、まだ分からないときは「未定」）" };
+  try {
+    return await db.$transaction(async (tx): Promise<SaleEditResult> => {
+      const sale = await tx.sale.findUnique({ where: { id: e.saleId }, include: { lines: { include: { item: true } }, channel: true, adjustments: { where: { cancelledAt: null, kind: "refund" } } } });
+      if (!sale || sale.cancelledAt || sale.kind !== "sale") throw new Error("直せる販売の記録が見つかりません");
+      const ch = await tx.channel.findFirst({ where: { name: e.channel, deletedAt: null } });
+      if (!ch) throw new Error(`販路「${e.channel}」が見つかりません`);
+      const bundle = sale.lines.length > 1;
+      if (bundle && ch.currency !== "JPY") throw new Error("まとめて売った販売は、円の販路にしか変えられません");
+      const fxr = await saleRate(tx, ch.currency, soldAt);
+      if (fxr == null) throw new Error(`${ch.currency} の為替レートがまだありません。販売を記録 →「為替レート」で取り込んでください`);
+
+      // 確定した月の販売なら、先に確かめる
+      const months = [...new Set([monthOf(sale.soldAt), monthOf(soldAt)])];
+      const fixed = await tx.monthlyReport.findMany({ where: { month: { in: months }, version: { gte: 1 } }, orderBy: { version: "desc" } });
+      if (fixed.length && !force) {
+        const ms = [...new Set(fixed.map((f) => f.month))].map((m) => `${+m.slice(5)}月`).join("・");
+        return { ok: false, error: "", confirm: `${ms}の月次レポートは、もう確定しています。\n直すと、確定したレポートと数字が合わなくなります（freee に入れた数字も直す必要があるかもしれません）。\n\n本当に直しますか？\n直したあとは、月次レポートでもう一度「確定して保存」すると第2版になります。` };
+      }
+
+      const cost = sale.lines.reduce((a, l) => a + l.costJpy, 0);
+      const price = bundle ? sale.priceJpy : e.price;
+      const r = calcSale(rule(ch), fxr.rate, { price, ship: e.ship, fee: e.fee, feeTouched: e.feeTouched, real: e.real, cost });
+      const fx = ch.currency !== "JPY";
+      const cents = (v: number) => Math.round(v * 100);
+      const data = {
+        soldAt, channelId: ch.id, currency: ch.currency,
+        priceForeign: fx ? cents(r.price) : null, shippingForeign: fx ? cents(r.shipIn) : null, feeForeign: fx ? cents(r.feeIn) : null,
+        priceJpy: Math.round(r.priceY), shippingFeeJpy: Math.round(r.shipY), feeJpy: Math.round(r.feeY), actualShippingJpy: Math.round(r.realY),
+        shippingTentative: e.tentative, fxRate: fx ? fxr.rate : null, fxRateFinal: fxr.final,
+      };
+      const LABEL: Record<string, string> = { soldAt: "売却日", channelId: "売り先", priceJpy: "売値", shippingFeeJpy: "設定送料", feeJpy: "手数料", actualShippingJpy: "実送料", shippingTentative: "送料の仮" };
+      const val = (k: string, o: Record<string, unknown>) => (o[k] instanceof Date ? (o[k] as Date).getTime() : o[k] == null ? null : Number(o[k]) || o[k]);
+      const keys = Object.keys(data) as (keyof typeof data)[];
+      const diff = keys.filter((k) => String(val(k, data)) !== String(val(k, sale as unknown as Record<string, unknown>)));
+      const before = editOf(sale, sale.channel?.name ?? "");
+      const refund = sale.adjustments.reduce((a, x) => a + x.refundJpy, 0); // 一部返金は粗利から引く（商品の画面と同じ）
+      const profit = data.priceJpy + data.shippingFeeJpy - data.actualShippingJpy - data.feeJpy - cost - refund;
+      if (!diff.length) return { ok: true, changed: [], before, profit };
+
+      await tx.sale.update({ where: { id: sale.id }, data });
+      if (!bundle) await tx.saleLine.update({ where: { id: sale.lines[0].id }, data: { amountJpy: data.priceJpy } });
+
+      // 売り先を変えたら、商品の「売れた販路」も付け替える
+      if (sale.channelId !== ch.id) {
+        for (const l of sale.lines) {
+          // 前の売れた販路：販売が作った行は「取り消し」、もともと出品していた行は「取り下げ」（販売を取り消せば出品中に戻る）
+          const ls = await tx.listing.findMany({ where: { itemId: l.itemId, endedBySaleId: sale.id } });
+          for (const x of ls.filter((x) => x.state === "sold")) {
+            if (x.createdBySale) await tx.listing.update({ where: { id: x.id }, data: { state: "cancelled", endedBySaleId: null } });
+            else await tx.listing.update({ where: { id: x.id }, data: { state: "withdrawn" } });
+          }
+          // 新しい売り先：もともと出品していたならその行を「売れた」に、なければ行を作る
+          const there = ls.find((x) => x.channelId === ch.id && !x.createdBySale);
+          if (there) await tx.listing.update({ where: { id: there.id }, data: { state: "sold" } });
+          else await tx.listing.create({ data: { itemId: l.itemId, channelId: ch.id, state: "sold", endedAt: new Date(), endedBySaleId: sale.id, createdBySale: true } });
+        }
+      }
+
+      const pick = (o: Record<string, unknown>) => Object.fromEntries(diff.map((k) => [k, o[k] instanceof Date ? (o[k] as Date).toISOString() : o[k] == null ? null : String(o[k])]));
+      const codes = sale.lines.map((l) => l.item.code).join("・");
+      await logChange(tx, {
+        table: "Sale", recordId: sale.id, action: "update",
+        before: pick(sale as unknown as Record<string, unknown>), after: pick(data as unknown as Record<string, unknown>),
+        note: `${codes} の販売を直す${fixed.length ? "（確定した月）" : ""}`,
+      });
+      return { ok: true, changed: [...new Set(diff.map((k) => LABEL[k]).filter(Boolean))], before, profit };
+    }).then((res) => {
+      if (res.ok) for (const path of ["/items", "/sales", "/report", "/dashboard"]) revalidatePath(path);
+      return res;
+    });
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : "直せませんでした" };
   }
 }

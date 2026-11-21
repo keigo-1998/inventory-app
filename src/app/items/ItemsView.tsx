@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { PageHead } from "@/components/PageHead";
 import { changeListings, undoListings, type ListingUndo } from "@/lib/listing-actions";
-import { recordBundle, recordSales, cancelSales } from "@/lib/sale-actions";
+import { recordBundle, recordSales, cancelSales, updateSale, type SaleEdit } from "@/lib/sale-actions";
+import { calcSale, toNum, CUR_SIGN } from "@/lib/sale-calc";
 import { recordReturn, recordRefund, cancelAdjustment } from "@/lib/adjust-actions";
 import { removeItem, undoRemove, restoreItem, updateItem, type ItemPatch } from "@/lib/item-actions";
 import { todayJst } from "@/lib/format";
@@ -396,6 +397,26 @@ export function ItemsView({ rows, channels, lots, genres, suppliers, removed }: 
       });
     });
   };
+  /** 販売を直す（確定した月なら、本当に直すか確かめてから） */
+  const runSaleEdit = (r: ItemRow, input: SaleEdit, done: () => void) => {
+    startTransition(async () => {
+      let res = await updateSale(input);
+      if (!res.ok && res.confirm) {
+        if (!(await ask(res.confirm, "確定した月でも直す"))) return;
+        res = await updateSale(input, true);
+      }
+      if (!res.ok) { showToast({ msg: res.error }); return; }
+      done();
+      if (!res.changed.length) { showToast({ msg: "変わったところはありませんでした" }); return; }
+      router.refresh();
+      flashCodes([r.code]);
+      const before = res.before;
+      showToast({
+        msg: <>{r.code} の販売の{res.changed.join("・")}を直しました（粗利 {yen(res.profit)}）</>,
+        undo: async () => { const u = await updateSale(before, true); router.refresh(); showToast({ msg: u.ok ? "元に戻しました" : u.error }); },
+      });
+    });
+  };
   /** 商品を直す */
   const runEdit = (r: ItemRow, patch: ItemPatch, done: () => void) => {
     startTransition(async () => {
@@ -615,6 +636,7 @@ export function ItemsView({ rows, channels, lots, genres, suppliers, removed }: 
           genres={genres}
           suppliers={suppliers}
           onEdit={(patch, done) => runEdit(openRow, patch, done)}
+          onSaleEdit={(input, done) => runSaleEdit(openRow, input, done)}
           onRemove={() => runRemove(openRow)}
           onDispose={(date, qty, done) => runDispose(openRow, date, qty, done)}
           onUndoAdj={(id, what) => undoAdj(openRow, id, what)}
@@ -668,15 +690,17 @@ function Modal({ className, onClose, children }: { className?: string; onClose: 
   );
 }
 
-function ItemDialog({ r, channels, listChannels, lot, pending, toast, onClose, onToggle, onAdjust, onUndoAdj, genres, suppliers, onEdit, onRemove, onDispose }: {
+function ItemDialog({ r, channels, listChannels, lot, pending, toast, onClose, onToggle, onAdjust, onUndoAdj, genres, suppliers, onEdit, onRemove, onDispose, onSaleEdit }: {
   r: ItemRow; channels: ChannelInfo[]; listChannels: ChannelInfo[]; lot: LotInfo | null; pending: boolean; toast: React.ReactNode;
   onClose: () => void; onToggle: (ch: ChannelInfo, on: boolean) => void; onAdjust: (a: AdjInput) => void; onUndoAdj: (adjId: number, what: string) => void;
   genres: string[]; suppliers: string[]; onEdit: (p: ItemPatch, done: () => void) => void; onRemove: () => void;
   onDispose: (date: string, qty: number, done: () => void) => void;
+  onSaleEdit: (input: SaleEdit, done: () => void) => void;
 }) {
   const [editOpen, setEditOpen] = useState(false);
+  const [saleOpen, setSaleOpen] = useState(false);
   const [dispOpen, setDispOpen] = useState(false);
-  useEffect(() => { setEditOpen(false); setDispOpen(false); }, [r.id]);
+  useEffect(() => { setEditOpen(false); setDispOpen(false); setSaleOpen(false); }, [r.id]);
   const st = ST[r.status];
   const [retOpen, setRetOpen] = useState(false);
   useEffect(() => setRetOpen(false), [r.status, r.sale?.saleId, r.sale?.refunds.length]);
@@ -715,9 +739,14 @@ function ItemDialog({ r, channels, listChannels, lot, pending, toast, onClose, o
             <tr className="tot"><td>粗利</td><td className={`n ${profit >= 0 ? "up" : "down"}`}>{yen(profit)}</td></tr>
           </tbody>
         </table>
-        {retOpen
+        {saleOpen
+          ? <SaleEditBox s={s} refund={refund} channels={channels} pending={pending} onCancel={() => setSaleOpen(false)} onSave={(input) => onSaleEdit(input, () => setSaleOpen(false))} />
+          : retOpen
           ? <ReturnBox s={s} profit={profit} pending={pending} onCancel={() => setRetOpen(false)} onSave={onAdjust} />
-          : <div style={{ textAlign: "right", marginTop: 10 }}><button className="btn" onClick={() => setRetOpen(true)}>返品・返金があった</button></div>}
+          : <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 10 }}>
+              <button className="btn" onClick={() => setSaleOpen(true)} title="売り先・売却日・売値・送料・手数料の打ち間違いを直す">✎ 販売を直す</button>
+              <button className="btn" onClick={() => setRetOpen(true)}>返品・返金があった</button>
+            </div>}
       </>
     );
   } else if (r.status === "sold") {
@@ -828,6 +857,72 @@ function ItemDialog({ r, channels, listChannels, lot, pending, toast, onClose, o
 }
 
 /** 商品を直す（商品名・ジャンル・仕入先・仕入日・原価・個数・予想売価） */
+/** 販売を直す：売り先・売却日・売値・設定送料・手数料・実送料（docs/data-design.md「販売を直す」） */
+function SaleEditBox({ s, refund, channels, pending, onCancel, onSave }: {
+  s: NonNullable<ItemRow["sale"]>; refund: number; channels: ChannelInfo[]; pending: boolean; onCancel: () => void; onSave: (input: SaleEdit) => void;
+}) {
+  const fx0 = s.currency !== "JPY";
+  const bundle = s.lineCount > 1;
+  const show = (cents: number | null, yenV: number) => String(fx0 ? (cents ?? 0) / 100 : yenV);
+  const [ch, setCh] = useState(s.channel);
+  const [date, setDate] = useState(s.date);
+  const [price, setPrice] = useState(show(s.priceForeign, s.priceJpy));
+  const [ship, setShip] = useState(show(s.shippingForeign, s.shippingFeeJpy));
+  const [fee, setFee] = useState(show(s.feeForeign, s.feeJpy));
+  const [feeTouched, setFeeTouched] = useState(true);
+  const [real, setReal] = useState(String(s.actualShippingJpy));
+  const [tbd, setTbd] = useState(s.shippingTentative);
+  const [err, setErr] = useState("");
+  const list = bundle ? channels.filter((c) => c.currency === "JPY") : channels;
+  const c = channels.find((x) => x.name === ch) ?? channels[0];
+  const sign = CUR_SIGN[c.currency];
+  const sameCur = c.currency === s.currency;
+  const rate = c.currency === "JPY" ? 1 : sameCur ? s.fxRate ?? 0 : 0;
+  const chooseCh = (name: string) => {
+    const n = channels.find((x) => x.name === name)!;
+    setCh(name); setFee(""); setFeeTouched(false);
+    if (n.currency !== c.currency && !bundle) { setPrice(""); setShip(""); } // 通貨が変わるときは、金額を入れ直す
+  };
+  const r = calcSale(c, rate, { price: bundle ? s.priceJpy : toNum(price), ship: toNum(ship), fee: toNum(fee), feeTouched, real: toNum(real), cost: s.costJpy });
+  const feeShown = r.feeAuto ? (c.feeMode === "none" ? "0" : r.feeIn ? String(+r.feeIn.toFixed(2)) : "") : fee;
+  const save = () => {
+    setErr("");
+    const vals = [bundle ? "0" : price, ship, fee, real];
+    if (vals.some((v) => Number.isNaN(toNum(v)))) { setErr("数字でないところがあります"); return; }
+    if (!bundle && toNum(price) == null) { setErr("売値を入れてください"); return; }
+    if (real.trim() === "" && !tbd) { setErr("実送料を入れてください（かからなかったときは 0、まだ分からないときは「未定」）"); return; }
+    onSave({ saleId: s.saleId, channel: ch, date, price: bundle ? null : toNum(price), ship: toNum(ship), fee: toNum(fee), feeTouched, real: toNum(real) == null ? null : Math.round(toNum(real)!), tentative: tbd });
+  };
+  return (
+    <div className="retbox editbox">
+      <b>販売を直す</b>
+      <div className="editgrid">
+        <label className="f">売り先<select className="inp" value={ch} onChange={(e) => chooseCh(e.target.value)}>{list.map((x) => <option key={x.id}>{x.name}</option>)}</select></label>
+        <label className="f">売却日<input className="inp" value={date} onChange={(e) => setDate(e.target.value)} /></label>
+        <label className="f">売値（{sign}）<input className="inp n" inputMode="decimal" value={bundle ? String(s.priceJpy) : price} disabled={bundle} onChange={(e) => setPrice(e.target.value)} /></label>
+        {c.usesShippingFee && <label className="f">設定送料（{sign}）<input className="inp n" inputMode="decimal" value={ship} onChange={(e) => setShip(e.target.value)} /></label>}
+        <label className="f">手数料（{sign}）<input className={`inp n${r.feeAuto ? " auto-in" : ""}`} inputMode="decimal" value={feeShown} readOnly={c.feeMode === "none"} onChange={(e) => { setFee(e.target.value); setFeeTouched(e.target.value !== ""); }} /></label>
+        <label className="f">{tbd ? "実送料（仮・円）" : "実送料（円）"}
+          <span style={{ display: "flex", gap: 6 }}>
+            <input className={`inp n${tbd ? " tmp-in" : ""}`} inputMode="numeric" value={real} placeholder="必ず入れる（なければ 0）" onChange={(e) => setReal(e.target.value)} />
+            <button type="button" className={`chipbtn${tbd ? " on" : ""}`} style={{ whiteSpace: "nowrap", flex: "none" }} onClick={() => setTbd(!tbd)}>{tbd ? "✓ 未定" : "未定"}</button>
+          </span>
+        </label>
+      </div>
+      <p className="hint" style={{ margin: 0 }}>
+        {rate ? <>直したあとの粗利 <b className={r.profit - refund >= 0 ? "up" : "down"}>{yen(r.profit - refund)}</b>{refund > 0 && "（一部返金を引いた額）"}{c.currency !== "JPY" && "（レートは保存するときに、売却日の月のもので計算し直します）"}</> : "外貨の販路に変えたときの粗利は、保存すると売却日の月のレートで計算します"}
+        {bundle && <><br />まとめて売った販売です。売れた金額と中身への割り振りは、ここでは直せません（取り消して記録し直します）。</>}
+        {r.warn && <><br /><span className="down">⚠ {r.warn}</span></>}
+      </p>
+      {err && <p className="err" style={{ margin: 0 }}>{err}</p>}
+      <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+        <button className="btn" onClick={onCancel}>やめる</button>
+        <button className="btn primary" disabled={pending} onClick={save}>直す</button>
+      </div>
+    </div>
+  );
+}
+
 /** 廃棄にする：日付と（縦積なら）個数を選ぶ */
 function DisposeBox({ r, pending, onCancel, onSave }: { r: ItemRow; pending: boolean; onCancel: () => void; onSave: (date: string, qty: number) => void }) {
   const [date, setDate] = useState(todayJst().replace(/-/g, "/"));
