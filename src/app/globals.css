@@ -503,3 +503,11 @@ table.fixedw th, table.fixedw td { overflow: hidden; text-overflow: ellipsis; }
   .hist-line { grid-template-columns: 80px 1fr; }
   .hist-line .hist-chs { grid-column: 1 / -1; }
 }
+
+/* 書き出す（商品一覧の右上） */
+.exportpop { position: relative; }
+.exportpop summary { list-style: none; cursor: pointer; }
+.exportpop summary::-webkit-details-marker { display: none; }
+.exportmenu { position: absolute; right: 0; top: 100%; margin-top: 4px; z-index: 20; background: var(--card); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 6px 20px rgba(0,0,0,.12); padding: 6px; display: flex; flex-direction: column; min-width: 180px; }
+.exportmenu a { padding: 7px 10px; border-radius: 6px; color: var(--text); text-decoration: none; font-size: 13px; white-space: nowrap; }
+.exportmenu a:hover { background: var(--bg); }

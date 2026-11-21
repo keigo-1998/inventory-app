@@ -474,8 +474,17 @@ export function ItemsView({ rows, channels, lots, genres, suppliers, removed }: 
           <><span className="tag t-yama">山 ▸</span> の行を押すと山の画面が開き、枝番を追加できます。縦積在庫は「縦積」で出ます。</>,
           <><b>並び替え</b>：見出しを押す（もう一度で逆）。Shift を押しながら押すと「次の並び順」を足せます。右上の「並び順」からも。</>,
           <><b>列の幅</b>：見出しの右のふちをドラッグ（ダブルクリックで元に戻す）。</>,
+          <><b>書き出す</b>：商品と販売の全件を、Excelで開けるファイル（CSV）で保存します。手元の控えや、Excelでの集計に使えます。</>,
         ]}
-      />
+      >
+        <details className="exportpop">
+          <summary className="linkbtn">⤓ 書き出す</summary>
+          <div className="exportmenu">
+            <a href="/export/items" download>商品の全件（CSV）</a>
+            <a href="/export/sales" download>販売の全件（CSV）</a>
+          </div>
+        </details>
+      </PageHead>
       {error && <p className="err">{error}</p>}
       <div className="filters">
         <span className="searchbox">
