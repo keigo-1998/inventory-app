@@ -7,6 +7,7 @@ const MENU = [
   { href: "/dashboard", label: "ダッシュボード", icon: "▦", ready: true },
   { href: "/items", label: "商品一覧", icon: "≡", ready: true },
   { href: "/report", label: "月次レポート", icon: "▤", ready: true },
+  { href: "/history", label: "変更履歴", icon: "↺", ready: true },
 ];
 
 export function TopNav() {

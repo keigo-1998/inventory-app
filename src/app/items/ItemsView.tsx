@@ -846,6 +846,7 @@ function ItemDialog({ r, channels, listChannels, lot, pending, toast, onClose, o
       )}
       {!editOpen && !dispOpen && (
         <div className="itemfoot">
+          <Link className="btn" href={`/history?q=${encodeURIComponent(r.code)}`} title="この商品の変更の記録を見る">↺ 履歴</Link>
           <button className="btn" disabled={pending} onClick={() => setEditOpen(true)}>✎ 直す</button>
           {inStock(r) && !isLotHead(r) && <button className="btn" disabled={pending} onClick={() => setDispOpen(true)} title="売る予定だったが捨てたとき。原価を損失として記録します">🗑 廃棄にする</button>}
           {inStock(r) && <button className="btn danger" disabled={pending} onClick={onRemove}>{isLotHead(r) ? "山ごと取り消す" : "この商品を取り消す"}</button>}
